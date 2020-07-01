@@ -1,6 +1,6 @@
 DFrame
 ===
-Kubernetes based **D**istributed Batch **Frame**work and Load Testing Library.
+Kubernetes based Micro **D**istributed Batch **Frame**work and Load Testing Library.
 
 Work in Progress.
 
