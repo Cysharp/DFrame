@@ -1,29 +1,42 @@
-﻿using DFrame.Core.Collections;
-using Grpc.Core;
-using MagicOnion;
-using MagicOnion.Client;
-using System;
+﻿using Grpc.Core;
+using MagicOnion.Hosting;
+using MagicOnion.Server;
+using Microsoft.Extensions.Hosting;
 using System.Collections.Generic;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DFrame.Core
 {
-    public class InProcessWorkerMaker : IWorkerMaker
+    public class InProcessScaler : IWorkerScaler
     {
-        public Task<T> CreatePodAsync<T>(Channel channel) 
-            where T : IWorkerHub, IStreamingHub<T, INoneReceiver>
+        CancellationTokenSource cts = new CancellationTokenSource();
+        List<IHost> hosts = new List<IHost>();
+
+        public Task<Channel> StartWorkerHostAsync(WorkerScalerOptions options, string?[] args, int port)
         {
-            // throw new NotImplementedException();
+            var host = options.HostBuilderFactory(args)
+                .UseMagicOnion(targetTypes: new[] { typeof(WorkerHub) }, options: new MagicOnionOptions
+                {
+                    IsReturnExceptionStackTraceInErrorDetail = true
+                }, ports: new ServerPort("localhost", port, ServerCredentials.Insecure))
+                .UseConsoleLifetime()
+                .Build();
+            hosts.Add(host);
+            host.RunAsync(cts.Token);
 
-
-            var hub = StreamingHubClient.Connect<T, INoneReceiver>(channel, new Receiver());
-
-            throw new NotImplementedException();
+            var channel = new Channel("localhost", port, ChannelCredentials.Insecure);
+            return Task.FromResult(channel);
         }
 
-        public class Receiver : INoneReceiver
+        public void Dispose()
         {
+            cts.Cancel();
+            cts.Dispose();
+            foreach (var item in hosts)
+            {
+                item.Dispose();
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using DFrame.Core;
+using Microsoft.Extensions.Hosting;
 using System;
 using System.Threading.Tasks;
 
@@ -8,7 +9,12 @@ namespace ConsoleApp
     {
         static async Task Main(string[] args)
         {
-            await DFrameApp.RunAsync(args);
+            // TODO:test args.
+            args = "-workerPerHost 10 -executePerWorker 10 -scenarioName ConsoleApp.SampleWorker".Split(' ');
+
+            await Host.CreateDefaultBuilder(args).RunDFrameAsync(args, new DFrameOptions(12345..12348, new InProcessScaler()
+            {
+            }));
         }
     }
 
@@ -22,8 +28,6 @@ namespace ConsoleApp
         public override Task ExecuteAsync()
         {
             Console.WriteLine("Hello");
-
-
             return Task.CompletedTask;
         }
 
