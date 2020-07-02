@@ -18,48 +18,36 @@ namespace DFrame.Core
         Task MasterShutdownAsync();
     }
 
-    public interface IWorker
-    {
-        Task SetupAsync();
-        Task ExecuteAsync();
-        Task TeardownAsync();
-    }
-
     public class WorkerContext
     {
-        public WorkerContext()
+        readonly Channel masterChannel;
+        public string WorkerId { get; }
+
+        public WorkerContext(Channel masterChannel)
         {
-            // to master Channel????
+            this.masterChannel = masterChannel;
+            this.WorkerId = Guid.NewGuid().ToString();
         }
 
         public IDistributedQueue<T> CreateDistributedQueue<T>()
         {
             var typeKey = this.GetType().FullName;
-            var q = MagicOnionClient.Create<IDistributedQueue<T>>((Channel)null, new IClientFilter[] { new AddHeaderFilter("queue-key", typeKey) });
-            return q;
+            var client = MagicOnionClient.Create<IDistributedQueueService>(masterChannel, new IClientFilter[] { new AddHeaderFilter("queue-key", typeKey) });
+            return new DistributedQueue<T>(client);
         }
-
-        public string WorkerId { get; }
     }
 
-    public class GroupContext
-    {
-
-    }
-
-
-
-    public abstract class WorkerBase : IWorker
+    public abstract class Worker
     {
         // public Dis Create
-        public abstract Task ExecuteAsync();
+        public abstract Task ExecuteAsync(WorkerContext context);
 
-        public virtual Task SetupAsync()
+        public virtual Task SetupAsync(WorkerContext context)
         {
             return Task.CompletedTask;
         }
 
-        public virtual Task TeardownAsync()
+        public virtual Task TeardownAsync(WorkerContext context)
         {
             return Task.CompletedTask;
         }
@@ -71,7 +59,7 @@ namespace DFrame.Core
         readonly string value;
 
         public AddHeaderFilter(string key, string value)
-        {
+        { 
             this.key = key;
             this.value = value;
         }
@@ -83,7 +71,6 @@ namespace DFrame.Core
         }
     }
 
-    // TODO: for Worker -> Master event.
     public interface INoneReceiver
     {
     }
@@ -100,7 +87,7 @@ namespace DFrame.Core
 
     public interface IWorkerHub : IStreamingHub<IWorkerHub, INoneReceiver>
     {
-        Task CreateCoWorkerAsync(int createCount, string typeName);
+        Task CreateCoWorkerAsync(int createCount, string typeName, string masterTarget);
         Task SetupAsync();
         Task ExecuteAsync(int executeCount);
         Task TeardownAsync();
@@ -110,7 +97,7 @@ namespace DFrame.Core
     public sealed class WorkerHub : StreamingHubBase<IWorkerHub, INoneReceiver>, IWorkerHub
     {
 #pragma warning disable CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
-        IWorker[] coWorkers;
+        (WorkerContext context, Worker worker)[] coWorkers;
         IGroup group;
 #pragma warning restore CS8618
 
@@ -119,12 +106,14 @@ namespace DFrame.Core
             group = await Group.AddAsync(Guid.NewGuid().ToString());
         }
 
-        public Task CreateCoWorkerAsync(int createCount, string typeName)
+        public Task CreateCoWorkerAsync(int createCount, string typeName, string masterTarget)
         {
+            var masterChannel = new Channel(masterTarget, ChannelCredentials.Insecure);
+
             // TODO:Entry?
             var type = Assembly.GetEntryAssembly().GetType(typeName);
 
-            this.coWorkers = new IWorker[createCount];
+            this.coWorkers = new (WorkerContext, Worker)[createCount];
             for (int i = 0; i < coWorkers.Length; i++)
             {
                 // TODO: ExpressionTree Lambda
@@ -132,7 +121,7 @@ namespace DFrame.Core
                 //var coWorker = typeof(IServiceLocator).GetMethod("GetService").MakeGenericMethod(type)
                 //    .Invoke(this.Context.ServiceLocator, null);
                 var coWorker = Activator.CreateInstance(type);
-                coWorkers[i] = (IWorker)coWorker;
+                coWorkers[i] = (new WorkerContext(masterChannel), (Worker)coWorker);
             }
 
             return Task.CompletedTask;
@@ -140,7 +129,7 @@ namespace DFrame.Core
 
         public async Task SetupAsync()
         {
-            await Task.WhenAll(coWorkers.Select(x => x.SetupAsync()));
+            await Task.WhenAll(coWorkers.Select(x => x.worker.SetupAsync(x.context)));
         }
 
         public async Task ExecuteAsync(int executeCount)
@@ -149,14 +138,14 @@ namespace DFrame.Core
             {
                 for (int i = 0; i < executeCount; i++)
                 {
-                    await x.ExecuteAsync();
+                    await x.worker.ExecuteAsync(x.context);
                 }
             }));
         }
 
         public async Task TeardownAsync()
         {
-            await Task.WhenAll(coWorkers.Select(x => x.TeardownAsync()));
+            await Task.WhenAll(coWorkers.Select(x => x.worker.TeardownAsync(x.context)));
         }
 
 

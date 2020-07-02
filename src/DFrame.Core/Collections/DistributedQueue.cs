@@ -3,30 +3,31 @@ using MagicOnion.Server;
 using MessagePack;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace DFrame.Core.Collections
 {
-    public interface IDistributedQueue<T> : IService<IDistributedQueue<T>>
+    public interface IDistributedQueueService : IService<IDistributedQueueService>
     {
         UnaryResult<int> CountAsync();
         UnaryResult<Nil> ClearAsync();
-        UnaryResult<bool> ContainsAsync(T item);
-        UnaryResult<Nil> CopyToAsync(T[] array, int arrayIndex);
-        UnaryResult<T> DequeueAsync();
-        UnaryResult<Nil> EnqueueAsync(T item);
-        UnaryResult<T> PeekAsync();
-        UnaryResult<T[]> ToArrayAsync();
+        UnaryResult<bool> ContainsAsync(object item);
+        UnaryResult<(bool, object)> TryDequeueAsync();
+        UnaryResult<Nil> EnqueueAsync(object item);
+        UnaryResult<(bool, object)> TryPeekAsync();
+        UnaryResult<object[]> ToArrayAsync();
         UnaryResult<Nil> TrimExcessAsync();
     }
 
-    public class DistributedQueue<T> : ServiceBase<IDistributedQueue<T>>, IDistributedQueue<T>
+    public class DistributedQueueService : ServiceBase<IDistributedQueueService>, IDistributedQueueService
     {
-        static readonly ConcurrentDictionary<string, Queue<T>> dict = new ConcurrentDictionary<string, Queue<T>>();
+        static readonly ConcurrentDictionary<string, Queue<object>> dict = new ConcurrentDictionary<string, Queue<object>>();
 
-        Queue<T> GetQueue()
+        Queue<object> GetQueue()
         {
             var key = this.Context.CallContext.RequestHeaders.GetValue("queue-key");
-            var q = dict.GetOrAdd(key, _ => new Queue<T>());
+            var q = dict.GetOrAdd(key, _ => new Queue<object>());
             return q;
         }
 
@@ -49,7 +50,7 @@ namespace DFrame.Core.Collections
             return ReturnNil();
         }
 
-        public UnaryResult<bool> ContainsAsync(T item)
+        public UnaryResult<bool> ContainsAsync(object item)
         {
             var q = GetQueue();
             lock (q)
@@ -58,26 +59,23 @@ namespace DFrame.Core.Collections
             }
         }
 
-        public UnaryResult<Nil> CopyToAsync(T[] array, int arrayIndex)
+        public UnaryResult<(bool, object)> TryDequeueAsync()
         {
             var q = GetQueue();
             lock (q)
             {
-                q.CopyTo(array, arrayIndex);
-            }
-            return ReturnNil();
-        }
-
-        public UnaryResult<T> DequeueAsync()
-        {
-            var q = GetQueue();
-            lock (q)
-            {
-                return UnaryResult(q.Dequeue());
+                if (q.Count == 0)
+                {
+                    return UnaryResult((false, (object)null!));
+                }
+                else
+                {
+                    return UnaryResult((true, q.Dequeue()));
+                }
             }
         }
 
-        public UnaryResult<Nil> EnqueueAsync(T item)
+        public UnaryResult<Nil> EnqueueAsync(object item)
         {
             var q = GetQueue();
             lock (q)
@@ -87,16 +85,23 @@ namespace DFrame.Core.Collections
             return ReturnNil();
         }
 
-        public UnaryResult<T> PeekAsync()
+        public UnaryResult<(bool, object)> TryPeekAsync()
         {
             var q = GetQueue();
             lock (q)
             {
-                return UnaryResult(q.Peek());
+                if (q.Count == 0)
+                {
+                    return UnaryResult((false, (object)null!));
+                }
+                else
+                {
+                    return UnaryResult((true, q.Peek()));
+                }
             }
         }
 
-        public UnaryResult<T[]> ToArrayAsync()
+        public UnaryResult<object[]> ToArrayAsync()
         {
             var q = GetQueue();
             lock (q)
@@ -113,6 +118,84 @@ namespace DFrame.Core.Collections
                 q.TrimExcess();
             }
             return ReturnNil();
+        }
+    }
+
+    public interface IDistributedQueue<T>
+    {
+        Task<int> CountAsync();
+        Task<Nil> ClearAsync();
+        Task<bool> ContainsAsync(T item);
+        Task<(bool, T)> TryDequeueAsync();
+        Task<Nil> EnqueueAsync(T item);
+        Task<(bool, T)> TryPeekAsync();
+        Task<T[]> ToArrayAsync();
+        Task<Nil> TrimExcessAsync();
+    }
+
+    internal sealed class DistributedQueue<T> : IDistributedQueue<T>
+    {
+        readonly IDistributedQueueService client;
+
+        internal DistributedQueue(IDistributedQueueService client)
+        {
+            this.client = client;
+        }
+
+        public async Task<Nil> ClearAsync()
+        {
+            return await client.ClearAsync();
+        }
+
+        public async Task<bool> ContainsAsync(T item)
+        {
+            return await client.ContainsAsync(item!);
+        }
+
+        public async Task<int> CountAsync()
+        {
+            return await client.CountAsync();
+        }
+
+        public async Task<(bool, T)> TryDequeueAsync()
+        {
+            var (ok, value) = await client.TryDequeueAsync();
+            if (ok)
+            {
+                return (true, (T)value);
+            }
+            else
+            {
+                return (false, default);
+            }
+        }
+
+        public async Task<Nil> EnqueueAsync(T item)
+        {
+            return await client.EnqueueAsync(item!);
+        }
+
+        public async Task<(bool, T)> TryPeekAsync()
+        {
+            var (ok, value) = await client.TryPeekAsync();
+            if (ok)
+            {
+                return (true, (T)value);
+            }
+            else
+            {
+                return (false, default);
+            }
+        }
+
+        public async Task<T[]> ToArrayAsync()
+        {
+            return (await client.ToArrayAsync()).Cast<T>().ToArray();
+        }
+
+        public async Task<Nil> TrimExcessAsync()
+        {
+            return await client.TrimExcessAsync();
         }
     }
 }
