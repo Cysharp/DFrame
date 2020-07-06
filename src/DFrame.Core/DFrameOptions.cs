@@ -5,18 +5,18 @@ namespace DFrame.Core
 {
     public class DFrameOptions
     {
-        public int MasterPort { get; }
-        public Range WorkerPortRange { get; }
-        public IWorkerScaler WorkerScaler { get; }
+        public string Host { get; }
+        public int Port { get; }
+        public IScalingProvider ScalingProvider { get; }
         public Func<string?[], IHostBuilder> HostBuilderFactory { get; set; }
 
-        public DFrameOptions(int masterPort, Range workerPortRange, IWorkerScaler workerScaler)
+        public DFrameOptions(string host, int port, IScalingProvider scalingProvider)
         {
-            MasterPort = masterPort;
-            WorkerPortRange = workerPortRange;
-            WorkerScaler = workerScaler;
+            Host = host;
+            Port = port;
+            ScalingProvider = scalingProvider;
             // TODO:configuration?
-            HostBuilderFactory = args => Host.CreateDefaultBuilder(args);
+            HostBuilderFactory = args => Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder(args);
         }
     }
 }

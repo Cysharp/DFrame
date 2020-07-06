@@ -1,4 +1,5 @@
 ﻿using DFrame.Core.Collections;
+using DFrame.Core.Internal;
 using Grpc.Core;
 using MagicOnion;
 using MagicOnion.Client;
@@ -11,13 +12,6 @@ using System.Threading.Tasks;
 
 namespace DFrame.Core
 {
-    // TODO:???
-    public interface IMaster
-    {
-        Task MasterSetupAsync();
-        Task MasterShutdownAsync();
-    }
-
     public class WorkerContext
     {
         readonly Channel masterChannel;
@@ -59,7 +53,7 @@ namespace DFrame.Core
         readonly string value;
 
         public AddHeaderFilter(string key, string value)
-        { 
+        {
             this.key = key;
             this.value = value;
         }
@@ -71,45 +65,36 @@ namespace DFrame.Core
         }
     }
 
-    public interface INoneReceiver
+
+
+
+
+
+
+
+    public interface IWorkerReceiver
     {
+        void CreateCoWorker(int createCount, string typeName);
+        void Setup();
+        void Execute(int executeCount);
+        void Teardown();
+        void Shutdown();
     }
 
-    public class NoneReceiver : INoneReceiver
+    public class WorkerReceiver : IWorkerReceiver
     {
-        public static readonly INoneReceiver Instance = new NoneReceiver();
+        readonly Channel channel;
+        (WorkerContext context, Worker worker)[] coWorkers = default!;
 
-        NoneReceiver()
+        public WorkerReceiver(Channel channel)
         {
-
-        }
-    }
-
-    public interface IWorkerHub : IStreamingHub<IWorkerHub, INoneReceiver>
-    {
-        Task CreateCoWorkerAsync(int createCount, string typeName, string masterTarget);
-        Task SetupAsync();
-        Task ExecuteAsync(int executeCount);
-        Task TeardownAsync();
-        Task ShutdownAsync();
-    }
-
-    public sealed class WorkerHub : StreamingHubBase<IWorkerHub, INoneReceiver>, IWorkerHub
-    {
-#pragma warning disable CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
-        (WorkerContext context, Worker worker)[] coWorkers;
-        IGroup group;
-#pragma warning restore CS8618
-
-        protected override async ValueTask OnConnecting()
-        {
-            group = await Group.AddAsync(Guid.NewGuid().ToString());
+            this.channel = channel;
         }
 
-        public Task CreateCoWorkerAsync(int createCount, string typeName, string masterTarget)
-        {
-            var masterChannel = new Channel(masterTarget, ChannelCredentials.Insecure);
+        public IMasterHub Client { get; set; } = default!;
 
+        public void CreateCoWorker(int createCount, string typeName)
+        {
             // TODO:Entry?
             var type = Assembly.GetEntryAssembly().GetType(typeName);
 
@@ -121,18 +106,19 @@ namespace DFrame.Core
                 //var coWorker = typeof(IServiceLocator).GetMethod("GetService").MakeGenericMethod(type)
                 //    .Invoke(this.Context.ServiceLocator, null);
                 var coWorker = Activator.CreateInstance(type);
-                coWorkers[i] = (new WorkerContext(masterChannel), (Worker)coWorker);
+                coWorkers[i] = (new WorkerContext(channel), (Worker)coWorker);
             }
 
-            return Task.CompletedTask;
+            Client.CreateCoWorkerCompleteAsync().Forget();
         }
 
-        public async Task SetupAsync()
+        public async void Setup()
         {
             await Task.WhenAll(coWorkers.Select(x => x.worker.SetupAsync(x.context)));
+            await Client.SetupCompleteAsync();
         }
 
-        public async Task ExecuteAsync(int executeCount)
+        public async void Execute(int executeCount)
         {
             await Task.WhenAll(coWorkers.Select(async x =>
             {
@@ -141,19 +127,75 @@ namespace DFrame.Core
                     await x.worker.ExecuteAsync(x.context);
                 }
             }));
+            await Client.ExecuteCompleteAsync();
         }
 
-        public async Task TeardownAsync()
+        public async void Teardown()
         {
             await Task.WhenAll(coWorkers.Select(x => x.worker.TeardownAsync(x.context)));
+            await Client.TeardownCompleteAsync();
         }
 
-
-        public Task ShutdownAsync()
+        public void Shutdown()
         {
-            // exit after???
-            _ = Task.Delay(TimeSpan.FromSeconds(1)).ContinueWith(_ => Environment.Exit(0));
+            // TODO:???
+            throw new NotImplementedException();
+        }
+    }
 
+
+    public interface IMasterHub : IStreamingHub<IMasterHub, IWorkerReceiver>
+    {
+        Task ConnectCompleteAsync();
+        Task CreateCoWorkerCompleteAsync();
+        Task SetupCompleteAsync();
+        Task ExecuteCompleteAsync();
+        Task TeardownCompleteAsync();
+    }
+
+    public sealed class MasterHub : StreamingHubBase<IMasterHub, IWorkerReceiver>, IMasterHub
+    {
+        readonly Reporter reporter;
+
+        public MasterHub(Reporter reporter)
+        {
+            this.reporter = reporter;
+        }
+
+        protected override async ValueTask OnConnecting()
+        {
+            var group = await Group.AddAsync("global-masterhub-group");
+            var broadcaster = group.CreateBroadcaster<IWorkerReceiver>();
+            reporter.Broadcaster = broadcaster;
+        }
+
+        public Task ConnectCompleteAsync()
+        {
+            reporter.OnConnected.IncrementCount();
+            return Task.CompletedTask;
+        }
+
+        public Task CreateCoWorkerCompleteAsync()
+        {
+            reporter.OnCreateCoWorker.IncrementCount();
+            return Task.CompletedTask;
+        }
+
+        public Task SetupCompleteAsync()
+        {
+            reporter.OnSetup.IncrementCount();
+            return Task.CompletedTask;
+        }
+
+        public Task ExecuteCompleteAsync()
+        {
+            reporter.OnExecute.IncrementCount();
+            return Task.CompletedTask;
+        }
+
+        public Task TeardownCompleteAsync()
+        {
+            reporter.OnTeardown.IncrementCount();
             return Task.CompletedTask;
         }
     }

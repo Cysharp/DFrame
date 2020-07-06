@@ -11,11 +11,12 @@ namespace ConsoleApp
         static async Task Main(string[] args)
         {
             // TODO:test args.
-            args = "-workerPerHost 3 -executePerWorker 3 -scenarioName ConsoleApp.SampleWorker".Split(' ');
+            args = "-nodeCount 3 -workerPerNode 3 -executePerWorker 3 -scenarioName ConsoleApp.SampleWorker".Split(' ');
 
-            await Host.CreateDefaultBuilder(args).RunDFrameAsync(args, new DFrameOptions(12344, 12345..12345, new InProcessScaler()
+            await Host.CreateDefaultBuilder(args).RunDFrameAsync(args, new DFrameOptions("localhost", 12345, new InProcessScalingProvider())
             {
-            }));
+                
+            });
         }
     }
 
