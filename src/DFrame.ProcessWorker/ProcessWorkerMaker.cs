@@ -2,50 +2,45 @@
 
 using Cysharp.Diagnostics;
 using DFrame.Core;
-using Grpc.Core;
-using MagicOnion;
-using MagicOnion.Client;
 using System;
-using System.Diagnostics;
+using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace DFrame.ProcessWorker
+namespace DFrame
 {
-    //public class ProcessWorkerMaker : IWorkerMaker
-    //{
-    //    readonly Process parentProcess;
+    public class OutOfProcessScalingProvider : IScalingProvider
+    {
+        CancellationTokenSource cts = new CancellationTokenSource();
 
-    //    public ProcessWorkerMaker(Process parentProcess)
-    //    {
-    //        this.parentProcess = parentProcess;
-    //    }
+        public async Task StartWorkerChannelAsync(DFrameOptions options)
+        {
+            var location = Assembly.GetEntryAssembly().Location;
 
-    //    public Task<T> CreatePodAsync<T>(Channel channel)
-    //        where T : IWorkerHub, IStreamingHub<T, INoneReceiver>
-    //    {
-    //        throw new NotImplementedException();
-    //    }
+            var cmd = $"dotnet \"{location}\" --worker-flag";
 
-    //    //public async Task<T> CreatePodAsync<T>(Channel channel)
-    //    //    where T: IWorker
-    //    //{
+            var startProcessTask = ProcessX.StartAsync(cmd);
+            WriteAll(startProcessTask);
+        }
 
-    //    //    // throw new NotImplementedException();
+        async void WriteAll(ProcessAsyncEnumerable e)
+        {
+            try
+            {
+                await foreach (var item in e.WithCancellation(cts.Token))
+                {
+                    Console.WriteLine(item); // TODO:logger?
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }
 
-    //    //    //Process.Start(new ProcessStartInfo
-    //    //    //{
-
-
-    //    //    var foo = ProcessX.StartAsync(fileName: parentProcess.StartInfo.FileName, arguments: "argument");
-
-
-    //    //    // 0
-    //    //    // channel.ConnectAsync();
-
-
-
-
-    //    //    return MagicOnionClient.Create<T>(channel);
-    //    //}
-    //}
+        public ValueTask DisposeAsync()
+        {
+            cts.Cancel();
+            return default;
+        }
+    }
 }

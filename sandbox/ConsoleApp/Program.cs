@@ -1,4 +1,5 @@
-﻿using DFrame.Core;
+﻿using DFrame;
+using DFrame.Core;
 using DFrame.Core.Collections;
 using Microsoft.Extensions.Hosting;
 using System;
@@ -11,9 +12,12 @@ namespace ConsoleApp
         static async Task Main(string[] args)
         {
             // TODO:test args.
-            args = "-nodeCount 3 -workerPerNode 3 -executePerWorker 3 -scenarioName ConsoleApp.SampleWorker".Split(' ');
+            if (args.Length == 0)
+            {
+                args = "-nodeCount 3 -workerPerNode 3 -executePerWorker 3 -scenarioName ConsoleApp.SampleWorker".Split(' ');
+            }
 
-            await Host.CreateDefaultBuilder(args).RunDFrameAsync(args, new DFrameOptions("localhost", 12345, new InProcessScalingProvider())
+            await Host.CreateDefaultBuilder(args).RunDFrameAsync(args, new DFrameOptions("localhost", 12345, new OutOfProcessScalingProvider())
             {
                 
             });

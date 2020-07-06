@@ -2,6 +2,7 @@
 using DFrame.Core.Collections;
 using DFrame.Core.Internal;
 using Grpc.Core;
+using MagicOnion.Client;
 using MagicOnion.Hosting;
 using MagicOnion.Server;
 using MessagePack;
@@ -19,9 +20,18 @@ namespace DFrame.Core
     {
         public static async Task RunDFrameAsync(this IHostBuilder hostBuilder, string[] args, DFrameOptions options)
         {
-            await hostBuilder
-                .ConfigureServices(x => x.AddSingleton(options))
-                .RunConsoleAppFrameworkAsync<DFrameApp>(args);
+            if (args.Length != 0 && args.Contains("--worker-flag"))
+            {
+                await hostBuilder
+                    .ConfigureServices(x => x.AddSingleton(options))
+                    .RunConsoleAppFrameworkAsync<DFrameWorkerApp>(args);
+            }
+            else
+            {
+                await hostBuilder
+                    .ConfigureServices(x => x.AddSingleton(options))
+                    .RunConsoleAppFrameworkAsync<DFrameApp>(args);
+            }
         }
     }
 
@@ -66,6 +76,8 @@ namespace DFrame.Core
 
                 broadcaster.Teardown();
                 await reporter.OnTeardown.Waiter.WithCancellation(Context.CancellationToken);
+
+                broadcaster.Shutdown();
             }
         }
 
@@ -94,6 +106,27 @@ namespace DFrame.Core
             }
 
             return host;
+        }
+    }
+
+    internal class DFrameWorkerApp : ConsoleAppBase
+    {
+        DFrameOptions options;
+
+        public DFrameWorkerApp(DFrameOptions options)
+        {
+            this.options = options;
+        }
+
+        public async Task Main()
+        {
+            var channel = new Channel(options.Host, options.Port, ChannelCredentials.Insecure);
+            var receiver = new WorkerReceiver(channel);
+            var client = StreamingHubClient.Connect<IMasterHub, IWorkerReceiver>(channel, receiver);
+            receiver.Client = client;
+
+            await client.ConnectCompleteAsync();
+            await receiver.WaitShutdown.WithCancellation(Context.CancellationToken);
         }
     }
 

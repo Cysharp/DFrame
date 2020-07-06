@@ -84,14 +84,18 @@ namespace DFrame.Core
     public class WorkerReceiver : IWorkerReceiver
     {
         readonly Channel channel;
+        readonly TaskCompletionSource<object?> receiveShutdown;
         (WorkerContext context, Worker worker)[] coWorkers = default!;
 
         public WorkerReceiver(Channel channel)
         {
             this.channel = channel;
+            this.receiveShutdown = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
         public IMasterHub Client { get; set; } = default!;
+
+        public Task WaitShutdown => receiveShutdown.Task;
 
         public void CreateCoWorker(int createCount, string typeName)
         {
@@ -138,8 +142,7 @@ namespace DFrame.Core
 
         public void Shutdown()
         {
-            // TODO:???
-            throw new NotImplementedException();
+            receiveShutdown.TrySetResult(null);
         }
     }
 
@@ -189,7 +192,7 @@ namespace DFrame.Core
 
         public Task ExecuteCompleteAsync()
         {
-            reporter.OnExecute.IncrementCount();
+            // reporter.OnExecute.IncrementCount();
             return Task.CompletedTask;
         }
 

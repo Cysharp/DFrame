@@ -26,6 +26,7 @@ namespace DFrame.Core.Internal
             else
             {
                 registration.Dispose();
+                result.GetAwaiter().GetResult();
             }
         }
 
