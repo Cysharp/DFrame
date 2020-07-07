@@ -54,4 +54,20 @@ namespace ConsoleApp
             }
         }
     }
+
+    public class SampleKubernetesWorker : Worker
+    {
+        public override async Task SetupAsync(WorkerContext context)
+        {
+        }
+
+        public override async Task ExecuteAsync(WorkerContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override async Task TeardownAsync(WorkerContext context)
+        {
+        }
+    }
 }
