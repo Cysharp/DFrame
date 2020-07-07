@@ -1,11 +1,13 @@
 ﻿using DFrame.Core.Collections;
 using DFrame.Core.Internal;
+using DFrame.Internal;
 using Grpc.Core;
 using MagicOnion;
 using MagicOnion.Client;
 using MagicOnion.Server;
 using MagicOnion.Server.Hubs;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -124,14 +126,20 @@ namespace DFrame.Core
 
         public async void Execute(int executeCount)
         {
-            await Task.WhenAll(coWorkers.Select(async x =>
+            var result = await Task.WhenAll(coWorkers.Select(async x =>
             {
+                var list = new List<TimeSpan>(executeCount);
                 for (int i = 0; i < executeCount; i++)
                 {
-                    await x.worker.ExecuteAsync(x.context);
+                    var sw = ValueStopwatch.StartNew();
+                    await x.worker.ExecuteAsync(x.context); // try-catch
+                    list.Add(sw.Elapsed);
                 }
+                return list;
             }));
-            await Client.ExecuteCompleteAsync();
+
+            // TODO:add worker Id and exception status.
+            await Client.ExecuteCompleteAsync(result.SelectMany(xs => xs).ToArray());
         }
 
         public async void Teardown()
@@ -152,7 +160,7 @@ namespace DFrame.Core
         Task ConnectCompleteAsync();
         Task CreateCoWorkerCompleteAsync();
         Task SetupCompleteAsync();
-        Task ExecuteCompleteAsync();
+        Task ExecuteCompleteAsync(TimeSpan[] result);
         Task TeardownCompleteAsync();
     }
 
@@ -190,9 +198,9 @@ namespace DFrame.Core
             return Task.CompletedTask;
         }
 
-        public Task ExecuteCompleteAsync()
+        public Task ExecuteCompleteAsync(TimeSpan[] result)
         {
-            // reporter.OnExecute.IncrementCount();
+            reporter.OnExecute.IncrementCount();
             return Task.CompletedTask;
         }
 

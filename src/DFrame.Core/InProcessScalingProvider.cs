@@ -1,10 +1,6 @@
 ﻿using Grpc.Core;
 using MagicOnion.Client;
-using MagicOnion.Hosting;
-using MagicOnion.Server;
-using Microsoft.Extensions.Hosting;
 using System.Collections.Generic;
-using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,7 +10,18 @@ namespace DFrame.Core
     {
         List<(Channel, IMasterHub)> channels = new List<(Channel, IMasterHub)>();
 
-        public async Task StartWorkerChannelAsync(DFrameOptions options)
+        public async Task StartWorkerAsync(DFrameOptions options, int nodeCount, CancellationToken cancellationToken)
+        {
+            var tasks = new Task[nodeCount];
+            for (int i = 0; i < nodeCount; i++)
+            {
+                tasks[i] = Core(options);
+            }
+
+            await Task.WhenAll(tasks);
+        }
+
+        async Task Core(DFrameOptions options)
         {
             var channel = new Channel(options.Host, options.Port, ChannelCredentials.Insecure);
             var receiver = new WorkerReceiver(channel);

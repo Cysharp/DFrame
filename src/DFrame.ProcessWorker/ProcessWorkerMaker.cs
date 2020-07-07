@@ -13,14 +13,17 @@ namespace DFrame
     {
         CancellationTokenSource cts = new CancellationTokenSource();
 
-        public async Task StartWorkerChannelAsync(DFrameOptions options)
+        public async Task StartWorkerAsync(DFrameOptions options, int nodeCount, CancellationToken cancellationToken)
         {
             var location = Assembly.GetEntryAssembly().Location;
 
             var cmd = $"dotnet \"{location}\" --worker-flag";
 
-            var startProcessTask = ProcessX.StartAsync(cmd);
-            WriteAll(startProcessTask);
+            for (int i = 0; i < nodeCount; i++)
+            {
+                var startProcessTask = ProcessX.StartAsync(cmd);
+                WriteAll(startProcessTask);
+            }
         }
 
         async void WriteAll(ProcessAsyncEnumerable e)

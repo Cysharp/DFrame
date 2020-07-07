@@ -1,12 +1,11 @@
-﻿using Grpc.Core;
-using Microsoft.Extensions.Hosting;
-using System;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DFrame.Core
 {
     public interface IScalingProvider : IAsyncDisposable
     {
-        Task StartWorkerChannelAsync(DFrameOptions options);
+        Task StartWorkerAsync(DFrameOptions options, int nodeCount, CancellationToken cancellationToken);
     }
 }

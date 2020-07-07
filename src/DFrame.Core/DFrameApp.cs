@@ -53,13 +53,7 @@ namespace DFrame.Core
                 var reporter = masterHost.Services.GetRequiredService<Reporter>();
                 reporter.Reset(nodeCount);
 
-                var startChannelTasks = new Task[nodeCount];
-                for (int i = 0; i < nodeCount; i++)
-                {
-                    startChannelTasks[i] = options.ScalingProvider.StartWorkerChannelAsync(options);
-                }
-
-                await Task.WhenAll(startChannelTasks).WithCancellation(Context.CancellationToken);
+                await options.ScalingProvider.StartWorkerAsync(options, nodeCount, Context.CancellationToken).WithCancellation(Context.CancellationToken);
 
                 await reporter.OnConnected.Waiter.WithCancellation(Context.CancellationToken);
 

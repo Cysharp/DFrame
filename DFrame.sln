@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DFrame.ProcessWorker", "src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DFrame.KubernetesWorker", "src\DFrame.KubernetesWorker\DFrame.KubernetesWorker.csproj", "{C5908829-BE99-4CF6-9D89-13856AA15667}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DFrame.LoadTesting", "src\DFrame.LoadTesting\DFrame.LoadTesting.csproj", "{EAF4563C-C542-4E77-A870-8230CFED330C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,10 @@ Global
 		{C5908829-BE99-4CF6-9D89-13856AA15667}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C5908829-BE99-4CF6-9D89-13856AA15667}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C5908829-BE99-4CF6-9D89-13856AA15667}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EAF4563C-C542-4E77-A870-8230CFED330C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EAF4563C-C542-4E77-A870-8230CFED330C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EAF4563C-C542-4E77-A870-8230CFED330C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EAF4563C-C542-4E77-A870-8230CFED330C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
