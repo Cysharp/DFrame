@@ -11,6 +11,7 @@ namespace DFrame.KubernetesWorker
     public class KubernetesScalingProvider : IScalingProvider
     {
         private readonly string _ns = "dframe-worker";
+        private readonly string _name = "dframe";
         private readonly KubernetesApi _kubeapi;
         private readonly IDeserializer _yamlDeserializer;
 
@@ -38,11 +39,11 @@ namespace DFrame.KubernetesWorker
             _ = await _kubeapi.CreateNamespaceAsync(_ns, _namespaceManifest, cancellationToken);
 
             // create deployment
-            _deploymentManifest = KubernetesManifest.GetDeployment("dframe", "guitarrapc/dframe-worker", "0.1.0", 12345, nodeCount);
+            _deploymentManifest = KubernetesManifest.GetDeployment(_name, "guitarrapc/dframe-worker", "0.1.0", 12345, nodeCount);
             _ = await _kubeapi.CreateDeploymentAsync(_ns, _deploymentManifest, cancellationToken);
 
             // wait kubernetes deployments done.
-            var deployresult = await _kubeapi.GetDeploymentAsync(_ns, "dframe");
+            var deployresult = await _kubeapi.GetDeploymentAsync(_ns, _name);
             var deploy = _yamlDeserializer.Deserialize<KubernetesDeploymentMetadata>(deployresult);
             Console.WriteLine($"deployment create. {deploy.metadata.@namespace}/{deploy.metadata.name}");
         }
@@ -50,8 +51,11 @@ namespace DFrame.KubernetesWorker
         public async ValueTask DisposeAsync()
         {
             // delete kubernetes deployments. namespace は master を含むので残す。
-            var namespaces = await _kubeapi.GetNamespacesAsync();
-            var deploy = await _kubeapi.GetDeploymentAsync(_ns, "dframe");
+            if (await _kubeapi.ExistsDeploymentAsync(_ns, _name))
+            {
+                var delete = await _kubeapi.DeleteDeploymentAsync(_ns, _name);
+                Console.WriteLine($"deployment delete. {_ns}/{_name}");
+            }
         }
     }
 }

@@ -57,17 +57,30 @@ namespace ConsoleApp
 
     public class SampleKubernetesWorker : Worker
     {
+        IDistributedQueue<byte> queue;
+
         public override async Task SetupAsync(WorkerContext context)
         {
+            queue = context.CreateDistributedQueue<byte>();
         }
 
         public override async Task ExecuteAsync(WorkerContext context)
         {
-            throw new NotImplementedException();
+            var randI = (byte)new Random().Next(1, 100);
+            Console.WriteLine($"running on {Environment.MachineName} {context.WorkerId}: {randI}");
+
+            await queue.EnqueueAsync(randI);
         }
 
         public override async Task TeardownAsync(WorkerContext context)
         {
+            while (true)
+            {
+                var (ok, value) = await queue.TryDequeueAsync();
+                if (!ok) return;
+
+                Console.WriteLine($"Dequeue all from {context.WorkerId}: {value}");
+            }
         }
     }
 }

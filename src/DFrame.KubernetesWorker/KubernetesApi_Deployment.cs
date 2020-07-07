@@ -5,7 +5,7 @@ namespace DFrame.KubernetesWorker
 {
     public partial class KubernetesApi
     {
-        public async ValueTask<string> CreateNamespaceAsync(string name, string manifest, CancellationToken ct)
+        public async ValueTask<string> CreateNamespaceAsync(string name, string manifest, CancellationToken ct = default)
         {
             var res = await PostApiAsync($"/apis/apps/v1/namespaces/", manifest, "application/yaml", ct);
             return res;
@@ -20,13 +20,13 @@ namespace DFrame.KubernetesWorker
             var res = await GetApiAsync($"/apis/apps/v1/namespaces/{name}", "application/yaml");
             return res;
         }
-        public async ValueTask<string> DeleteNamespaceAsync(string @namespace, CancellationToken ct)
+        public async ValueTask<string> DeleteNamespaceAsync(string @namespace, CancellationToken ct = default)
         {
             var res = await DeleteApiAsync($"/apis/apps/v1/namespaces/{@namespace}", ct);
             return res;
         }
 
-        public async ValueTask<string> CreateDeploymentAsync(string @namespace, string manifest, CancellationToken ct)
+        public async ValueTask<string> CreateDeploymentAsync(string @namespace, string manifest, CancellationToken ct = default)
         {
             var res = await PostApiAsync($"/apis/apps/v1/namespaces/{@namespace}/deployments", manifest, "application/yaml", ct);
             return res;
@@ -41,7 +41,20 @@ namespace DFrame.KubernetesWorker
             var res = await GetApiAsync($"/apis/apps/v1/namespaces/{@namespace}/deployments/{name}", "application/yaml");
             return res;
         }
-        public async ValueTask<string> DeleteNamespaceAsync(string @namespace, string name, CancellationToken ct)
+        public async ValueTask<bool> ExistsDeploymentAsync(string @namespace, string name)
+        {
+            try
+            {
+                // 雑 of 雑
+                var res = await GetApiAsync($"/apis/apps/v1/namespaces/{@namespace}/deployments/{name}", "application/yaml");
+                return true;
+            }
+            catch (System.Exception)
+            {
+                return false;
+            }
+        }
+        public async ValueTask<string> DeleteDeploymentAsync(string @namespace, string name, CancellationToken ct = default)
         {
             var res = await DeleteApiAsync($"/apis/apps/v1/namespaces/{@namespace}/deployments/{name}", ct);
             return res;
