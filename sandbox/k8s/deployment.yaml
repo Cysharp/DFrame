@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dframe-master
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dframe-master
+  labels:
+    app: dframe-master
+spec:
+  replicas: dframe-master
+  selector:
+    matchLabels:
+      app: dframe-master
+  template:
+    metadata:
+      labels:
+        app: dframe-master
+    spec:
+      containers:
+        - name: dframe-master
+          image: {image}:{imageTag}
+          args: [""--worker-flag""]
+          env:
+            - name: DFRAME_MASTER_HOST
+              value: ""{host}""
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+            limits:
+              cpu: 2000m
+              memory: 1000Mi

@@ -1,11 +1,12 @@
 ﻿using DFrame;
 using DFrame.Core;
 using DFrame.Core.Collections;
+using DFrame.KubernetesWorker;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Threading.Tasks;
 
-namespace ConsoleApp
+namespace ConsoleAppK8s
 {
     class Program
     {
@@ -32,9 +33,9 @@ namespace ConsoleApp
                         : "localhost";
             }
 
-            await Host.CreateDefaultBuilder(args).RunDFrameAsync(args, new DFrameOptions(host, 12345, new OutOfProcessScalingProvider())
+            await Host.CreateDefaultBuilder(args).RunDFrameAsync(args, new DFrameOptions(host, 12345, new KubernetesScalingProvider())
             {
-                
+
             });
         }
     }
