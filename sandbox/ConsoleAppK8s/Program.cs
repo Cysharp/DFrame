@@ -18,7 +18,7 @@ namespace ConsoleAppK8s
             if (args.Length == 0)
             {
                 // master
-                args = "-nodeCount 3 -workerPerNode 3 -executePerWorker 3 -scenarioName ConsoleApp.SampleWorker".Split(' ');
+                args = "-nodeCount 3 -workerPerNode 3 -executePerWorker 3 -scenarioName ConsoleAppK8s.SampleWorker".Split(' ');
                 // listen on
                 host = "0.0.0.0";
             }

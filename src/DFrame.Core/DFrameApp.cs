@@ -50,35 +50,27 @@ namespace DFrame.Core
             using (masterHost = StartMasterHost())
             await using (options.ScalingProvider)
             {
-                Console.WriteLine($"{nameof(DFrameApp)} Get reporter from DI");
                 var reporter = masterHost.Services.GetRequiredService<Reporter>();
                 reporter.Reset(nodeCount);
 
-                Console.WriteLine($"{nameof(DFrameApp)} Start Worker");
                 await options.ScalingProvider.StartWorkerAsync(options, nodeCount, Context.CancellationToken).WithCancellation(Context.CancellationToken);
 
-                Console.WriteLine($"{nameof(DFrameApp)} reporter wait connect");
                 await reporter.OnConnected.Waiter.WithCancellation(Context.CancellationToken);
 
                 var broadcaster = reporter.Broadcaster;
 
-                Console.WriteLine($"{nameof(DFrameApp)} broadcaster create co-worker");
                 broadcaster.CreateCoWorker(workerPerNode, scenarioName);
                 await reporter.OnCreateCoWorker.Waiter.WithCancellation(Context.CancellationToken);
 
-                Console.WriteLine($"{nameof(DFrameApp)} broadcaster setup");
                 broadcaster.Setup();
                 await reporter.OnSetup.Waiter.WithCancellation(Context.CancellationToken);
 
-                Console.WriteLine($"{nameof(DFrameApp)} broadcaster execute worker");
                 broadcaster.Execute(executePerWorker);
                 await reporter.OnExecute.Waiter.WithCancellation(Context.CancellationToken);
 
-                Console.WriteLine($"{nameof(DFrameApp)} broadcaster execute teardown");
                 broadcaster.Teardown();
                 await reporter.OnTeardown.Waiter.WithCancellation(Context.CancellationToken);
 
-                Console.WriteLine($"{nameof(DFrameApp)} broadcaster shutdown");
                 broadcaster.Shutdown();
             }
         }
@@ -122,17 +114,12 @@ namespace DFrame.Core
 
         public async Task Main()
         {
-            Console.WriteLine($"{nameof(DFrameWorkerApp)} create channel");
             var channel = new Channel(options.Host, options.Port, ChannelCredentials.Insecure);
-            Console.WriteLine($"{nameof(DFrameWorkerApp)} create receiver");
             var receiver = new WorkerReceiver(channel);
-            Console.WriteLine($"{nameof(DFrameWorkerApp)} create client");
             var client = StreamingHubClient.Connect<IMasterHub, IWorkerReceiver>(channel, receiver);
             receiver.Client = client;
 
-            Console.WriteLine($"{nameof(DFrameWorkerApp)} client connect complete async");
             await client.ConnectCompleteAsync();
-            Console.WriteLine($"{nameof(DFrameWorkerApp)} receiver wait shutdown");
             await receiver.WaitShutdown.WithCancellation(Context.CancellationToken);
         }
     }

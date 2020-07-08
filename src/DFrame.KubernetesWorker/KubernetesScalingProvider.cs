@@ -11,7 +11,7 @@ namespace DFrame.KubernetesWorker
     public class KubernetesScalingProvider : IScalingProvider
     {
         private readonly KubernetesApi _kubeapi;
-        private readonly bool preserveWorker = true;
+        private readonly bool preserveWorker = false; // not recommended
 
         // master info
         private readonly string masterSvc = "dframe-master";

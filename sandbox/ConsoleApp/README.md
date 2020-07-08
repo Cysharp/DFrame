@@ -25,3 +25,13 @@ docker build -t dframe_sample_k8s:0.1.0 -f sandbox/ConsoleAppK8s/Dockerfile .
 docker tag dframe_sample_k8s:0.1.0 cysharp/dframe_sample_k8s
 docker push cysharp/dframe_sample_k8s
 ```
+
+```shell
+kubectl apply -f sandbox/k8s/namespace.yaml
+kubectl apply -f sandbox/k8s/service.yaml
+<secret生成>
+kubectl delete deploy dframe-worker
+kubectl delete -f sandbox/k8s/pod.yaml
+kubectl apply -f sandbox/k8s/pod.yaml
+stern dframe*
+```
