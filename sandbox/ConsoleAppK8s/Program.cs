@@ -12,6 +12,7 @@ namespace ConsoleAppK8s
     {
         static async Task Main(string[] args)
         {
+            Console.WriteLine($"dframe begin. {nameof(KubernetesScalingProvider)}");
             var host = "localhost";
             // TODO:test args.
             if (args.Length == 0)
@@ -33,6 +34,7 @@ namespace ConsoleAppK8s
                         : "localhost";
             }
 
+            Console.WriteLine($"args {string.Join(", ", args)}, host {host}");
             await Host.CreateDefaultBuilder(args).RunDFrameAsync(args, new DFrameOptions(host, 12345, new KubernetesScalingProvider())
             {
 

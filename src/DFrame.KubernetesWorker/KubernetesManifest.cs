@@ -8,16 +8,18 @@ namespace DFrame.KubernetesWorker
     {
         public static string GetNamespace(string name)
         {
-            return $@"---
+            var manifest = $@"---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: {name}
 ";
+            return NormalizeNewLine(manifest);
         }
-        public static string GetDeployment(string name, string image, string imageTag, string host, int replicas = 1)
+
+        public static string GetDeployment(string name, string image, string imageTag, string host, string imagePullPolicy = "IfNotPresent", string imagePullSecret = "", int replicas = 1)
         {
-            return $@"---
+            var manifest = $@"---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -37,6 +39,7 @@ spec:
       containers:
         - name: {name}
           image: {image}:{imageTag}
+          imagePullPolicy: {imagePullPolicy}
           args: [""--worker-flag""]
           env:
             - name: DFRAME_MASTER_HOST
@@ -48,7 +51,15 @@ spec:
             limits:
               cpu: 2000m
               memory: 1000Mi
+      {(imagePullSecret != "" ? $@"imagePullSecrets:
+        - name: {imagePullSecret}" : "")}
 ";
+            return NormalizeNewLine(manifest);
+        }
+
+        private static string NormalizeNewLine(string manifest)
+        {
+            return manifest.Replace("\r\n", "\n");
         }
     }
 }

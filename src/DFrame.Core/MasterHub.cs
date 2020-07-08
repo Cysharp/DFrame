@@ -101,6 +101,7 @@ namespace DFrame.Core
 
         public void CreateCoWorker(int createCount, string typeName)
         {
+            Console.WriteLine($"{nameof(WorkerReceiver)} Begin CreateCoWorker");
             // TODO:Entry?
             var type = Assembly.GetEntryAssembly().GetType(typeName);
 
@@ -115,6 +116,7 @@ namespace DFrame.Core
                 coWorkers[i] = (new WorkerContext(channel), (Worker)coWorker);
             }
 
+            Console.WriteLine($"{nameof(WorkerReceiver)} Complete CreateCoWorker");
             Client.CreateCoWorkerCompleteAsync().Forget();
         }
 

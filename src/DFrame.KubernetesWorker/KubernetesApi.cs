@@ -13,7 +13,7 @@ namespace DFrame.KubernetesWorker
     public class KubernetesApiConfig
     {
         public bool SkipCertificateValidation { get; set; }
-        public HeaderContentType AccesptHeaderType { get; set; } = HeaderContentType.Json;
+        public HeaderContentType ResponseHeaderType { get; set; } = HeaderContentType.Json;
 
         public void Configure(IKubernetesClient _provider)
         {
@@ -183,7 +183,7 @@ namespace DFrame.KubernetesWorker
         }
         private void SetAcceptHeader(HttpClient httpClient)
         {
-            switch (_config.AccesptHeaderType)
+            switch (_config.ResponseHeaderType)
             {
                 case HeaderContentType.Json:
                     httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));

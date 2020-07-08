@@ -1,16 +1,12 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: dframe-master
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: dframe-master
+  namespace: dframe
   labels:
     app: dframe-master
 spec:
-  replicas: dframe-master
+  replicas: 1
   selector:
     matchLabels:
       app: dframe-master
@@ -21,11 +17,10 @@ spec:
     spec:
       containers:
         - name: dframe-master
-          image: {image}:{imageTag}
-          args: [""--worker-flag""]
-          env:
-            - name: DFRAME_MASTER_HOST
-              value: ""{host}""
+          image: 431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s:0.1.0
+          ports:
+            - name: dframe
+              containerPort: 12345
           resources:
             requests:
               cpu: 100m
@@ -33,3 +28,5 @@ spec:
             limits:
               cpu: 2000m
               memory: 1000Mi
+      imagePullSecrets:
+        - name: aws-registry

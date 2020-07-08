@@ -11,6 +11,7 @@ namespace ConsoleApp
     {
         static async Task Main(string[] args)
         {
+            Console.WriteLine($"dframe begin. {nameof(OutOfProcessScalingProvider)}");
             var host = "localhost";
             // TODO:test args.
             if (args.Length == 0)
@@ -32,6 +33,7 @@ namespace ConsoleApp
                         : "localhost";
             }
 
+            Console.WriteLine($"args {string.Join(", ", args)}, host {host}");
             await Host.CreateDefaultBuilder(args).RunDFrameAsync(args, new DFrameOptions(host, 12345, new OutOfProcessScalingProvider())
             {
                 
