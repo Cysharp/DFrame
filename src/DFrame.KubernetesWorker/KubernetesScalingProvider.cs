@@ -32,11 +32,14 @@ namespace DFrame.KubernetesWorker
         {
             // master が kubernetes で起動している、worker をここで作る。
             // todo: rbac が有効だと service account / role / rolebindings が必要 (role は namespace/deployments/pod の create権限....)
+            // nodeCount = replicas
 
-            // create kuberentes deployments. replicas = nodeCount
             // create namespace
             _namespaceManifest = KubernetesManifest.GetNamespace(_ns);
-            _ = await _kubeapi.CreateNamespaceAsync(_ns, _namespaceManifest, cancellationToken);
+            if (!await _kubeapi.ExistsNamespaceAsync(_ns))
+            {
+                _ = await _kubeapi.CreateNamespaceAsync(_ns, _namespaceManifest, cancellationToken);
+            }
 
             // create deployment
             _deploymentManifest = KubernetesManifest.GetDeployment(_name, "cysharp/dframe-worker", "0.1.0", options.Host, nodeCount);
