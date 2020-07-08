@@ -31,15 +31,15 @@ namespace DFrame.KubernetesWorker
         public async Task StartWorkerAsync(DFrameOptions options, int nodeCount, CancellationToken cancellationToken)
         {
             // master が kubernetes で起動している、worker をここで作る。
-            // todo: service account / role / rolebindings が必要
+            // todo: rbac が有効だと service account / role / rolebindings が必要 (role は namespace/deployments/pod の create権限....)
 
-            // create kuberentes deployments. replicacount = nodeCount
+            // create kuberentes deployments. replicas = nodeCount
             // create namespace
             _namespaceManifest = KubernetesManifest.GetNamespace(_ns);
             _ = await _kubeapi.CreateNamespaceAsync(_ns, _namespaceManifest, cancellationToken);
 
             // create deployment
-            _deploymentManifest = KubernetesManifest.GetDeployment(_name, "guitarrapc/dframe-worker", "0.1.0", 12345, nodeCount);
+            _deploymentManifest = KubernetesManifest.GetDeployment(_name, "cysharp/dframe-worker", "0.1.0", options.Host, nodeCount);
             _ = await _kubeapi.CreateDeploymentAsync(_ns, _deploymentManifest, cancellationToken);
 
             // wait kubernetes deployments done.

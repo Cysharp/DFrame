@@ -11,13 +11,28 @@ namespace ConsoleApp
     {
         static async Task Main(string[] args)
         {
+            var host = "localhost";
             // TODO:test args.
             if (args.Length == 0)
             {
+                // master
                 args = "-nodeCount 3 -workerPerNode 3 -executePerWorker 3 -scenarioName ConsoleApp.SampleWorker".Split(' ');
+                // listen on
+                host = "0.0.0.0";
+            }
+            else
+            {
+                // worker
+                // connect to
+                var envHost = Environment.GetEnvironmentVariable("DFRAME_MASTER_HOST");
+                host = args.Length >= 2
+                    ? args[1]
+                    : !string.IsNullOrEmpty(envHost)
+                        ? envHost
+                        : "localhost";
             }
 
-            await Host.CreateDefaultBuilder(args).RunDFrameAsync(args, new DFrameOptions("localhost", 12345, new OutOfProcessScalingProvider())
+            await Host.CreateDefaultBuilder(args).RunDFrameAsync(args, new DFrameOptions(host, 12345, new OutOfProcessScalingProvider())
             {
                 
             });
@@ -38,7 +53,7 @@ namespace ConsoleApp
         public override async Task ExecuteAsync(WorkerContext context)
         {
             var randI = (byte)new Random().Next(1, 100);
-            Console.WriteLine($"Enqueue from {context.WorkerId}: {randI}");
+            Console.WriteLine($"Enqueue from {Environment.MachineName} {context.WorkerId}: {randI}");
 
             await queue.EnqueueAsync(randI);
         }
@@ -50,7 +65,7 @@ namespace ConsoleApp
                 var (ok, value) = await queue.TryDequeueAsync();
                 if (!ok) return;
 
-                Console.WriteLine($"Dequeue all from {context.WorkerId}: {value}");
+                Console.WriteLine($"Dequeue all from {Environment.MachineName} {context.WorkerId}: {value}");
             }
         }
     }
@@ -67,7 +82,7 @@ namespace ConsoleApp
         public override async Task ExecuteAsync(WorkerContext context)
         {
             var randI = (byte)new Random().Next(1, 100);
-            Console.WriteLine($"running on {Environment.MachineName} {context.WorkerId}: {randI}");
+            Console.WriteLine($"Enqueue from {Environment.MachineName} {context.WorkerId}: {randI}");
 
             await queue.EnqueueAsync(randI);
         }
@@ -79,7 +94,7 @@ namespace ConsoleApp
                 var (ok, value) = await queue.TryDequeueAsync();
                 if (!ok) return;
 
-                Console.WriteLine($"Dequeue all from {context.WorkerId}: {value}");
+                Console.WriteLine($"Dequeue all from {Environment.MachineName} {context.WorkerId}: {value}");
             }
         }
     }

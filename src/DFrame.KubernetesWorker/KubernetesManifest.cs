@@ -15,7 +15,7 @@ metadata:
   name: {name}
 ";
         }
-        public static string GetDeployment(string name, string image, string imageTag, int port, int replicas = 1)
+        public static string GetDeployment(string name, string image, string imageTag, string host, int replicas = 1)
         {
             return $@"---
 apiVersion: apps/v1
@@ -37,6 +37,10 @@ spec:
       containers:
         - name: {name}
           image: {image}:{imageTag}
+          args: [""--worker-flag""]
+          env:
+            - name: DFRAME_MASTER_HOST
+              value: ""{host}""
           resources:
             requests:
               cpu: 100m
@@ -44,9 +48,6 @@ spec:
             limits:
               cpu: 2000m
               memory: 1000Mi
-          ports:
-            - name: {name}
-              containerPort: {port}
 ";
         }
     }
