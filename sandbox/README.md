@@ -29,8 +29,9 @@ docker push cysharp/dframe_sample_k8s
 ```shell
 kubectl apply -f sandbox/k8s/namespace.yaml
 kubectl apply -f sandbox/k8s/service.yaml
-<secret生成>
-kubectl delete deploy dframe-worker
+#<secret生成>
+# kubectl delete deploy dframe-worker
+# kubectl delete job dframe-worker
 kubectl delete -f sandbox/k8s/pod.yaml
 kubectl apply -f sandbox/k8s/pod.yaml
 stern dframe*
