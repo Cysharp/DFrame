@@ -1,0 +1,10 @@
+namespace: dframe
+bases:
+  - ../../base
+
+resources:
+  - namespace.yaml
+  - service.yaml
+
+patches:
+  - pod.yaml

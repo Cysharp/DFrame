@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dframe-master
+  labels:
+    app: dframe-master
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dframe-master
+  template:
+    metadata:
+      labels:
+        app: dframe-master
+    spec:
+      serviceAccountName: dframe-master
+      containers:
+        - name: dframe-master
+          image: 431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s:0.1.0
+          ports:
+            - name: dframe
+              containerPort: 12345
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+            limits:
+              cpu: 2000m
+              memory: 1000Mi
+      imagePullSecrets:
+        - name: aws-registry

@@ -91,7 +91,7 @@ namespace DFrame.KubernetesWorker
                 case ScalingType.Job:
                     if (!preserveWorker && await _kubeapi.ExistsJobAsync(_ns, _name))
                     {
-                        await _kubeapi.DeleteJobAsync(_ns, _name);
+                        await _kubeapi.DeleteJobAsync(_ns, _name, graceperiodSecond:10);
                     };
                     break;
                 default:

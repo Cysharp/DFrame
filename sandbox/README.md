@@ -26,13 +26,25 @@ docker tag dframe_sample_k8s:0.1.0 cysharp/dframe_sample_k8s
 docker push cysharp/dframe_sample_k8s
 ```
 
+rbac-less
+
 ```shell
-kubectl apply -f sandbox/k8s/namespace.yaml
-kubectl apply -f sandbox/k8s/service.yaml
+kubectl apply -f sandbox/k8s/overlays/local/namespace.yaml
 #<secret生成>
 # kubectl delete deploy dframe-worker
 # kubectl delete job dframe-worker
 kubectl delete -f sandbox/k8s/pod.yaml
-kubectl apply -f sandbox/k8s/pod.yaml
+kubectl kustomize sandbox/k8s/overlays/local | kubectl apply -f -
 stern dframe*
+```
+
+rbac
+
+```shell
+kubectl kustomize sandbox/k8s/overlays/development | kubectl apply -f -
+kubens dframe
+stern dframe*
+
+k delete pod dframe-master
+kubectl kustomize sandbox/k8s/overlays/development | kubectl delete -f -
 ```
