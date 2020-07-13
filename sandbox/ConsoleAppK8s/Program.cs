@@ -1,23 +1,24 @@
 ﻿using DFrame;
 using DFrame.Core;
 using DFrame.Core.Collections;
+using DFrame.KubernetesWorker;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Threading.Tasks;
 
-namespace ConsoleApp
+namespace ConsoleAppK8s
 {
     class Program
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine($"dframe begin. {nameof(OutOfProcessScalingProvider)}");
+            Console.WriteLine($"dframe begin. {nameof(KubernetesScalingProvider)}");
             var host = "localhost";
             // TODO:test args.
             if (args.Length == 0)
             {
                 // master
-                args = "-nodeCount 3 -workerPerNode 3 -executePerWorker 3 -scenarioName ConsoleApp.SampleWorker".Split(' ');
+                args = "-nodeCount 3 -workerPerNode 3 -executePerWorker 3 -scenarioName ConsoleAppK8s.SampleWorker".Split(' ');
                 // listen on
                 host = "0.0.0.0";
             }
@@ -34,9 +35,9 @@ namespace ConsoleApp
             }
 
             Console.WriteLine($"args {string.Join(", ", args)}, host {host}");
-            await Host.CreateDefaultBuilder(args).RunDFrameAsync(args, new DFrameOptions(host, 12345, new OutOfProcessScalingProvider())
+            await Host.CreateDefaultBuilder(args).RunDFrameAsync(args, new DFrameOptions(host, 12345, new KubernetesScalingProvider())
             {
-                
+
             });
         }
     }

@@ -3,17 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DFrame.Core", "src\DFrame.Core\DFrame.Core.csproj", "{542C0EB5-A964-4172-9B0B-1206EF6500CD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DFrame.Core", "src\DFrame.Core\DFrame.Core.csproj", "{542C0EB5-A964-4172-9B0B-1206EF6500CD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sandbox", "sandbox", "{DDD04377-167A-4FDC-90D5-01EDCB7BA465}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp", "sandbox\ConsoleApp\ConsoleApp.csproj", "{5B0EE039-3B09-4480-8880-67C9D76FF907}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp", "sandbox\ConsoleApp\ConsoleApp.csproj", "{5B0EE039-3B09-4480-8880-67C9D76FF907}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DFrame.ProcessWorker", "src\DFrame.ProcessWorker\DFrame.ProcessWorker.csproj", "{8EA34049-3F67-4F3B-8339-4095AECB8B4E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DFrame.ProcessWorker", "src\DFrame.ProcessWorker\DFrame.ProcessWorker.csproj", "{8EA34049-3F67-4F3B-8339-4095AECB8B4E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DFrame.KubernetesWorker", "src\DFrame.KubernetesWorker\DFrame.KubernetesWorker.csproj", "{C5908829-BE99-4CF6-9D89-13856AA15667}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DFrame.KubernetesWorker", "src\DFrame.KubernetesWorker\DFrame.KubernetesWorker.csproj", "{C5908829-BE99-4CF6-9D89-13856AA15667}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DFrame.LoadTesting", "src\DFrame.LoadTesting\DFrame.LoadTesting.csproj", "{EAF4563C-C542-4E77-A870-8230CFED330C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DFrame.LoadTesting", "src\DFrame.LoadTesting\DFrame.LoadTesting.csproj", "{EAF4563C-C542-4E77-A870-8230CFED330C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleAppK8s", "sandbox\ConsoleAppK8s\ConsoleAppK8s.csproj", "{9D93D2E2-DCB5-4B3A-8B61-F4239C3C3826}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,12 +43,17 @@ Global
 		{EAF4563C-C542-4E77-A870-8230CFED330C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EAF4563C-C542-4E77-A870-8230CFED330C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EAF4563C-C542-4E77-A870-8230CFED330C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D93D2E2-DCB5-4B3A-8B61-F4239C3C3826}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D93D2E2-DCB5-4B3A-8B61-F4239C3C3826}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D93D2E2-DCB5-4B3A-8B61-F4239C3C3826}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D93D2E2-DCB5-4B3A-8B61-F4239C3C3826}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{5B0EE039-3B09-4480-8880-67C9D76FF907} = {DDD04377-167A-4FDC-90D5-01EDCB7BA465}
+		{9D93D2E2-DCB5-4B3A-8B61-F4239C3C3826} = {DDD04377-167A-4FDC-90D5-01EDCB7BA465}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {77245B01-4128-4759-BF61-CC223FAA2E01}
