@@ -42,7 +42,7 @@ namespace ConsoleApp
                 })
                 .RunDFrameLoadTestingAsync(args, new DFrameOptions(host, 12345, new InProcessScalingProvider())
                 {
-                
+
                 });
         }
     }
@@ -74,6 +74,10 @@ namespace ConsoleApp
                 if (v.HasValue)
                 {
                     Console.WriteLine($"Dequeue all from {Environment.MachineName} {context.WorkerId}: {v.Value}");
+                }
+                else
+                {
+                    return;
                 }
             }
         }

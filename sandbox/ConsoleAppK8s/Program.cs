@@ -70,6 +70,10 @@ namespace ConsoleAppK8s
                 {
                     Console.WriteLine($"Dequeue all from {Environment.MachineName} {context.WorkerId}: {v.Value}");
                 }
+                else
+                {
+                    return;
+                }
             }
         }
     }
