@@ -82,7 +82,7 @@ namespace DFrame.Core
                 broadcaster.Teardown();
                 await reporter.OnTeardown.Waiter.WithCancellation(Context.CancellationToken);
 
-                options.OnExecuteResult?.Invoke(reporter.ExecuteResult);
+                options.OnExecuteResult?.Invoke(reporter.ExecuteResult.ToArray(), options);
 
                 broadcaster.Shutdown();
             }

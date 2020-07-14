@@ -11,7 +11,7 @@ namespace DFrame.Core
         public IScalingProvider ScalingProvider { get; }
         public Func<string?[], IHostBuilder> HostBuilderFactory { get; set; }
 
-        public Action<IReadOnlyList<ExecuteResult>>? OnExecuteResult { get; set; }
+        public Action<ExecuteResult[], DFrameOptions>? OnExecuteResult { get; set; }
 
         public DFrameOptions(string host, int port, IScalingProvider scalingProvider)
         {

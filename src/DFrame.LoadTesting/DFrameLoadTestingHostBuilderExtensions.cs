@@ -19,7 +19,7 @@ namespace DFrame
 
         }
 
-        static void SummaryResult(IReadOnlyList<ExecuteResult> results)
+        static void SummaryResult(ExecuteResult[] results, DFrameOptions options)
         {
             // TODO:req/secとか色々集計したのを返す。
             // とりあえず集計したらConsole.WriteLine(雑)
