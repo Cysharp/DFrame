@@ -1,6 +1,5 @@
 ﻿using ConsoleAppFramework;
 using DFrame.Collections;
-using DFrame.Core.Internal;
 using DFrame.Internal;
 using Grpc.Core;
 using MagicOnion.Client;
@@ -17,7 +16,7 @@ using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DFrame.Core
+namespace DFrame
 {
     public static class DFrameAppHostBuilderExtensions
     {

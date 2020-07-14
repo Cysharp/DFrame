@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace DFrame.Core
+namespace DFrame
 {
     public class DFrameOptions
     {

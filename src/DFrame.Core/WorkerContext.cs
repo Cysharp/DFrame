@@ -6,7 +6,7 @@ using MessagePack;
 using System;
 using System.Threading.Tasks;
 
-namespace DFrame.Core
+namespace DFrame
 {
     public class WorkerContext
     {

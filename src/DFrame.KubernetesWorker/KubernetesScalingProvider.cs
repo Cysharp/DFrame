@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using DFrame.Core;
+using DFrame;
 
 namespace DFrame.KubernetesWorker
 {

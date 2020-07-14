@@ -4,7 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DFrame.Core.Internal
+namespace DFrame.Internal
 {
     internal static class TaskExtensions
     {

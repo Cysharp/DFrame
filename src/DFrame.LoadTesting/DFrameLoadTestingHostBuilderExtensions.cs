@@ -1,5 +1,4 @@
 ﻿using ConsoleAppFramework;
-using DFrame.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;

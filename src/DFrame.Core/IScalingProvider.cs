@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DFrame.Core
+namespace DFrame
 {
     public interface IScalingProvider : IAsyncDisposable
     {

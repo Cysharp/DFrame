@@ -1,4 +1,4 @@
-﻿using DFrame.Core.Internal;
+﻿using DFrame;
 using DFrame.Internal;
 using Grpc.Core;
 using MagicOnion;
@@ -13,7 +13,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace DFrame.Core
+namespace DFrame
 {
 
     public abstract class Worker

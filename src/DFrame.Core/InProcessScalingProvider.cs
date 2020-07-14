@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DFrame.Core
+namespace DFrame
 {
     public class InProcessScalingProvider : IScalingProvider
     {
