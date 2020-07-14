@@ -125,6 +125,28 @@ namespace DFrame.KubernetesWorker
             }
         }
 
+        /// <summary>
+        /// Delete resource
+        /// </summary>
+        /// <param name="apiPath"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public async ValueTask<string> DeleteApiAsync(string apiPath, HttpContent body, CancellationToken ct = default)
+        {
+            using (var httpClient = _provider.CreateHttpClient())
+            {
+                SetAcceptHeader(httpClient, "application/json");
+                var request = new HttpRequestMessage(HttpMethod.Delete, _provider.KubernetesServiceEndPoint + apiPath)
+                {
+                    Content = body,
+                };
+                var res = await httpClient.SendAsync(request, ct);
+                res.EnsureSuccessStatusCode();
+                var responseContent = await res.Content.ReadAsStringAsync();
+                return responseContent;
+            }
+        }
+
 
         /// <summary>
         /// OpenAPI Swagger Definition. https://kubernetes.io/ja/docs/concepts/overview/kubernetes-api/

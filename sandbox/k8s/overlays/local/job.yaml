@@ -1,0 +1,9 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: dframe-master
+spec:
+  template:
+    spec:
+      imagePullSecrets:
+        - name: aws-registry

@@ -1,0 +1,8 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: dframe-master
+spec:
+  template:
+    spec:
+      serviceAccountName: dframe-master

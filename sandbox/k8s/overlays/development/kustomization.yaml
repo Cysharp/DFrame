@@ -1,0 +1,15 @@
+namespace: dframe
+bases:
+  - ../../base
+
+resources:
+  - namespace.yaml
+  - role.yaml
+  - rolebinding.yaml
+  - service.yaml
+  - serviceaccount.yaml
+
+patches:
+  # - deployment.yaml
+  - job.yaml
+  # - pod.yaml

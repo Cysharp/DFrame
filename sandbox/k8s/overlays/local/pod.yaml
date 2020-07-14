@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dframe-master
+spec:
+  imagePullSecrets:
+    - name: aws-registry
