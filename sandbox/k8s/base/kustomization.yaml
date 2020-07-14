@@ -1,2 +1,4 @@
 resources:
-  - pod.yaml
+  #  - deployment.yaml
+  - job.yaml
+  #  - pod.yaml

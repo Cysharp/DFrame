@@ -20,6 +20,7 @@ metadata:
 
         public static string GetJob(string name, string image, string imageTag, string host, string imagePullPolicy = "IfNotPresent", string imagePullSecret = "", int parallelism = 1)
         {
+            // backofflimit = 0 to run only once regardless success or failure.
             // todo: resources and limits should be same value to avoid pod move on resource exhaust
             var manifest = $@"---
 apiVersion: batch/v1
@@ -31,6 +32,7 @@ metadata:
 spec:
   parallelism: {parallelism}
   completions: {parallelism}
+  backoffLimit: 0
   template:
     metadata:
       labels:

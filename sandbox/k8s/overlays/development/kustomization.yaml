@@ -10,4 +10,6 @@ resources:
   - serviceaccount.yaml
 
 patches:
-  - pod.yaml
+  # - deployment.yaml
+  - job.yaml
+  # - pod.yaml
