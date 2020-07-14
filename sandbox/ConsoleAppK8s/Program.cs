@@ -1,6 +1,6 @@
 ﻿using DFrame;
 using DFrame.Core;
-using DFrame.Core.Collections;
+using DFrame.Collections;
 using DFrame.KubernetesWorker;
 using Microsoft.Extensions.Hosting;
 using System;
@@ -50,7 +50,7 @@ namespace ConsoleAppK8s
 
         public override async Task SetupAsync(WorkerContext context)
         {
-            queue = context.CreateDistributedQueue<byte>();
+            queue = context.CreateDistributedQueue<byte>("foo");
         }
 
         public override async Task ExecuteAsync(WorkerContext context)

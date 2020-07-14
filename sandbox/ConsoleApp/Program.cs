@@ -1,6 +1,7 @@
 ﻿using DFrame;
+using DFrame.Collections;
 using DFrame.Core;
-using DFrame.Core.Collections;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Threading.Tasks;
@@ -19,7 +20,8 @@ namespace ConsoleApp
                 // master
                 args = "-nodeCount 3 -workerPerNode 3 -executePerWorker 3 -scenarioName ConsoleApp.SampleWorker".Split(' ');
                 // listen on
-                host = "0.0.0.0";
+                //host = "0.0.0.0";
+                host = "localhost";
             }
             else
             {
@@ -34,10 +36,15 @@ namespace ConsoleApp
             }
 
             Console.WriteLine($"args {string.Join(", ", args)}, host {host}");
-            await Host.CreateDefaultBuilder(args).RunDFrameAsync(args, new DFrameOptions(host, 12345, new OutOfProcessScalingProvider())
-            {
+            await Host.CreateDefaultBuilder(args)
+                .ConfigureLogging(x =>
+                {
+                    x.SetMinimumLevel(LogLevel.Trace);
+                })
+                .RunDFrameLoadTestingAsync(args, new DFrameOptions(host, 12345, new InProcessScalingProvider())
+                {
                 
-            });
+                });
         }
     }
 
@@ -45,16 +52,16 @@ namespace ConsoleApp
 
     public class SampleWorker : Worker
     {
-        IDistributedQueue<byte> queue;
+        IDistributedQueue<int> queue;
 
         public override async Task SetupAsync(WorkerContext context)
         {
-            queue = context.CreateDistributedQueue<byte>();
+            queue = context.CreateDistributedQueue<int>("sampleworker-testq");
         }
 
         public override async Task ExecuteAsync(WorkerContext context)
         {
-            var randI = (byte)new Random().Next(1, 100);
+            var randI = (int)new Random().Next(1, 3999);
             Console.WriteLine($"Enqueue from {Environment.MachineName} {context.WorkerId}: {randI}");
 
             await queue.EnqueueAsync(randI);

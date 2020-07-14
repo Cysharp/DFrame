@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Hosting;
 using System;
+using System.Collections.Generic;
 
 namespace DFrame.Core
 {
@@ -9,6 +10,8 @@ namespace DFrame.Core
         public int Port { get; }
         public IScalingProvider ScalingProvider { get; }
         public Func<string?[], IHostBuilder> HostBuilderFactory { get; set; }
+
+        public Action<IReadOnlyList<ExecuteResult>>? OnExecuteResult { get; set; }
 
         public DFrameOptions(string host, int port, IScalingProvider scalingProvider)
         {

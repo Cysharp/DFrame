@@ -1,5 +1,5 @@
 ﻿using ConsoleAppFramework;
-using DFrame.Core.Collections;
+using DFrame.Collections;
 using DFrame.Core.Internal;
 using Grpc.Core;
 using MagicOnion.Client;
@@ -8,7 +8,9 @@ using MagicOnion.Server;
 using MessagePack;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading;
@@ -37,11 +39,15 @@ namespace DFrame.Core
 
     internal class DFrameApp : ConsoleAppBase
     {
+        ILogger<DFrameApp> logger;
+        IServiceProvider provider;
         DFrameOptions options;
         IHost? masterHost;
 
-        public DFrameApp(DFrameOptions options)
+        public DFrameApp(ILogger<DFrameApp> logger, IServiceProvider provider, DFrameOptions options)
         {
+            this.provider = provider;
+            this.logger = logger;
             this.options = options;
         }
 
@@ -53,26 +59,35 @@ namespace DFrame.Core
                 var reporter = masterHost.Services.GetRequiredService<Reporter>();
                 reporter.Reset(nodeCount);
 
+                logger.LogInformation("Starting worker nodes.");
                 await options.ScalingProvider.StartWorkerAsync(options, nodeCount, Context.CancellationToken).WithCancellation(Context.CancellationToken);
 
                 await reporter.OnConnected.Waiter.WithCancellation(Context.CancellationToken);
 
                 var broadcaster = reporter.Broadcaster;
 
+                logger.LogTrace("Send CreateWorker command to workers and wait complete message.");
                 broadcaster.CreateCoWorker(workerPerNode, scenarioName);
                 await reporter.OnCreateCoWorker.Waiter.WithCancellation(Context.CancellationToken);
 
+                logger.LogTrace("Send Setup command to workers and wait complete message.");
                 broadcaster.Setup();
                 await reporter.OnSetup.Waiter.WithCancellation(Context.CancellationToken);
 
+                logger.LogTrace("Send Execute command to workers and wait complete message.");
                 broadcaster.Execute(executePerWorker);
                 await reporter.OnExecute.Waiter.WithCancellation(Context.CancellationToken);
 
+                logger.LogTrace("Send SetTeardownup command to workers and wait complete message.");
                 broadcaster.Teardown();
                 await reporter.OnTeardown.Waiter.WithCancellation(Context.CancellationToken);
 
+                options.OnExecuteResult?.Invoke(reporter.ExecuteResult);
+
                 broadcaster.Shutdown();
             }
+
+            logger.LogInformation("Master shutdown.");
         }
 
         IHost StartMasterHost()
@@ -93,6 +108,8 @@ namespace DFrame.Core
                 })
                 .Build();
 
+            logger.LogInformation("Starting DFrame master node.");
+
             var task = host.RunAsync(Context.CancellationToken);
             if (task.IsFaulted)
             {
@@ -105,22 +122,32 @@ namespace DFrame.Core
 
     internal class DFrameWorkerApp : ConsoleAppBase
     {
+        ILogger<DFrameWorkerApp> logger;
+        IServiceProvider provider;
         DFrameOptions options;
 
-        public DFrameWorkerApp(DFrameOptions options)
+        public DFrameWorkerApp(ILogger<DFrameWorkerApp> logger, IServiceProvider provider, DFrameOptions options)
         {
+            this.provider = provider;
+            this.logger = logger;
             this.options = options;
         }
 
         public async Task Main()
         {
+            logger.LogInformation("Starting DFrame worker node");
+
             var channel = new Channel(options.Host, options.Port, ChannelCredentials.Insecure);
             var receiver = new WorkerReceiver(channel);
             var client = StreamingHubClient.Connect<IMasterHub, IWorkerReceiver>(channel, receiver);
             receiver.Client = client;
 
             await client.ConnectCompleteAsync();
+            logger.LogInformation("Worker -> Master connect successfully.");
+
             await receiver.WaitShutdown.WithCancellation(Context.CancellationToken);
+
+            logger.LogInformation("Worker shutdown.");
         }
     }
 
@@ -160,6 +187,9 @@ namespace DFrame.Core
     public class Reporter
     {
         int nodeCount;
+        List<ExecuteResult> executeResult = new List<ExecuteResult>();
+
+        public IReadOnlyList<ExecuteResult> ExecuteResult => executeResult;
 
         // global broadcaster of MasterHub.
         public IWorkerReceiver Broadcaster { get; set; } = default!;
@@ -181,6 +211,12 @@ namespace DFrame.Core
             this.OnTeardown = new CountReporting(nodeCount);
         }
 
-
+        public void AddExecuteResult(ExecuteResult[] results)
+        {
+            lock (executeResult)
+            {
+                executeResult.AddRange(results);
+            }
+        }
     }
 }

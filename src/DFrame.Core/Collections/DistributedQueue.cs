@@ -6,7 +6,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DFrame.Core.Collections
+namespace DFrame
+{
+    public interface IDistributedQueue<T>
+    {
+        Task<int> CountAsync();
+        Task<Nil> ClearAsync();
+        Task<bool> ContainsAsync(T item);
+        Task<(bool, T)> TryDequeueAsync();
+        Task<Nil> EnqueueAsync(T item);
+        Task<(bool, T)> TryPeekAsync();
+        Task<T[]> ToArrayAsync();
+        Task<Nil> TrimExcessAsync();
+    }
+}
+
+namespace DFrame.Collections
 {
     public interface IDistributedQueueService : IService<IDistributedQueueService>
     {
@@ -20,13 +35,14 @@ namespace DFrame.Core.Collections
         UnaryResult<Nil> TrimExcessAsync();
     }
 
-    public class DistributedQueueService : ServiceBase<IDistributedQueueService>, IDistributedQueueService
+    public sealed class DistributedQueueService : ServiceBase<IDistributedQueueService>, IDistributedQueueService
     {
+        public const string Key = "distributed-queue-key";
         static readonly ConcurrentDictionary<string, Queue<object>> dict = new ConcurrentDictionary<string, Queue<object>>();
 
         Queue<object> GetQueue()
         {
-            var key = this.Context.CallContext.RequestHeaders.GetValue("queue-key");
+            var key = this.Context.CallContext.RequestHeaders.GetValue(Key);
             var q = dict.GetOrAdd(key, _ => new Queue<object>());
             return q;
         }
@@ -119,18 +135,6 @@ namespace DFrame.Core.Collections
             }
             return ReturnNil();
         }
-    }
-
-    public interface IDistributedQueue<T>
-    {
-        Task<int> CountAsync();
-        Task<Nil> ClearAsync();
-        Task<bool> ContainsAsync(T item);
-        Task<(bool, T)> TryDequeueAsync();
-        Task<Nil> EnqueueAsync(T item);
-        Task<(bool, T)> TryPeekAsync();
-        Task<T[]> ToArrayAsync();
-        Task<Nil> TrimExcessAsync();
     }
 
     internal sealed class DistributedQueue<T> : IDistributedQueue<T>

@@ -1,4 +1,4 @@
-﻿using DFrame.Core.Collections;
+﻿using DFrame.Collections;
 using DFrame.Core.Internal;
 using DFrame.Internal;
 using Grpc.Core;
@@ -6,6 +6,8 @@ using MagicOnion;
 using MagicOnion.Client;
 using MagicOnion.Server;
 using MagicOnion.Server.Hubs;
+using MessagePack;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,10 +27,12 @@ namespace DFrame.Core
             this.WorkerId = Guid.NewGuid().ToString();
         }
 
-        public IDistributedQueue<T> CreateDistributedQueue<T>()
+        public IDistributedQueue<T> CreateDistributedQueue<T>(string key)
         {
-            var typeKey = this.GetType().FullName;
-            var client = MagicOnionClient.Create<IDistributedQueueService>(masterChannel, new IClientFilter[] { new AddHeaderFilter("queue-key", typeKey) });
+            var client = MagicOnionClient.Create<IDistributedQueueService>(
+                new DefaultCallInvoker(masterChannel),
+                MessagePackSerializer.Typeless.DefaultOptions,
+                new IClientFilter[] { new AddHeaderFilter(DistributedQueueService.Key, key) });
             return new DistributedQueue<T>(client);
         }
     }
@@ -85,12 +89,14 @@ namespace DFrame.Core
 
     public class WorkerReceiver : IWorkerReceiver
     {
+        // readonly ILogger<WorkerReceiver> logger;
         readonly Channel channel;
         readonly TaskCompletionSource<object?> receiveShutdown;
         (WorkerContext context, Worker worker)[] coWorkers = default!;
 
         public WorkerReceiver(Channel channel)
         {
+            // this.logger = logger;
             this.channel = channel;
             this.receiveShutdown = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
@@ -128,17 +134,26 @@ namespace DFrame.Core
         {
             var result = await Task.WhenAll(coWorkers.Select(async x =>
             {
-                var list = new List<TimeSpan>(executeCount);
+                var list = new List<ExecuteResult>(executeCount);
                 for (int i = 0; i < executeCount; i++)
                 {
+                    string? errorMsg = null;
                     var sw = ValueStopwatch.StartNew();
-                    await x.worker.ExecuteAsync(x.context); // try-catch
-                    list.Add(sw.Elapsed);
+                    try
+                    {
+                        await x.worker.ExecuteAsync(x.context);
+                    }
+                    catch (Exception ex)
+                    {
+                        errorMsg = ex.ToString();
+                    }
+
+                    var executeResult = new ExecuteResult(x.context.WorkerId, sw.Elapsed, i, (errorMsg != null), errorMsg);
+                    list.Add(executeResult);
                 }
                 return list;
             }));
 
-            // TODO:add worker Id and exception status.
             await Client.ExecuteCompleteAsync(result.SelectMany(xs => xs).ToArray());
         }
 
@@ -154,13 +169,37 @@ namespace DFrame.Core
         }
     }
 
+    [MessagePackObject]
+    public class ExecuteResult
+    {
+        [Key(0)]
+        public string WorkerId { get; }
+        [Key(1)]
+        public TimeSpan Elapsed { get; }
+        [Key(2)]
+        public int ExecutionNo { get; }
+        [Key(3)]
+        public bool HasError { get; }
+        [Key(4)]
+        public string? ErrorMessage { get; }
+
+        public ExecuteResult(string workerId, TimeSpan elapsed, int executionNo, bool hasError, string? errorMessage)
+        {
+            WorkerId = workerId;
+            Elapsed = elapsed;
+            ExecutionNo = executionNo;
+            HasError = hasError;
+            ErrorMessage = errorMessage;
+        }
+    }
+
 
     public interface IMasterHub : IStreamingHub<IMasterHub, IWorkerReceiver>
     {
         Task ConnectCompleteAsync();
         Task CreateCoWorkerCompleteAsync();
         Task SetupCompleteAsync();
-        Task ExecuteCompleteAsync(TimeSpan[] result);
+        Task ExecuteCompleteAsync(ExecuteResult[] result);
         Task TeardownCompleteAsync();
     }
 
@@ -198,8 +237,9 @@ namespace DFrame.Core
             return Task.CompletedTask;
         }
 
-        public Task ExecuteCompleteAsync(TimeSpan[] result)
+        public Task ExecuteCompleteAsync(ExecuteResult[] result)
         {
+            reporter.AddExecuteResult(result);
             reporter.OnExecute.IncrementCount();
             return Task.CompletedTask;
         }
