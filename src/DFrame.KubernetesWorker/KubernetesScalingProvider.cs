@@ -62,6 +62,8 @@ namespace DFrame.KubernetesWorker
             var imageTag = "0.1.0";
             var connectTo = $"{masterSvc}.{masterNamespace}.svc.cluster.local";
 
+            // todo: node count を pod とみなしているので、node = vm の修正が必要。
+            // その場合、node = k8s node, worker = deploy replicas (job parallism).
             switch (ScalingType)
             {
                 case ScalingType.Deployment:
