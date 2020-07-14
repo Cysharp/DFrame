@@ -1,5 +1,4 @@
-﻿using DFrame.Collections;
-using DFrame.Core.Internal;
+﻿using DFrame.Core.Internal;
 using DFrame.Internal;
 using Grpc.Core;
 using MagicOnion;
@@ -16,26 +15,6 @@ using System.Threading.Tasks;
 
 namespace DFrame.Core
 {
-    public class WorkerContext
-    {
-        readonly Channel masterChannel;
-        public string WorkerId { get; }
-
-        public WorkerContext(Channel masterChannel)
-        {
-            this.masterChannel = masterChannel;
-            this.WorkerId = Guid.NewGuid().ToString();
-        }
-
-        public IDistributedQueue<T> CreateDistributedQueue<T>(string key)
-        {
-            var client = MagicOnionClient.Create<IDistributedQueueService>(
-                new DefaultCallInvoker(masterChannel),
-                MessagePackSerializer.Typeless.DefaultOptions,
-                new IClientFilter[] { new AddHeaderFilter(DistributedQueueService.Key, key) });
-            return new DistributedQueue<T>(client);
-        }
-    }
 
     public abstract class Worker
     {
@@ -53,23 +32,6 @@ namespace DFrame.Core
         }
     }
 
-    public class AddHeaderFilter : IClientFilter
-    {
-        readonly string key;
-        readonly string value;
-
-        public AddHeaderFilter(string key, string value)
-        {
-            this.key = key;
-            this.value = value;
-        }
-
-        public ValueTask<ResponseContext> SendAsync(RequestContext context, Func<RequestContext, ValueTask<ResponseContext>> next)
-        {
-            context.CallOptions.Headers.Add(key, value);
-            return next(context);
-        }
-    }
 
 
 

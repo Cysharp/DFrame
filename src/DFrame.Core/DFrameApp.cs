@@ -1,6 +1,7 @@
 ﻿using ConsoleAppFramework;
 using DFrame.Collections;
 using DFrame.Core.Internal;
+using DFrame.Internal;
 using Grpc.Core;
 using MagicOnion.Client;
 using MagicOnion.Hosting;
@@ -97,6 +98,10 @@ namespace DFrame.Core
                 {
                     typeof(MasterHub),
                     typeof(DistributedQueueService),
+                    typeof(DistributedStackService),
+                    typeof(DistributedHashSetService),
+                    typeof(DistributedListService),
+                    typeof(IDistributedDictionaryService),
                 }, options: new MagicOnionOptions
                 {
                     IsReturnExceptionStackTraceInErrorDetail = true,
@@ -105,6 +110,7 @@ namespace DFrame.Core
                 .ConfigureServices(x =>
                 {
                     x.AddSingleton<Reporter>();
+                    x.AddSingleton(typeof(KeyedValueProvider<>));
                 })
                 .Build();
 

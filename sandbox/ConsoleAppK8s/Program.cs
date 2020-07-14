@@ -65,10 +65,11 @@ namespace ConsoleAppK8s
         {
             while (true)
             {
-                var (ok, value) = await queue.TryDequeueAsync();
-                if (!ok) return;
-
-                Console.WriteLine($"Dequeue all from {Environment.MachineName} {context.WorkerId}: {value}");
+                var v = await queue.TryDequeueAsync();
+                if (v.HasValue)
+                {
+                    Console.WriteLine($"Dequeue all from {Environment.MachineName} {context.WorkerId}: {v.Value}");
+                }
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿using MagicOnion;
+﻿using DFrame.Internal;
+using MagicOnion;
 using MagicOnion.Server;
 using MessagePack;
 using System.Collections.Concurrent;
@@ -8,16 +9,14 @@ using System.Threading.Tasks;
 
 namespace DFrame
 {
-    public interface IDistributedQueue<T>
+    public interface IDistributedQueue<T> : IDistributedCollection<T>
     {
-        Task<int> CountAsync();
-        Task<Nil> ClearAsync();
+        Task ClearAsync();
         Task<bool> ContainsAsync(T item);
-        Task<(bool, T)> TryDequeueAsync();
-        Task<Nil> EnqueueAsync(T item);
-        Task<(bool, T)> TryPeekAsync();
-        Task<T[]> ToArrayAsync();
-        Task<Nil> TrimExcessAsync();
+        Task<ConditionalValue<T>> TryDequeueAsync();
+        Task EnqueueAsync(T item);
+        Task EnqueueRangeAsync(IEnumerable<T> collection);
+        Task<ConditionalValue<T>> TryPeekAsync();
     }
 }
 
@@ -25,29 +24,34 @@ namespace DFrame.Collections
 {
     public interface IDistributedQueueService : IService<IDistributedQueueService>
     {
-        UnaryResult<int> CountAsync();
+        UnaryResult<int> GetCountAsync();
         UnaryResult<Nil> ClearAsync();
         UnaryResult<bool> ContainsAsync(object item);
-        UnaryResult<(bool, object)> TryDequeueAsync();
+        UnaryResult<ConditionalValue<object>> TryDequeueAsync();
         UnaryResult<Nil> EnqueueAsync(object item);
-        UnaryResult<(bool, object)> TryPeekAsync();
+        UnaryResult<Nil> EnqueueRangeAsync(IEnumerable<object> collection);
+        UnaryResult<ConditionalValue<object>> TryPeekAsync();
         UnaryResult<object[]> ToArrayAsync();
-        UnaryResult<Nil> TrimExcessAsync();
     }
 
     public sealed class DistributedQueueService : ServiceBase<IDistributedQueueService>, IDistributedQueueService
     {
         public const string Key = "distributed-queue-key";
-        static readonly ConcurrentDictionary<string, Queue<object>> dict = new ConcurrentDictionary<string, Queue<object>>();
+
+        readonly KeyedValueProvider<Queue<object>> valueProvider;
+
+        public DistributedQueueService(KeyedValueProvider<Queue<object>> valueProvider)
+        {
+            this.valueProvider = valueProvider;
+        }
 
         Queue<object> GetQueue()
         {
             var key = this.Context.CallContext.RequestHeaders.GetValue(Key);
-            var q = dict.GetOrAdd(key, _ => new Queue<object>());
-            return q;
+            return valueProvider.GetValue(key);
         }
 
-        public UnaryResult<int> CountAsync()
+        public UnaryResult<int> GetCountAsync()
         {
             var q = GetQueue();
             lock (q)
@@ -75,19 +79,12 @@ namespace DFrame.Collections
             }
         }
 
-        public UnaryResult<(bool, object)> TryDequeueAsync()
+        public UnaryResult<ConditionalValue<object>> TryDequeueAsync()
         {
             var q = GetQueue();
             lock (q)
             {
-                if (q.Count == 0)
-                {
-                    return UnaryResult((false, (object)null!));
-                }
-                else
-                {
-                    return UnaryResult((true, q.Dequeue()));
-                }
+                return UnaryResult(new ConditionalValue<object>(q.TryDequeue(out var v), v));
             }
         }
 
@@ -101,19 +98,25 @@ namespace DFrame.Collections
             return ReturnNil();
         }
 
-        public UnaryResult<(bool, object)> TryPeekAsync()
+        public UnaryResult<Nil> EnqueueRangeAsync(IEnumerable<object> item)
         {
             var q = GetQueue();
             lock (q)
             {
-                if (q.Count == 0)
+                foreach (var v in item)
                 {
-                    return UnaryResult((false, (object)null!));
+                    q.Enqueue(v);
                 }
-                else
-                {
-                    return UnaryResult((true, q.Peek()));
-                }
+            }
+            return ReturnNil();
+        }
+
+        public UnaryResult<ConditionalValue<object>> TryPeekAsync()
+        {
+            var q = GetQueue();
+            lock (q)
+            {
+                return UnaryResult(new ConditionalValue<object>(q.TryPeek(out var v), v));
             }
         }
 
@@ -125,30 +128,23 @@ namespace DFrame.Collections
                 return UnaryResult(q.ToArray());
             }
         }
-
-        public UnaryResult<Nil> TrimExcessAsync()
-        {
-            var q = GetQueue();
-            lock (q)
-            {
-                q.TrimExcess();
-            }
-            return ReturnNil();
-        }
     }
 
     internal sealed class DistributedQueue<T> : IDistributedQueue<T>
     {
         readonly IDistributedQueueService client;
 
-        internal DistributedQueue(IDistributedQueueService client)
+        public string Key { get; }
+
+        internal DistributedQueue(string key, IDistributedQueueService client)
         {
+            this.Key = key;
             this.client = client;
         }
 
-        public async Task<Nil> ClearAsync()
+        public async Task ClearAsync()
         {
-            return await client.ClearAsync();
+            await client.ClearAsync();
         }
 
         public async Task<bool> ContainsAsync(T item)
@@ -156,40 +152,24 @@ namespace DFrame.Collections
             return await client.ContainsAsync(item!);
         }
 
-        public async Task<int> CountAsync()
+        public async Task<int> GetCountAsync()
         {
-            return await client.CountAsync();
+            return await client.GetCountAsync();
         }
 
-        public async Task<(bool, T)> TryDequeueAsync()
+        public async Task<ConditionalValue<T>> TryDequeueAsync()
         {
-            var (ok, value) = await client.TryDequeueAsync();
-            if (ok)
-            {
-                return (true, (T)value);
-            }
-            else
-            {
-                return (false, default);
-            }
+            return (await client.TryDequeueAsync()).As<T>();
         }
 
-        public async Task<Nil> EnqueueAsync(T item)
+        public async Task EnqueueAsync(T item)
         {
-            return await client.EnqueueAsync(item!);
+            await client.EnqueueAsync(item!);
         }
 
-        public async Task<(bool, T)> TryPeekAsync()
+        public async Task<ConditionalValue<T>> TryPeekAsync()
         {
-            var (ok, value) = await client.TryPeekAsync();
-            if (ok)
-            {
-                return (true, (T)value);
-            }
-            else
-            {
-                return (false, default);
-            }
+            return (await client.TryPeekAsync()).As<T>();
         }
 
         public async Task<T[]> ToArrayAsync()
@@ -197,9 +177,9 @@ namespace DFrame.Collections
             return (await client.ToArrayAsync()).Cast<T>().ToArray();
         }
 
-        public async Task<Nil> TrimExcessAsync()
+        public async Task EnqueueRangeAsync(IEnumerable<T> collection)
         {
-            return await client.TrimExcessAsync();
+            await client.EnqueueRangeAsync(collection.Cast<object>());
         }
     }
 }
