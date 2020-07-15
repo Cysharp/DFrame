@@ -39,13 +39,17 @@ namespace DFrame
         {
             var requestCount = executeScenario.NodeCount * executeScenario.WorkerPerNode * executeScenario.ExecutePerWorker;
             var concurrentExecCount = executeScenario.WorkerPerNode * executeScenario.ExecutePerWorker;
-
-            // 各workerで実行されたIWorkerReciever.Execute の始まりから終わりまでの計測結果の合計
-            var sumElapsedRequestsSec = results.GroupBy(x => x.WorkerId).Select(xs => xs.Max(x => x.Elapsed.TotalSeconds)).Sum();
             var totalRequests = results.Length;
             var completeRequests = results.Where(x => !x.HasError).Count();
             var failedRequests = results.Where(x => x.HasError).Count();
+
+            // mater から worker Execute の実行を待った結果
+            var sumElapsedRequestsSec = executeScenario.ExecutionElapsed.TotalSeconds;
             var timePerRequest = sumElapsedRequestsSec * 1000 / requestCount;
+
+            // 各workerで実行されたIWorkerReciever.Execute の始まりから終わりまでの計測結果の合計
+            var sumElapsedRequestsSecWorkerOnly = results.GroupBy(x => x.WorkerId).Select(xs => xs.Max(x => x.Elapsed.TotalSeconds)).Sum();
+            var timePerRequestWorkerOnly = sumElapsedRequestsSecWorkerOnly * 1000 / requestCount;
 
             // percentile requires sort before calculate
             var sortedResultsElapsedMs = results.Select(x => x.Elapsed.TotalMilliseconds).OrderBy(x => x).ToArray();
@@ -66,12 +70,20 @@ namespace DFrame
             // result summary
             Console.WriteLine($"Request count:          {requestCount}");
             Console.WriteLine($"Concurrentcy count:     {concurrentExecCount}");
-            Console.WriteLine($"Time taken for tests:   {sumElapsedRequestsSec:F2} seconds"); // すべてのリクエストが完了するのにかかった時間
             Console.WriteLine($"Complete requests:      {completeRequests}");
             Console.WriteLine($"Failed requests:        {failedRequests}");
+            Console.WriteLine($"");
+            Console.WriteLine($"#include master wait");
+            Console.WriteLine($"Time taken for tests:   {sumElapsedRequestsSec:F2} seconds"); // すべてのリクエストが完了するのにかかった時間
             Console.WriteLine($"Requests per seconds:   {totalRequests / sumElapsedRequestsSec:F2} [#/sec] (mean)"); // リクエスト数 / 合計所要時間
             Console.WriteLine($"Time per request:       {concurrentExecCount * timePerRequest:F2} [ms] (mean)"); // 同時実行したリクエストの平均処理時間 = 同時実行数 * 全てのリクエストが完了するのにかかった時間sec * 1000 / 処理したリクエスト数
             Console.WriteLine($"Time per request:       {timePerRequest:F2} [ms] (mean, across all concurrent requests)"); // 1リクエストの平均処理時間 = 全てのリクエストが完了するのにかかった時間sec * 1000 / 処理したリクエスト数
+            Console.WriteLine($"");
+            Console.WriteLine($"#worker execution only");
+            Console.WriteLine($"Time taken for tests:   {sumElapsedRequestsSecWorkerOnly:F2} seconds"); // すべてのリクエストが完了するのにかかった時間
+            Console.WriteLine($"Requests per seconds:   {totalRequests / sumElapsedRequestsSecWorkerOnly:F2} [#/sec] (mean)"); // リクエスト数 / 合計所要時間
+            Console.WriteLine($"Time per request:       {concurrentExecCount * timePerRequestWorkerOnly:F2} [ms] (mean)"); // 同時実行したリクエストの平均処理時間 = 同時実行数 * 全てのリクエストが完了するのにかかった時間sec * 1000 / 処理したリクエスト数
+            Console.WriteLine($"Time per request:       {timePerRequestWorkerOnly:F2} [ms] (mean, across all concurrent requests)"); // 1リクエストの平均処理時間 = 全てのリクエストが完了するのにかかった時間sec * 1000 / 処理したリクエスト数
             Console.WriteLine($"");
 
             // percentile summary
