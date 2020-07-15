@@ -22,6 +22,9 @@ namespace DFrame
     {
         public static async Task RunDFrameAsync(this IHostBuilder hostBuilder, string[] args, DFrameOptions options)
         {
+            // TODO: 雑
+            ThreadPool.SetMinThreads(1000, 1000);
+
             if (args.Length != 0 && args.Contains("--worker-flag"))
             {
                 await hostBuilder
