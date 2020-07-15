@@ -69,7 +69,10 @@ namespace DFrame
 
             // result summary
             Console.WriteLine($"Request count:          {requestCount}");
-            Console.WriteLine($"Concurrentcy count:     {concurrentExecCount}");
+            Console.WriteLine($"NodeCount:              {executeScenario.NodeCount}");
+            Console.WriteLine($"WorkerPerNode:          {executeScenario.WorkerPerNode}");
+            Console.WriteLine($"ExecutePerWorker:       {executeScenario.ExecutePerWorker}");
+            Console.WriteLine($"Concurrentcy level:     {concurrentExecCount}");
             Console.WriteLine($"Complete requests:      {completeRequests}");
             Console.WriteLine($"Failed requests:        {failedRequests}");
             Console.WriteLine($"");

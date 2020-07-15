@@ -1,0 +1,11 @@
+namespace: apiserver
+bases:
+  - ../../base
+
+resources:
+  - ingress.yaml
+  - namespace.yaml
+  - service.yaml
+
+patches:
+  - deployment.yaml
