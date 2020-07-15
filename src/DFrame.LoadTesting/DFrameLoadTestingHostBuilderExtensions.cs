@@ -18,11 +18,11 @@ namespace DFrame
 
         }
 
-        static void SummaryResult(ExecuteResult[] results, DFrameOptions options)
+        static void SummaryResult(ExecuteResult[] results, DFrameOptions options, ExecuteScenario executeScenario)
         {
             // TODO:req/secとか色々集計したのを返す。
             // とりあえず集計したらConsole.WriteLine(雑)
-            ShowReportAb(results, options);
+            ShowReportAb(results, options, executeScenario);
 
             //foreach (var item in results)
             //{
@@ -35,7 +35,7 @@ namespace DFrame
         /// </summary>
         /// <param name="results"></param>
         /// <param name="options"></param>
-        static void ShowReportAb(ExecuteResult[] results, DFrameOptions options)
+        static void ShowReportAb(ExecuteResult[] results, DFrameOptions options, ExecuteScenario executeScenario)
         {
             // todo:
             var requestCount = 3 * 3 * 3; // node count * worker count * execute per worker count
@@ -81,7 +81,7 @@ namespace DFrame
             Console.WriteLine($"Time per request:       {timePerRequest:F2} [ms] (mean, across all concurrent requests)"); // 1リクエストの平均処理時間 = 全てのリクエストが完了するのにかかった時間sec * 1000 / 処理したリクエスト数
             Console.WriteLine($"Transfer rate:          xxxx [Kbytes/sec] received");
             Console.WriteLine($"");
-            
+
             // todo: 標準偏差の計算
             // request summary
             Console.WriteLine($"Connection Times (ms)");

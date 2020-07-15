@@ -82,7 +82,7 @@ namespace DFrame
                 broadcaster.Teardown();
                 await reporter.OnTeardown.Waiter.WithCancellation(Context.CancellationToken);
 
-                options.OnExecuteResult?.Invoke(reporter.ExecuteResult.ToArray(), options);
+                options.OnExecuteResult?.Invoke(reporter.ExecuteResult.ToArray(), options, new ExecuteScenario(scenarioName, nodeCount, workerPerNode, executePerWorker));
 
                 broadcaster.Shutdown();
             }
