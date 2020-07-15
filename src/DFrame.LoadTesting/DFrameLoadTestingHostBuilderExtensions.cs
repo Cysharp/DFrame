@@ -41,8 +41,8 @@ namespace DFrame
             var concurrentExecCount = executeScenario.WorkerPerNode * executeScenario.ExecutePerWorker;
 
             // 各workerで実行されたIWorkerReciever.Execute の始まりから終わりまでの計測結果の合計
-            var sumElapsedRequestsSec = results.Select(x => x.Elapsed.TotalSeconds).Sum();
-            var totalRequests = results.Count();
+            var sumElapsedRequestsSec = results.GroupBy(x => x.WorkerId).Select(xs => xs.Max(x => x.Elapsed.TotalSeconds)).Sum();
+            var totalRequests = results.Length;
             var completeRequests = results.Where(x => !x.HasError).Count();
             var failedRequests = results.Where(x => x.HasError).Count();
             var timePerRequest = sumElapsedRequestsSec * 1000 / requestCount;
