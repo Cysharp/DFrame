@@ -49,27 +49,9 @@ namespace DFrame
             where T : IService<T>
         {
             return MagicOnionClient.Create<T>(
-                new DefaultCallInvoker(masterChannel),
-                MessagePackSerializer.Typeless.DefaultOptions,
-                new IClientFilter[] { new AppendHeaderFilter(key, value) });
-        }
-    }
-
-    internal class AppendHeaderFilter : IClientFilter
-    {
-        readonly string key;
-        readonly string value;
-
-        public AppendHeaderFilter(string key, string value)
-        {
-            this.key = key;
-            this.value = value;
-        }
-
-        public ValueTask<ResponseContext> SendAsync(RequestContext context, Func<RequestContext, ValueTask<ResponseContext>> next)
-        {
-            context.CallOptions.Headers.Add(key, value);
-            return next(context);
+                    new DefaultCallInvoker(masterChannel),
+                    MessagePackSerializer.Typeless.DefaultOptions)
+                .WithHeaders(new Metadata() { { key, value } });
         }
     }
 }
