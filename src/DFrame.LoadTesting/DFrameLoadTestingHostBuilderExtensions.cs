@@ -37,9 +37,8 @@ namespace DFrame
         /// <param name="options"></param>
         static void ShowReportAb(ExecuteResult[] results, DFrameOptions options, ExecuteScenario executeScenario)
         {
-            // todo:
-            var requestCount = 3 * 3 * 3; // node count * worker count * execute per worker count
-            var concurrentExecCount = 3 * 3; // worker count * execute per worker count
+            var requestCount = executeScenario.NodeCount * executeScenario.WorkerPerNode * executeScenario.ExecutePerWorker;
+            var concurrentExecCount = executeScenario.WorkerPerNode * executeScenario.ExecutePerWorker;
 
             // 各workerで実行されたIWorkerReciever.Execute の始まりから終わりまでの計測結果の合計
             var sumElapsedRequestsSec = results.Select(x => x.Elapsed.TotalSeconds).Sum();
@@ -65,31 +64,15 @@ namespace DFrame
             Console.WriteLine($"");
 
             // result summary
-            // todo: 同時実行数を持ってくる
             Console.WriteLine($"Request count:          {requestCount}");
             Console.WriteLine($"Concurrentcy count:     {concurrentExecCount}");
             Console.WriteLine($"Time taken for tests:   {sumElapsedRequestsSec:F2} seconds"); // すべてのリクエストが完了するのにかかった時間
             Console.WriteLine($"Complete requests:      {completeRequests}");
             Console.WriteLine($"Failed requests:        {failedRequests}");
-            // note: 2xx などのステータスがない
-            //Console.WriteLine($"Non-2xx responses:");
-            // note] transfer サイズはみていない
-            //Console.WriteLine($"Total transfered:");
             Console.WriteLine($"Requests per seconds:   {totalRequests / sumElapsedRequestsSec:F2} [#/sec] (mean)"); // リクエスト数 / 合計所要時間
-            // todo: 同時実行数を拾ってくる
             Console.WriteLine($"Time per request:       {concurrentExecCount * timePerRequest:F2} [ms] (mean)"); // 同時実行したリクエストの平均処理時間 = 同時実行数 * 全てのリクエストが完了するのにかかった時間sec * 1000 / 処理したリクエスト数
             Console.WriteLine($"Time per request:       {timePerRequest:F2} [ms] (mean, across all concurrent requests)"); // 1リクエストの平均処理時間 = 全てのリクエストが完了するのにかかった時間sec * 1000 / 処理したリクエスト数
-            Console.WriteLine($"Transfer rate:          xxxx [Kbytes/sec] received");
             Console.WriteLine($"");
-
-            // todo: 標準偏差の計算
-            // request summary
-            Console.WriteLine($"Connection Times (ms)");
-            Console.WriteLine($"              min  mean[+/-sd] median   max");
-            Console.WriteLine($"Connect:        0    0   0.5        0     1");
-            Console.WriteLine($"Processing:     0    0   0.5        0     1");
-            Console.WriteLine($"Waiting:        0    0   0.5        0     1");
-            Console.WriteLine($"Total:          0    0   0.5        0     1");
 
             // percentile summary
             Console.WriteLine($"Percentage of the requests served within a certain time (ms)");
