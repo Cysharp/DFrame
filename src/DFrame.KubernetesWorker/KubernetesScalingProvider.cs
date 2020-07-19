@@ -42,7 +42,7 @@ namespace DFrame.KubernetesWorker
             this.ScalingType = scalingType;
         }
 
-        public async Task StartWorkerAsync(DFrameOptions options, int nodeCount, CancellationToken cancellationToken)
+        public async Task StartWorkerAsync(DFrameOptions options, int nodeCount, IServiceProvider provider, CancellationToken cancellationToken)
         {
             Console.WriteLine($"scale out workers. {_ns}/{_name} {ScalingType}");
 

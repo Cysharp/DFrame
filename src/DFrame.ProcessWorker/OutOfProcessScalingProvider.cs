@@ -12,7 +12,7 @@ namespace DFrame
     {
         CancellationTokenSource cts = new CancellationTokenSource();
 
-        public async Task StartWorkerAsync(DFrameOptions options, int nodeCount, CancellationToken cancellationToken)
+        public async Task StartWorkerAsync(DFrameOptions options, int nodeCount, IServiceProvider provider, CancellationToken cancellationToken)
         {
             var location = Assembly.GetEntryAssembly().Location;
 

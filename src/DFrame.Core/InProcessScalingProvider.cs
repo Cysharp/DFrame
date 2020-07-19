@@ -1,5 +1,7 @@
 ﻿using Grpc.Core;
 using MagicOnion.Client;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,41 +10,38 @@ namespace DFrame
 {
     public class InProcessScalingProvider : IScalingProvider
     {
-        List<(Channel, IMasterHub)> channels = new List<(Channel, IMasterHub)>();
+        CancellationTokenSource cancellationTokenSource = default!;
+        Task tasks = default!;
 
-        public async Task StartWorkerAsync(DFrameOptions options, int nodeCount, CancellationToken cancellationToken)
+        public Task StartWorkerAsync(DFrameOptions options, int nodeCount, IServiceProvider provider, CancellationToken cancellationToken)
         {
+            cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
             var tasks = new Task[nodeCount];
             for (int i = 0; i < nodeCount; i++)
             {
-                tasks[i] = Core(options);
+                tasks[i] = Core(provider, options, cancellationTokenSource.Token);
             }
 
-            await Task.WhenAll(tasks);
+            this.tasks = Task.WhenAll(tasks);
+            return Task.CompletedTask;
         }
 
-        async Task Core(DFrameOptions options)
+        async Task Core(IServiceProvider provider, DFrameOptions options, CancellationToken cancellationToken)
         {
-            var channel = new Channel(options.Host, options.Port, ChannelCredentials.Insecure);
-            var receiver = new WorkerReceiver(channel);
-            var client = StreamingHubClient.Connect<IMasterHub, IWorkerReceiver>(channel, receiver);
-            receiver.Client = client;
+            // create shim of ConsoleApp
+            var logger = provider.GetService(typeof(ILogger<DFrameWorkerApp>));
+            var logger2 = provider.GetService(typeof(ILogger<ConsoleAppFramework.ConsoleAppEngine>));
+            var app = new DFrameWorkerApp((ILogger<DFrameWorkerApp>)logger, provider, options);
+            app.Context = new ConsoleAppFramework.ConsoleAppContext(new string[0], DateTime.UtcNow, cancellationToken, (ILogger<ConsoleAppFramework.ConsoleAppEngine>)logger2);
 
-            lock (channels)
-            {
-                channels.Add((channel, client));
-            }
-
-            await client.ConnectCompleteAsync();
+            await app.Main();
         }
 
         public async ValueTask DisposeAsync()
         {
-            foreach (var item in channels)
-            {
-                await item.Item2.DisposeAsync();
-                await item.Item1.ShutdownAsync();
-            }
+            cancellationTokenSource.Cancel();
+            await tasks;
         }
     }
 }

@@ -11,7 +11,7 @@ namespace ConsoleApp
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine($"dframe begin. {nameof(OutOfProcessScalingProvider)}");
+            Console.WriteLine($"dframe begin. {nameof(InProcessScalingProvider)}");
             var host = "localhost";
             // TODO:test args.
             if (args.Length == 0)
@@ -61,7 +61,7 @@ namespace ConsoleApp
         public override async Task ExecuteAsync(WorkerContext context)
         {
             var randI = (int)new Random().Next(1, 3999);
-            Console.WriteLine($"Enqueue from {Environment.MachineName} {context.WorkerId}: {randI}");
+            // Console.WriteLine($"Enqueue from {Environment.MachineName} {context.WorkerId}: {randI}");
 
             await queue.EnqueueAsync(randI);
         }
@@ -73,7 +73,7 @@ namespace ConsoleApp
                 var v = await queue.TryDequeueAsync();
                 if (v.HasValue)
                 {
-                    Console.WriteLine($"Dequeue all from {Environment.MachineName} {context.WorkerId}: {v.Value}");
+                    // Console.WriteLine($"Dequeue all from {Environment.MachineName} {context.WorkerId}: {v.Value}");
                 }
                 else
                 {

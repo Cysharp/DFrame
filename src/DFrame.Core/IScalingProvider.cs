@@ -6,6 +6,6 @@ namespace DFrame
 {
     public interface IScalingProvider : IAsyncDisposable
     {
-        Task StartWorkerAsync(DFrameOptions options, int nodeCount, CancellationToken cancellationToken);
+        Task StartWorkerAsync(DFrameOptions options, int nodeCount, IServiceProvider provider, CancellationToken cancellationToken);
     }
 }

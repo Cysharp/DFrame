@@ -16,22 +16,6 @@ using System.Threading.Tasks;
 namespace DFrame
 {
 
-    public abstract class Worker
-    {
-        // public Dis Create
-        public abstract Task ExecuteAsync(WorkerContext context);
-
-        public virtual Task SetupAsync(WorkerContext context)
-        {
-            return Task.CompletedTask;
-        }
-
-        public virtual Task TeardownAsync(WorkerContext context)
-        {
-            return Task.CompletedTask;
-        }
-    }
-
 
 
 
@@ -53,13 +37,15 @@ namespace DFrame
     {
         // readonly ILogger<WorkerReceiver> logger;
         readonly Channel channel;
+        readonly Guid nodeId;
         readonly TaskCompletionSource<object?> receiveShutdown;
         (WorkerContext context, Worker worker)[] coWorkers = default!;
 
-        public WorkerReceiver(Channel channel)
+        public WorkerReceiver(Channel channel, Guid nodeId)
         {
             // this.logger = logger;
             this.channel = channel;
+            this.nodeId = nodeId;
             this.receiveShutdown = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
@@ -158,7 +144,7 @@ namespace DFrame
 
     public interface IMasterHub : IStreamingHub<IMasterHub, IWorkerReceiver>
     {
-        Task ConnectCompleteAsync();
+        Task ConnectCompleteAsync(Guid nodeId);
         Task CreateCoWorkerCompleteAsync();
         Task SetupCompleteAsync();
         Task ExecuteCompleteAsync(ExecuteResult[] result);
@@ -181,7 +167,12 @@ namespace DFrame
             reporter.Broadcaster = broadcaster;
         }
 
-        public Task ConnectCompleteAsync()
+        protected override ValueTask OnDisconnected()
+        {
+            return base.OnDisconnected();
+        }
+
+        public Task ConnectCompleteAsync(Guid nodeId)
         {
             reporter.OnConnected.IncrementCount();
             return Task.CompletedTask;
@@ -212,4 +203,8 @@ namespace DFrame
             return Task.CompletedTask;
         }
     }
+
+
+
+
 }

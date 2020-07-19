@@ -4,7 +4,6 @@ using MagicOnion;
 using MagicOnion.Client;
 using MessagePack;
 using System;
-using System.Threading.Tasks;
 
 namespace DFrame
 {

@@ -22,20 +22,45 @@ namespace DFrame
     {
         public static async Task RunDFrameAsync(this IHostBuilder hostBuilder, string[] args, DFrameOptions options)
         {
+            var workerCollection = DFrameWorkerCollection.FromCurrentAssemblies();
+
+            if (args.Length == 0)
+            {
+                ShowDFrameAppList(workerCollection);
+                return;
+            }
+
             // TODO: 雑
             ThreadPool.SetMinThreads(1000, 1000);
 
             if (args.Length != 0 && args.Contains("--worker-flag"))
             {
                 await hostBuilder
-                    .ConfigureServices(x => x.AddSingleton(options))
+                    .ConfigureServices(x =>
+                    {
+                        x.AddSingleton(options);
+                        x.AddSingleton(workerCollection);
+                    })
                     .RunConsoleAppFrameworkAsync<DFrameWorkerApp>(args);
             }
             else
             {
                 await hostBuilder
-                    .ConfigureServices(x => x.AddSingleton(options))
+                    .ConfigureServices(x =>
+                    {
+                        x.AddSingleton(options);
+                        x.AddSingleton(workerCollection);
+                    })
                     .RunConsoleAppFrameworkAsync<DFrameApp>(args);
+            }
+        }
+
+        static void ShowDFrameAppList(DFrameWorkerCollection types)
+        {
+            Console.WriteLine("WorkerNames:");
+            foreach (var item in types.All)
+            {
+                Console.WriteLine(item.Name);
             }
         }
     }
@@ -45,12 +70,14 @@ namespace DFrame
         ILogger<DFrameApp> logger;
         IServiceProvider provider;
         DFrameOptions options;
+        DFrameWorkerCollection workers;
         IHost? masterHost;
 
-        public DFrameApp(ILogger<DFrameApp> logger, IServiceProvider provider, DFrameOptions options)
+        public DFrameApp(ILogger<DFrameApp> logger, IServiceProvider provider, DFrameOptions options, DFrameWorkerCollection workers)
         {
             this.provider = provider;
             this.logger = logger;
+            this.workers = workers;
             this.options = options;
         }
 
@@ -63,7 +90,9 @@ namespace DFrame
                 reporter.Reset(nodeCount);
 
                 logger.LogInformation("Starting worker nodes.");
-                await options.ScalingProvider.StartWorkerAsync(options, nodeCount, Context.CancellationToken).WithCancellation(Context.CancellationToken);
+                await options.ScalingProvider.StartWorkerAsync(options, nodeCount, provider, Context.CancellationToken).WithCancellation(Context.CancellationToken);
+
+                // 
 
                 await reporter.OnConnected.Waiter.WithCancellation(Context.CancellationToken);
 
@@ -146,16 +175,41 @@ namespace DFrame
             logger.LogInformation("Starting DFrame worker node");
 
             var channel = new Channel(options.Host, options.Port, ChannelCredentials.Insecure);
-            var receiver = new WorkerReceiver(channel);
+            var nodeId = Guid.NewGuid();
+            var receiver = new WorkerReceiver(channel, nodeId);
             var client = StreamingHubClient.Connect<IMasterHub, IWorkerReceiver>(channel, receiver);
             receiver.Client = client;
 
-            await client.ConnectCompleteAsync();
-            logger.LogInformation("Worker -> Master connect successfully.");
+            var disconnect = client.WaitForDisconnect();
 
-            await receiver.WaitShutdown.WithCancellation(Context.CancellationToken);
+            var t = await Task.WhenAny(client.ConnectCompleteAsync(nodeId), disconnect);
+            if (t == disconnect)
+            {
+                await ShutdownAsync(client, channel, nodeId);
+                return;
+            }
 
-            logger.LogInformation("Worker shutdown.");
+            logger.LogInformation($"Worker -> Master connect successfully, WorkerNodeId:{nodeId.ToString()}.");
+            try
+            {
+                // wait for shutdown command from master.
+                await Task.WhenAny(receiver.WaitShutdown.WithCancellation(Context.CancellationToken), client.WaitForDisconnect());
+            }
+            finally
+            {
+                await ShutdownAsync(client, channel, nodeId);
+            }
+        }
+
+        async Task ShutdownAsync(IMasterHub client, Channel channel, Guid nodeId)
+        {
+            logger.LogInformation($"Worker shutdown, WorkerNodeId:{nodeId.ToString()}.");
+
+            logger.LogTrace($"Worker StreamingHubClient disposing.");
+            await client.DisposeAsync();
+
+            logger.LogTrace($"Worker Channel shutdown.");
+            await channel.ShutdownAsync();
         }
     }
 
