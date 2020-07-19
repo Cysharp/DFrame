@@ -12,8 +12,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\src\DFrame.Core\DFrame.Core.csproj" />
-		<ProjectReference Include="..\..\src\DFrame.KubernetesWorker\DFrame.KubernetesWorker.csproj" />
+		<ProjectReference Include="..\..\src\DFrame\DFrame.csproj" />
+		<ProjectReference Include="..\..\src\DFrame.Kubernetes\DFrame.Kubernetes.csproj" />
 	</ItemGroup>
 
 </Project>

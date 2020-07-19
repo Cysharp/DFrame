@@ -6,8 +6,8 @@ WORKDIR /app
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
 WORKDIR /src
 COPY ["sandbox/ConsoleApp/ConsoleApp.csproj", "sandbox/ConsoleApp/"]
-COPY ["src/DFrame.ProcessWorker/DFrame.ProcessWorker.csproj", "src/DFrame.ProcessWorker/"]
-COPY ["src/DFrame.Core/DFrame.Core.csproj", "src/DFrame.Core/"]
+COPY ["src/DFrame.OutOfProcess/DFrame.OutOfProcess.csproj", "src/DFrame.OutOfProcess/"]
+COPY ["src/DFrame/DFrame.csproj", "src/DFrame/"]
 RUN dotnet restore "sandbox/ConsoleApp/ConsoleApp.csproj"
 COPY . .
 WORKDIR "/src/sandbox/ConsoleApp"

@@ -12,9 +12,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\DFrame.Core\DFrame.Core.csproj" />
+    <ProjectReference Include="..\..\src\DFrame\DFrame.csproj" />
     <ProjectReference Include="..\..\src\DFrame.LoadTesting\DFrame.LoadTesting.csproj" />
-    <ProjectReference Include="..\..\src\DFrame.ProcessWorker\DFrame.ProcessWorker.csproj" />
+    <ProjectReference Include="..\..\src\DFrame.OutOfProcess\DFrame.OutOfProcess.csproj" />
   </ItemGroup>
 
 </Project>
