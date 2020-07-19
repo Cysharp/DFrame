@@ -29,7 +29,8 @@ docker push cysharp/dframe_sample_k8s
 rbac-less
 
 ```shell
-kubectl apply -f sandbox/k8s/overlays/local/namespace.yaml
+kubectl apply -f sandbox/k8s/dframe/overlays/local/namespace.yaml
+kubens dframe
 kubectl delete secret aws-registry
 kubectl create secret docker-registry aws-registry \
               --docker-server=https://<ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com \
@@ -38,16 +39,38 @@ kubectl create secret docker-registry aws-registry \
               --docker-email=no@email.local
 # kubectl delete deploy dframe-master
 kubectl delete job dframe-master
-kubectl kustomize sandbox/k8s/overlays/local | kubectl apply -f -
+kubectl kustomize sandbox/k8s/dframe/overlays/local | kubectl apply -f -
 stern dframe*
 ```
 
 rbac
 
 ```shell
-kubectl kustomize sandbox/k8s/overlays/development | kubectl apply -f -
+kubectl kustomize sandbox/k8s/dframe/overlays/development | kubectl apply -f -
 kubens dframe
 stern dframe*
 
-kubectl kustomize sandbox/k8s/overlays/development | kubectl delete -f -
+kubectl kustomize sandbox/k8s/dframe/overlays/development | kubectl delete -f -
+```
+
+### deploy api server
+
+let's launch apiserver to try httpclient access bench through dframe worker.
+
+local
+
+```shell
+kubectl kustomize sandbox/k8s/apiserver/overlays/local | kubectl apply -f -
+kubens apiserver
+curl http://localhost:8080/api/weatherforecast
+```
+
+aws
+
+```shell
+kubectl kustomize sandbox/k8s/apiserver/overlays/aws | kubectl apply -f -
+kubens apiserver
+curl http://localhost:8080/api/weatherforecast
+
+kubectl kustomize sandbox/k8s/apiserver/overlays/aws | kubectl delete -f -
 ```

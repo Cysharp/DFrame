@@ -1,4 +1,4 @@
-﻿using DFrame;
+using DFrame;
 using DFrame.Collections;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
@@ -17,7 +17,8 @@ namespace ConsoleApp
             if (args.Length == 0)
             {
                 // master
-                args = "-nodeCount 3 -workerPerNode 3 -executePerWorker 3 -scenarioName ConsoleApp.SampleWorker".Split(' ');
+                //args = "-nodeCount 3 -workerPerNode 3 -executePerWorker 3 -scenarioName ConsoleApp.SampleWorker".Split(' ');
+                args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 100 -scenarioName ConsoleApp.SampleHttpWorker".Split(' ');
                 // listen on
                 //host = "0.0.0.0";
                 host = "localhost";
@@ -61,7 +62,7 @@ namespace ConsoleApp
         public override async Task ExecuteAsync(WorkerContext context)
         {
             var randI = (int)new Random().Next(1, 3999);
-            // Console.WriteLine($"Enqueue from {Environment.MachineName} {context.WorkerId}: {randI}");
+            //Console.WriteLine($"Enqueue from {Environment.MachineName} {context.WorkerId}: {randI}");
 
             await queue.EnqueueAsync(randI);
         }
@@ -73,13 +74,35 @@ namespace ConsoleApp
                 var v = await queue.TryDequeueAsync();
                 if (v.HasValue)
                 {
-                    // Console.WriteLine($"Dequeue all from {Environment.MachineName} {context.WorkerId}: {v.Value}");
+                    //Console.WriteLine($"Dequeue all from {Environment.MachineName} {context.WorkerId}: {v.Value}");
                 }
                 else
                 {
                     return;
                 }
             }
+        }
+    }
+
+    public class SampleHttpWorker : Worker
+    {
+        private readonly string _url = "http://77948c50-apiserver-apiserv-98d9-538745285.ap-northeast-1.elb.amazonaws.com/healthz";
+        //private readonly string _url = "http://77948c50-apiserver-apiserv-98d9-538745285.ap-northeast-1.elb.amazonaws.com/api/weatherforecast";
+        private HttpClient httpClient;
+
+        public override async Task SetupAsync(WorkerContext context)
+        {
+            httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add("ContentType", "application/json");
+        }
+
+        public override async Task ExecuteAsync(WorkerContext context)
+        {
+            await httpClient.GetAsync(_url, HttpCompletionOption.ResponseHeadersRead);
+        }
+
+        public override async Task TeardownAsync(WorkerContext context)
+        {
         }
     }
 }

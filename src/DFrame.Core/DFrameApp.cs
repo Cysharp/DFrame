@@ -107,14 +107,16 @@ namespace DFrame
                 await reporter.OnSetup.Waiter.WithCancellation(Context.CancellationToken);
 
                 logger.LogTrace("Send Execute command to workers and wait complete message.");
+                var executeSw = ValueStopwatch.StartNew();
                 broadcaster.Execute(executePerWorker);
                 await reporter.OnExecute.Waiter.WithCancellation(Context.CancellationToken);
+                var executeElapsed = executeSw.Elapsed;
 
                 logger.LogTrace("Send SetTeardownup command to workers and wait complete message.");
                 broadcaster.Teardown();
                 await reporter.OnTeardown.Waiter.WithCancellation(Context.CancellationToken);
 
-                options.OnExecuteResult?.Invoke(reporter.ExecuteResult.ToArray(), options, new ExecuteScenario(scenarioName, nodeCount, workerPerNode, executePerWorker));
+                options.OnExecuteResult?.Invoke(reporter.ExecuteResult.ToArray(), options, new ExecuteScenario(scenarioName, nodeCount, workerPerNode, executePerWorker, executeElapsed));
 
                 broadcaster.Shutdown();
             }
