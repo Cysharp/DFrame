@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Threading.Tasks;
+using System.Net.Http;
 
 namespace ConsoleApp
 {
@@ -11,17 +12,14 @@ namespace ConsoleApp
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine($"dframe begin. {nameof(InProcessScalingProvider)}");
             var host = "localhost";
             // TODO:test args.
             if (args.Length == 0)
             {
                 // master
-                //args = "-nodeCount 3 -workerPerNode 3 -executePerWorker 3 -scenarioName ConsoleApp.SampleWorker".Split(' ');
-                args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 100 -scenarioName ConsoleApp.SampleHttpWorker".Split(' ');
+                args = "-nodeCount 3 -workerPerNode 3 -executePerWorker 3 -scenarioName ConsoleAppK8s.SampleWorker".Split(' ');
                 // listen on
-                //host = "0.0.0.0";
-                host = "localhost";
+                host = "0.0.0.0";
             }
             else
             {
@@ -35,13 +33,12 @@ namespace ConsoleApp
                         : "localhost";
             }
 
-            Console.WriteLine($"args {string.Join(", ", args)}, host {host}");
             await Host.CreateDefaultBuilder(args)
                 .ConfigureLogging(x =>
                 {
                     x.SetMinimumLevel(LogLevel.Trace);
                 })
-                .RunDFrameLoadTestingAsync(args, new DFrameOptions(host, 12345, new InProcessScalingProvider())
+                .RunDFrameLoadTestingAsync(args, new DFrameOptions(host + ":12345", host + ":12345", new InProcessScalingProvider())
                 {
 
                 });

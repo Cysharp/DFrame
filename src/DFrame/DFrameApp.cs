@@ -139,7 +139,7 @@ namespace DFrame
                 {
                     IsReturnExceptionStackTraceInErrorDetail = true,
                     SerializerOptions = MessagePackSerializer.Typeless.DefaultOptions // use Typeless.
-                }, ports: new ServerPort(options.Host, options.Port, ServerCredentials.Insecure))
+                }, ports: new ServerPort(options.MasterListenHostAndPort.Split(':').First(), int.Parse(options.MasterListenHostAndPort.Split(':').Last()), ServerCredentials.Insecure))
                 .ConfigureServices(x =>
                 {
                     x.AddSingleton<Reporter>();
@@ -176,7 +176,7 @@ namespace DFrame
         {
             logger.LogInformation("Starting DFrame worker node");
 
-            var channel = new Channel(options.Host, options.Port, ChannelCredentials.Insecure);
+            var channel = new Channel(options.WorkerConnectToHotAndPort, ChannelCredentials.Insecure);
             var nodeId = Guid.NewGuid();
             var receiver = new WorkerReceiver(channel, nodeId);
             var client = StreamingHubClient.Connect<IMasterHub, IWorkerReceiver>(channel, receiver);

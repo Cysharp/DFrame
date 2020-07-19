@@ -34,7 +34,7 @@ namespace ConsoleAppK8s
             }
 
             Console.WriteLine($"args {string.Join(", ", args)}, host {host}");
-            await Host.CreateDefaultBuilder(args).RunDFrameAsync(args, new DFrameOptions(host, 12345, new KubernetesScalingProvider())
+            await Host.CreateDefaultBuilder(args).RunDFrameAsync(args, new DFrameOptions(host + ":12345", host + ":12345", new KubernetesScalingProvider())
             {
 
             });
