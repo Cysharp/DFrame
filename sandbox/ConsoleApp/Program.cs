@@ -22,7 +22,7 @@ namespace ConsoleApp
                 //args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 100 -scenarioName ConsoleApp.SampleHttpWorker".Split(' ');
                 args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 10000 -scenarioName ConsoleApp.SampleHttpWorker".Split(' ');
                 // listen on
-                host = "0.0.0.0";
+                // host = "0.0.0.0";
             }
             else
             {
