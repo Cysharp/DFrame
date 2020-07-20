@@ -95,7 +95,7 @@ namespace ConsoleApp
         {
             var handler = new HttpClientHandler
             {
-                MaxConnectionsPerServer = 2,
+                MaxConnectionsPerServer = 10,
             };
             _httpClient = new HttpClient(handler);
         }

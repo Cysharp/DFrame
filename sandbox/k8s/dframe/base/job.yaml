@@ -22,10 +22,3 @@ spec:
           ports:
             - name: dframe
               containerPort: 12345
-          resources:
-            requests:
-              cpu: 100m
-              memory: 100Mi
-            limits:
-              cpu: 2000m
-              memory: 1000Mi

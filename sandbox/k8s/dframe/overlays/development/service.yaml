@@ -8,4 +8,4 @@ spec:
   ports:
     - protocol: TCP
       port: 12345
-      targetPort: dframe
+      targetPort: 12345
