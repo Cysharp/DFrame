@@ -18,15 +18,14 @@ namespace DFrame.KubernetesWorker
         private readonly KubernetesApi _kubeapi;
         private readonly bool preserveWorker = false; // not recommended
 
-        // master info
-        private readonly string masterSvc = "dframe-master";
-        private readonly string masterNamespace = "dframe";
-
         // manifest configuable parameters
         private readonly string _ns = "dframe";
         private readonly string _name = "dframe-worker";
-        private readonly string imagePullSecret = "aws-registry";
-        private readonly string imagePullPolicy = "Never";
+        private readonly string connectTo = Environment.GetEnvironmentVariable("DFRAME_MASTER_HOST") ?? $"dframe-master.dframe.svc.cluster.local";
+        private readonly string image = Environment.GetEnvironmentVariable("WORKER_IMAGE_NAME") ?? "";
+        private readonly string imageTag = Environment.GetEnvironmentVariable("WORKER_IMAGE_TAG") ?? "";
+        private readonly string imagePullSecret = Environment.GetEnvironmentVariable("WORKER_IMAGE_PULL_SECERT") ?? "";
+        private readonly string imagePullPolicy = Environment.GetEnvironmentVariable("WORKER_IMAGE_PULL_POLICY") ?? "IfNotPresent";
 
         public KubernetesScalingProvider()
         {
@@ -55,12 +54,6 @@ namespace DFrame.KubernetesWorker
             //{
             //    _ = await _kubeapi.CreateNamespaceAsync(_ns, namespaceManifest, cancellationToken);
             //}
-
-            // ハイパー決め打ち
-            // todo: pass from options?
-            var image = "431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s";
-            var imageTag = "0.1.0";
-            var connectTo = $"{masterSvc}.{masterNamespace}.svc.cluster.local";
 
             // todo: node count を pod とみなしているので、node = vm の修正が必要。
             // その場合、node = k8s node, worker = deploy replicas (job parallism).

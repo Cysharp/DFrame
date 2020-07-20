@@ -2,7 +2,9 @@
 using DFrame.Collections;
 using DFrame.KubernetesWorker;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace ConsoleAppK8s
@@ -17,7 +19,8 @@ namespace ConsoleAppK8s
             if (args.Length == 0)
             {
                 // master
-                args = "-nodeCount 3 -workerPerNode 3 -executePerWorker 3 -scenarioName ConsoleAppK8s.SampleWorker".Split(' ');
+                //args = "-nodeCount 3 -workerPerNode 3 -executePerWorker 3 -scenarioName ConsoleAppK8s.SampleWorker".Split(' ');
+                args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 1000 -scenarioName ConsoleAppK8s.SampleHttpWorker".Split(' ');
                 // listen on
                 host = "0.0.0.0";
             }
@@ -34,10 +37,15 @@ namespace ConsoleAppK8s
             }
 
             Console.WriteLine($"args {string.Join(", ", args)}, host {host}");
-            await Host.CreateDefaultBuilder(args).RunDFrameAsync(args, new DFrameOptions(host + ":12345", host + ":12345", new KubernetesScalingProvider())
-            {
+            await Host.CreateDefaultBuilder(args)
+                .ConfigureLogging(x =>
+                {
+                    x.SetMinimumLevel(LogLevel.Trace);
+                })
+                .RunDFrameLoadTestingAsync(args, new DFrameOptions(host, 12345, new KubernetesScalingProvider())
+                {
 
-            });
+                });
         }
     }
 
@@ -74,6 +82,33 @@ namespace ConsoleAppK8s
                     return;
                 }
             }
+        }
+    }
+
+    public class SampleHttpWorker : Worker
+    {
+        private readonly string _url = "http://77948c50-apiserver-apiserv-98d9-538745285.ap-northeast-1.elb.amazonaws.com/healthz";
+        //private readonly string _url = "http://77948c50-apiserver-apiserv-98d9-538745285.ap-northeast-1.elb.amazonaws.com/api/weatherforecast";
+        private HttpClient httpClient;
+
+        public override async Task SetupAsync(WorkerContext context)
+        {
+            var handler = new HttpClientHandler
+            {
+                MaxConnectionsPerServer = 2,
+            };
+            httpClient = new HttpClient(handler);
+            httpClient.DefaultRequestHeaders.Add("ContentType", "application/json");
+        }
+
+        public override async Task ExecuteAsync(WorkerContext context)
+        {
+            //Console.WriteLine($"Connecting to {_url}");
+            await httpClient.GetAsync(_url, HttpCompletionOption.ResponseHeadersRead);
+        }
+
+        public override async Task TeardownAsync(WorkerContext context)
+        {
         }
     }
 }
