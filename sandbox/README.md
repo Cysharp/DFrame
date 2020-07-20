@@ -74,3 +74,9 @@ curl http://localhost:8080/api/weatherforecast
 
 kubectl kustomize sandbox/k8s/apiserver/overlays/aws | kubectl delete -f -
 ```
+
+### ab test on k8s
+
+```
+kubectl run -i --rm --restart=Never -n dframe --image=mocoso/apachebench apachebench -- bash -c "ab -n 10000 -c 10 http://77948c50-apiserver-apiserv-98d9-538745285.ap-northeast-1.elb.amazonaws.com/healthz"
+```

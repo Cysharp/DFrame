@@ -5,3 +5,10 @@ metadata:
 spec:
   imagePullSecrets:
     - name: aws-registry
+      containers:
+        - name: dframe-master
+          env:
+            - name: WORKER_IMAGE_PULL_SECRET
+              value: "aws-registry"
+            - name: WORKER_IMAGE_PULL_POLICY
+              value: "Never"

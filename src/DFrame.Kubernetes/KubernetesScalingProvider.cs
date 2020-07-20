@@ -25,8 +25,8 @@ namespace DFrame.KubernetesWorker
         // manifest configuable parameters
         private readonly string _ns = "dframe";
         private readonly string _name = "dframe-worker";
-        private readonly string imagePullSecret = "aws-registry";
-        private readonly string imagePullPolicy = "Never";
+        private readonly string imagePullSecret = Environment.GetEnvironmentVariable("WORKER_IMAGE_PULL_SECERT") ?? "";
+        private readonly string imagePullPolicy = Environment.GetEnvironmentVariable("WORKER_IMAGE_PULL_POLICY") ?? "IfNotPresent";
 
         public KubernetesScalingProvider()
         {
