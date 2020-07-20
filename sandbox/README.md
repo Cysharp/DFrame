@@ -53,6 +53,29 @@ stern dframe*
 kubectl kustomize sandbox/k8s/dframe/overlays/development | kubectl delete -f -
 ```
 
+command line pod execute.
+
+```shell
+kubectl run -it --rm --restart=Never -n dframe --image=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s:0.1.0 --env DFRAME_MASTER_HOST=dframe-master.dframe.svc.cluster.local --env WORKER_IMAGE_NAME=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s --env WORKER_IMAGE_TAG="0.1.0" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master
+```
+
+### ab test on k8s
+
+```shell
+# 10並列 / 10000 リクエスト
+kubectl run -i --rm --restart=Never -n dframe --image=mocoso/apachebench apachebench -- bash -c "ab -n 10000 -c 10 http://77948c50-apiserver-apiserv-98d9-538745285.ap-northeast-1.elb.amazonaws.com/healthz"
+```
+
+
+## TIPD
+
+### HttpClient socker configuration
+
+```shell
+$ kubectl exec -it dframe-worker-xxxxx /bin/bash
+# apt-get update && apt-get install iputils-ping net-tools -y && netstat -aon
+```
+
 ### deploy api server
 
 let's launch apiserver to try httpclient access bench through dframe worker.
@@ -73,10 +96,4 @@ kubens apiserver
 curl http://localhost:8080/api/weatherforecast
 
 kubectl kustomize sandbox/k8s/apiserver/overlays/aws | kubectl delete -f -
-```
-
-### ab test on k8s
-
-```
-kubectl run -i --rm --restart=Never -n dframe --image=mocoso/apachebench apachebench -- bash -c "ab -n 10000 -c 10 http://77948c50-apiserver-apiserv-98d9-538745285.ap-northeast-1.elb.amazonaws.com/healthz"
 ```
