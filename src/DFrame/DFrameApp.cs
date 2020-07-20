@@ -139,7 +139,8 @@ namespace DFrame
                 {
                     IsReturnExceptionStackTraceInErrorDetail = true,
                     SerializerOptions = MessagePackSerializer.Typeless.DefaultOptions // use Typeless.
-                }, ports: new ServerPort(options.MasterListenHostAndPort.Split(':').First(), int.Parse(options.MasterListenHostAndPort.Split(':').Last()), ServerCredentials.Insecure))
+                }, ports: new ServerPort(options.MasterListenHostAndPort.Split(':').First(), int.Parse(options.MasterListenHostAndPort.Split(':').Last()), ServerCredentials.Insecure),
+                    new[] { new ChannelOption("grpc.max_receive_message_length", int.MaxValue) })
                 .ConfigureServices(x =>
                 {
                     x.AddSingleton<Reporter>();

@@ -97,10 +97,19 @@ namespace DFrame
                     }
 
                     var executeResult = new ExecuteResult(x.context.WorkerId, sw.Elapsed, i, (errorMsg != null), errorMsg);
+
+                    // TODO:atode kesu.
+                    //if (i % 1000 == 0)
+                    //{
+                    //    Console.WriteLine(i + ":" + sw.Elapsed);
+                    //}
+
                     list.Add(executeResult);
                 }
                 return list;
             }));
+
+            // await Client.ExecuteCompleteAsync(result.SelectMany(xs => xs).Take(1).ToArray());
 
             await Client.ExecuteCompleteAsync(result.SelectMany(xs => xs).ToArray());
         }
@@ -169,6 +178,7 @@ namespace DFrame
 
         protected override ValueTask OnDisconnected()
         {
+            Console.WriteLine("Disconnected!");
             return base.OnDisconnected();
         }
 
