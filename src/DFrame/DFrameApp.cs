@@ -140,7 +140,14 @@ namespace DFrame
                     IsReturnExceptionStackTraceInErrorDetail = true,
                     SerializerOptions = MessagePackSerializer.Typeless.DefaultOptions // use Typeless.
                 }, ports: new ServerPort(options.MasterListenHostAndPort.Split(':').First(), int.Parse(options.MasterListenHostAndPort.Split(':').Last()), ServerCredentials.Insecure),
-                    new[] { new ChannelOption("grpc.max_receive_message_length", int.MaxValue) })
+                    new[] { 
+                        // body message size
+                        new ChannelOption("grpc.max_receive_message_length", int.MaxValue),
+                        // keep alive
+                        new ChannelOption("grpc.keepalive_time_ms", 2000),
+                        new ChannelOption("grpc.keepalive_timeout_ms", 3000),
+                        new ChannelOption("grpc.http2.min_time_between_pings_ms", 5000),
+                    })
                 .ConfigureServices(x =>
                 {
                     x.AddSingleton<Reporter>();
@@ -177,7 +184,13 @@ namespace DFrame
         {
             logger.LogInformation("Starting DFrame worker node");
 
-            var channel = new Channel(options.WorkerConnectToHotAndPort, ChannelCredentials.Insecure);
+            var channel = new Channel(options.WorkerConnectToHotAndPort, ChannelCredentials.Insecure, 
+                new[] {
+                    // keep alive
+                    new ChannelOption("grpc.keepalive_time_ms", 2000),
+                    new ChannelOption("grpc.keepalive_timeout_ms", 3000),
+                    new ChannelOption("grpc.http2.min_time_between_pings_ms", 5000),
+                });
             var nodeId = Guid.NewGuid();
             var receiver = new WorkerReceiver(channel, nodeId);
             var client = StreamingHubClient.Connect<IMasterHub, IWorkerReceiver>(channel, receiver);
