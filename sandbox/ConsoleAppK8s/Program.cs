@@ -92,13 +92,13 @@ namespace ConsoleAppK8s
         private static HttpClient httpClient;
 
         private readonly string _url = "http://77948c50-apiserver-apiserv-98d9-538745285.ap-northeast-1.elb.amazonaws.com/healthz";
-        //private CancellationTokenSource cts;
+        private CancellationTokenSource cts;
 
         static SampleHttpWorker()
         {
             var handler = new HttpClientHandler
             {
-                MaxConnectionsPerServer = 10,
+                MaxConnectionsPerServer = 100,
             };
             httpClient = new HttpClient(handler);
             httpClient.DefaultRequestHeaders.Add("ContentType", "application/json");
@@ -107,13 +107,13 @@ namespace ConsoleAppK8s
 
         public override async Task SetupAsync(WorkerContext context)
         {
-            //cts = new CancellationTokenSource(TimeSpan.FromSeconds(300));
+            cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
         }
 
         public override async Task ExecuteAsync(WorkerContext context)
         {
-            //await httpClient.GetAsync(_url, cts.Token);
-            await httpClient.GetAsync(_url);
+            await httpClient.GetAsync(_url, cts.Token);
+            //await httpClient.GetAsync(_url);
         }
 
         public override async Task TeardownAsync(WorkerContext context)
