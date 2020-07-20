@@ -13,6 +13,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\src\DFrame\DFrame.csproj" />
+		<ProjectReference Include="..\..\src\DFrame.LoadTesting\DFrame.LoadTesting.csproj" />
 		<ProjectReference Include="..\..\src\DFrame.Kubernetes\DFrame.Kubernetes.csproj" />
 	</ItemGroup>
 
