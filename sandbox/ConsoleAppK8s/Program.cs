@@ -44,7 +44,7 @@ namespace ConsoleAppK8s
                 {
                     x.SetMinimumLevel(LogLevel.Trace);
                 })
-                .RunDFrameLoadTestingAsync(args, new DFrameOptions(host, 12345, new KubernetesScalingProvider())
+                .RunDFrameLoadTestingAsync(args, new DFrameOptions(host + ":12345", host + ":12345", new KubernetesScalingProvider())
                 {
 
                 });
