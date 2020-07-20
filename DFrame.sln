@@ -15,7 +15,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DFrame.Kubernetes", "src\DF
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DFrame.LoadTesting", "src\DFrame.LoadTesting\DFrame.LoadTesting.csproj", "{EAF4563C-C542-4E77-A870-8230CFED330C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleAppK8s", "sandbox\ConsoleAppK8s\ConsoleAppK8s.csproj", "{9D93D2E2-DCB5-4B3A-8B61-F4239C3C3826}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleAppK8s", "sandbox\ConsoleAppK8s\ConsoleAppK8s.csproj", "{9D93D2E2-DCB5-4B3A-8B61-F4239C3C3826}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EchoServer", "sandbox\EchoServer\EchoServer.csproj", "{4CA38B17-E34B-4221-8C91-A57EA8241E11}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,6 +49,10 @@ Global
 		{9D93D2E2-DCB5-4B3A-8B61-F4239C3C3826}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9D93D2E2-DCB5-4B3A-8B61-F4239C3C3826}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9D93D2E2-DCB5-4B3A-8B61-F4239C3C3826}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4CA38B17-E34B-4221-8C91-A57EA8241E11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4CA38B17-E34B-4221-8C91-A57EA8241E11}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4CA38B17-E34B-4221-8C91-A57EA8241E11}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4CA38B17-E34B-4221-8C91-A57EA8241E11}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -54,6 +60,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{5B0EE039-3B09-4480-8880-67C9D76FF907} = {DDD04377-167A-4FDC-90D5-01EDCB7BA465}
 		{9D93D2E2-DCB5-4B3A-8B61-F4239C3C3826} = {DDD04377-167A-4FDC-90D5-01EDCB7BA465}
+		{4CA38B17-E34B-4221-8C91-A57EA8241E11} = {DDD04377-167A-4FDC-90D5-01EDCB7BA465}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {77245B01-4128-4759-BF61-CC223FAA2E01}

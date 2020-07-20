@@ -13,7 +13,6 @@ namespace ConsoleApp
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine($"dframe begin. {nameof(InProcessScalingProvider)}");
             var host = "localhost";
             // TODO:test args.
             if (args.Length == 0)
@@ -23,8 +22,7 @@ namespace ConsoleApp
                 //args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 100 -scenarioName ConsoleApp.SampleHttpWorker".Split(' ');
                 args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 10000 -scenarioName ConsoleApp.SampleHttpWorker".Split(' ');
                 // listen on
-                //host = "0.0.0.0";
-                host = "localhost";
+                // host = "0.0.0.0";
             }
             else
             {
@@ -38,13 +36,12 @@ namespace ConsoleApp
                         : "localhost";
             }
 
-            Console.WriteLine($"args {string.Join(", ", args)}, host {host}");
             await Host.CreateDefaultBuilder(args)
                 .ConfigureLogging(x =>
                 {
                     x.SetMinimumLevel(LogLevel.Trace);
                 })
-                .RunDFrameLoadTestingAsync(args, new DFrameOptions(host, 12345, new InProcessScalingProvider())
+                .RunDFrameLoadTestingAsync(args, new DFrameOptions(host + ":12345", host + ":12345", new InProcessScalingProvider())
                 {
 
                 });
