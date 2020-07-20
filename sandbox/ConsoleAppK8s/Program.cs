@@ -93,7 +93,11 @@ namespace ConsoleAppK8s
 
         public override async Task SetupAsync(WorkerContext context)
         {
-            httpClient = new HttpClient();
+            var handler = new HttpClientHandler
+            {
+                MaxConnectionsPerServer = 2,
+            };
+            httpClient = new HttpClient(handler);
             httpClient.DefaultRequestHeaders.Add("ContentType", "application/json");
         }
 

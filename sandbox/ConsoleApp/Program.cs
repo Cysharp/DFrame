@@ -89,17 +89,25 @@ namespace ConsoleApp
     {
         private readonly string _url = "http://77948c50-apiserver-apiserv-98d9-538745285.ap-northeast-1.elb.amazonaws.com/healthz";
         //private readonly string _url = "http://77948c50-apiserver-apiserv-98d9-538745285.ap-northeast-1.elb.amazonaws.com/api/weatherforecast";
-        private HttpClient httpClient;
+        private static readonly HttpClient _httpClient;
 
+        static SampleHttpWorker()
+        {
+            var handler = new HttpClientHandler
+            {
+                MaxConnectionsPerServer = 2,
+            };
+            _httpClient = new HttpClient(handler);
+        }
         public override async Task SetupAsync(WorkerContext context)
         {
-            httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.Add("ContentType", "application/json");
+            //httpClient = new HttpClient();
+            //httpClient.DefaultRequestHeaders.Add("ContentType", "application/json");
         }
 
         public override async Task ExecuteAsync(WorkerContext context)
         {
-            await httpClient.GetAsync(_url, HttpCompletionOption.ResponseHeadersRead);
+            await _httpClient.GetAsync(_url, HttpCompletionOption.ResponseHeadersRead);
         }
 
         public override async Task TeardownAsync(WorkerContext context)
