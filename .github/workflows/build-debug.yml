@@ -24,10 +24,10 @@ jobs:
         with:
           dotnet-version: 3.1.201
       # build src
-      - run: dotnet build -c Debug ./src/DFrame.Core
+      - run: dotnet build -c Debug ./src/DFrame
+      - run: dotnet build -c Debug ./src/DFrame.Kubernetes
       - run: dotnet build -c Debug ./src/DFrame.LoadTesting
-      - run: dotnet build -c Debug ./src/DFrame.ProcessWorker
-      - run: dotnet build -c Debug ./src/DFrame.KubernetesWorker
+      - run: dotnet build -c Debug ./src/DFrame.OutOfProcess
       # build sandbox
       - run: dotnet build -c Debug ./sandbox/ConsoleApp
       - run: dotnet build -c Debug ./sandbox/ConsoleAppK8s
