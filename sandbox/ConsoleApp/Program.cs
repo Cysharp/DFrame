@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using System;
 using System.Threading.Tasks;
 using System.Net.Http;
+using System.Threading;
 
 namespace ConsoleApp
 {
@@ -87,9 +88,10 @@ namespace ConsoleApp
 
     public class SampleHttpWorker : Worker
     {
+        private static HttpClient httpClient;
+
         private readonly string _url = "http://77948c50-apiserver-apiserv-98d9-538745285.ap-northeast-1.elb.amazonaws.com/healthz";
-        //private readonly string _url = "http://77948c50-apiserver-apiserv-98d9-538745285.ap-northeast-1.elb.amazonaws.com/api/weatherforecast";
-        private static readonly HttpClient _httpClient;
+        //private CancellationTokenSource cts;
 
         static SampleHttpWorker()
         {
@@ -97,17 +99,20 @@ namespace ConsoleApp
             {
                 MaxConnectionsPerServer = 10,
             };
-            _httpClient = new HttpClient(handler);
+            httpClient = new HttpClient(handler);
+            httpClient.DefaultRequestHeaders.Add("ContentType", "application/json");
+            Console.WriteLine($"MaxConnectionsPerServer: {handler.MaxConnectionsPerServer}");
         }
+
         public override async Task SetupAsync(WorkerContext context)
         {
-            //httpClient = new HttpClient();
-            //httpClient.DefaultRequestHeaders.Add("ContentType", "application/json");
+            //cts = new CancellationTokenSource(TimeSpan.FromSeconds(300));
         }
 
         public override async Task ExecuteAsync(WorkerContext context)
         {
-            await _httpClient.GetAsync(_url, HttpCompletionOption.ResponseHeadersRead);
+            //await httpClient.GetAsync(_url, cts.Token);
+            await httpClient.GetAsync(_url);
         }
 
         public override async Task TeardownAsync(WorkerContext context)

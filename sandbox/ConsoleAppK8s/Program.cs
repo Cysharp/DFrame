@@ -21,7 +21,8 @@ namespace ConsoleAppK8s
             {
                 // master
                 //args = "-nodeCount 3 -workerPerNode 3 -executePerWorker 3 -scenarioName ConsoleAppK8s.SampleWorker".Split(' ');
-                args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 1000 -scenarioName ConsoleAppK8s.SampleHttpWorker".Split(' ');
+                //args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 1000 -scenarioName ConsoleAppK8s.SampleHttpWorker".Split(' ');
+                args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 10000 -scenarioName ConsoleAppK8s.SampleHttpWorker".Split(' ');
                 // listen on
                 host = "0.0.0.0";
             }
@@ -91,8 +92,7 @@ namespace ConsoleAppK8s
         private static HttpClient httpClient;
 
         private readonly string _url = "http://77948c50-apiserver-apiserv-98d9-538745285.ap-northeast-1.elb.amazonaws.com/healthz";
-        //private readonly string _url = "http://77948c50-apiserver-apiserv-98d9-538745285.ap-northeast-1.elb.amazonaws.com/api/weatherforecast";
-        private CancellationTokenSource cts;
+        //private CancellationTokenSource cts;
 
         static SampleHttpWorker()
         {
@@ -101,19 +101,19 @@ namespace ConsoleAppK8s
                 MaxConnectionsPerServer = 10,
             };
             httpClient = new HttpClient(handler);
+            httpClient.DefaultRequestHeaders.Add("ContentType", "application/json");
             Console.WriteLine($"MaxConnectionsPerServer: {handler.MaxConnectionsPerServer}");
         }
 
         public override async Task SetupAsync(WorkerContext context)
         {
-            cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
-            //httpClient.DefaultRequestHeaders.Add("ContentType", "application/json");
+            //cts = new CancellationTokenSource(TimeSpan.FromSeconds(300));
         }
 
         public override async Task ExecuteAsync(WorkerContext context)
         {
-            //Console.WriteLine($"Connecting to {_url}");
-            await httpClient.GetAsync(_url, cts.Token);
+            //await httpClient.GetAsync(_url, cts.Token);
+            await httpClient.GetAsync(_url);
         }
 
         public override async Task TeardownAsync(WorkerContext context)
