@@ -28,15 +28,13 @@ namespace DFrame
         public int NodeCount { get; }
         public int WorkerPerNode { get; }
         public int ExecutePerWorker { get; }
-        public TimeSpan ExecutionElapsed { get; }
 
-        public ExecuteScenario(string scenarioName, int nodeCount, int workerPerNode, int executePerWorker, TimeSpan executionElapsed)
+        public ExecuteScenario(string scenarioName, int nodeCount, int workerPerNode, int executePerWorker)
         {
             ScenarioName = scenarioName;
             NodeCount = nodeCount;
             WorkerPerNode = workerPerNode;
             ExecutePerWorker = executePerWorker;
-            ExecutionElapsed = executionElapsed;
         }
     }
 }

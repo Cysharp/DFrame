@@ -25,6 +25,8 @@ namespace DFrame.KubernetesWorker
         private string _imagePullPolicy;
         private bool? _preserveWorker;
 
+        // todo: additional worker argument
+
         /// <summary>
         /// Master Host to connect from Worker.
         /// </summary>
@@ -101,6 +103,7 @@ namespace DFrame.KubernetesWorker
         {
             Console.WriteLine($"scale out workers. {_parameters.Namespace}/{_parameters.Name} {ScalingType}");
 
+            // todo: get current namespace.
             // todo: create namespace for the worker. default same namespace.
             //var namespaceManifest = KubernetesManifest.GetNamespace(_ns);
             //if (!await _kubeapi.ExistsNamespaceAsync(_ns))
@@ -159,7 +162,6 @@ namespace DFrame.KubernetesWorker
         /// <returns></returns>
         private async ValueTask CreateJobAsync(int nodeCount, CancellationToken cancellationToken)
         {
-            Console.WriteLine($"use job. {_parameters.Namespace}/{_parameters.Name}");
             var jobManifest = KubernetesManifest.GetJob(_parameters.Name, _parameters.Image, _parameters.ImageTag, _parameters.ConnectTo, _parameters.ImagePullPolicy, _parameters.ImagePullSecret, nodeCount);
             // Debug Log
             // Console.WriteLine(jobManifest);
@@ -191,7 +193,6 @@ namespace DFrame.KubernetesWorker
         /// <returns></returns>
         private async ValueTask CreateDeployment(int nodeCount, CancellationToken cancellationToken)
         {
-            Console.WriteLine($"use deployment. {_parameters.Namespace}/{_parameters.Name}");
             var deploymentManifest = KubernetesManifest.GetDeployment(_parameters.Name, _parameters.Image, _parameters.ImageTag, _parameters.ConnectTo, _parameters.ImagePullPolicy, _parameters.ImagePullSecret, nodeCount);
             // Debug Log
             // Console.WriteLine(deploymentManifest);

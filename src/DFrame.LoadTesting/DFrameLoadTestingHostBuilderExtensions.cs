@@ -1,5 +1,4 @@
 ﻿using ConsoleAppFramework;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
@@ -15,14 +14,12 @@ namespace DFrame
             options.OnExecuteResult = SummaryResult;
 
             await hostBuilder.RunDFrameAsync(args, options);
-
         }
 
         static void SummaryResult(ExecuteResult[] results, DFrameOptions options, ExecuteScenario executeScenario)
         {
-            // TODO:req/secとか色々集計したのを返す。
-            // とりあえず集計したらConsole.WriteLine(雑)
-            ShowReportAb(results, options, executeScenario);
+            // Output req/sec and other calcutlation report.
+            AbReport(results, options, executeScenario);
 
             //foreach (var item in results)
             //{
@@ -35,7 +32,7 @@ namespace DFrame
         /// </summary>
         /// <param name="results"></param>
         /// <param name="options"></param>
-        static void ShowReportAb(ExecuteResult[] results, DFrameOptions options, ExecuteScenario executeScenario)
+        static void AbReport(ExecuteResult[] results, DFrameOptions options, ExecuteScenario executeScenario)
         {
             var requestCount = executeScenario.NodeCount * executeScenario.WorkerPerNode * executeScenario.ExecutePerWorker;
             var concurrentExecCount = executeScenario.WorkerPerNode;
@@ -43,11 +40,7 @@ namespace DFrame
             var completeRequests = results.Where(x => !x.HasError).Count();
             var failedRequests = results.Where(x => x.HasError).Count();
 
-            // mater から worker Execute の実行を待った結果
-            var sumElapsedRequestsSec = executeScenario.ExecutionElapsed.TotalSeconds;
-            var timePerRequest = sumElapsedRequestsSec * 1000 / requestCount;
-
-            // 各workerで実行されたIWorkerReciever.Execute (すべて並列実行されている) の合計が最も大きいWokerId = Worker の実行時間とみなす。
+            // Get sum of IWorkerReciever.Execute time on each workerId, max execution time will be actual execution time.
             var sumElapsedRequestsSecWorkerOnly = results.GroupBy(x => x.WorkerId).Select(xs => xs.Sum(x => x.Elapsed.TotalSeconds)).Max();
             var timePerRequestWorkerOnly = sumElapsedRequestsSecWorkerOnly * 1000 / requestCount;
 
@@ -75,13 +68,6 @@ namespace DFrame
             Console.WriteLine($"Complete requests:      {completeRequests}");
             Console.WriteLine($"Failed requests:        {failedRequests}");
             Console.WriteLine($"");
-            Console.WriteLine($"#include master wait");
-            Console.WriteLine($"Time taken for tests:   {sumElapsedRequestsSec:F2} seconds"); // すべてのリクエストが完了するのにかかった時間
-            Console.WriteLine($"Requests per seconds:   {totalRequests / sumElapsedRequestsSec:F2} [#/sec] (mean)"); // リクエスト数 / 合計所要時間
-            Console.WriteLine($"Time per request:       {concurrentExecCount * timePerRequest:F2} [ms] (mean)"); // 同時実行したリクエストの平均処理時間 = 同時実行数 * 全てのリクエストが完了するのにかかった時間sec * 1000 / 処理したリクエスト数
-            Console.WriteLine($"Time per request:       {timePerRequest:F2} [ms] (mean, across all concurrent requests)"); // 1リクエストの平均処理時間 = 全てのリクエストが完了するのにかかった時間sec * 1000 / 処理したリクエスト数
-            Console.WriteLine($"");
-            Console.WriteLine($"#worker execution only");
             Console.WriteLine($"Time taken for tests:   {sumElapsedRequestsSecWorkerOnly:F2} seconds"); // すべてのリクエストが完了するのにかかった時間
             Console.WriteLine($"Requests per seconds:   {totalRequests / sumElapsedRequestsSecWorkerOnly:F2} [#/sec] (mean)"); // リクエスト数 / 合計所要時間
             Console.WriteLine($"Time per request:       {concurrentExecCount * timePerRequestWorkerOnly:F2} [ms] (mean)"); // 同時実行したリクエストの平均処理時間 = 同時実行数 * 全てのリクエストが完了するのにかかった時間sec * 1000 / 処理したリクエスト数
