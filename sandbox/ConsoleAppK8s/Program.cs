@@ -23,6 +23,7 @@ namespace ConsoleAppK8s
                 //args = "-nodeCount 3 -workerPerNode 3 -executePerWorker 3 -scenarioName ConsoleAppK8s.SampleWorker".Split(' ');
                 //args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 1000 -scenarioName ConsoleAppK8s.SampleHttpWorker".Split(' ');
                 args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 10000 -scenarioName ConsoleAppK8s.SampleHttpWorker".Split(' ');
+                //args = "-nodeCount 10 -workerPerNode 10 -executePerWorker 1000 -scenarioName ConsoleAppK8s.SampleHttpWorker".Split(' ');
                 // listen on
                 host = "0.0.0.0";
             }

@@ -11,7 +11,7 @@ spec:
       env:
         - name: DFRAME_MASTER_HOST
           value: "dframe-master.dframe.svc.cluster.local"
-        - name: WORKER_IMAGE_NAME
+        - name: DFRAME_WORKER_IMAGE_NAME
           value: 431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s
-        - name: WORKER_IMAGE_TAG
+        - name: DFRAME_WORKER_IMAGE_TAG
           value: "0.1.0"
