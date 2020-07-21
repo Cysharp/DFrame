@@ -7,17 +7,6 @@ namespace DFrame.KubernetesWorker
     // may use T4 to gen manifests.
     public class KubernetesManifest
     {
-        public static string GetNamespace(string name)
-        {
-            var manifest = $@"---
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: {name}
-";
-            return LinuxNewLine(manifest);
-        }
-
         public static string GetJob(string name, string image, string imageTag, string host, string imagePullPolicy = "IfNotPresent", string imagePullSecret = "", int parallelism = 1)
         {
             // backofflimit = 0 to run only once regardless success or failure.
