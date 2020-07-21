@@ -47,8 +47,8 @@ namespace DFrame
             var sumElapsedRequestsSec = executeScenario.ExecutionElapsed.TotalSeconds;
             var timePerRequest = sumElapsedRequestsSec * 1000 / requestCount;
 
-            // 各workerで実行されたIWorkerReciever.Execute の始まりから終わりまでの計測結果の合計
-            var sumElapsedRequestsSecWorkerOnly = results.GroupBy(x => x.WorkerId).Select(xs => xs.Max(x => x.Elapsed.TotalSeconds)).Sum();
+            // 各workerで実行されたIWorkerReciever.Execute (すべて並列実行されている) の合計が最も大きいWokerId = Worker の実行時間とみなす。
+            var sumElapsedRequestsSecWorkerOnly = results.GroupBy(x => x.WorkerId).Select(xs => xs.Sum(x => x.Elapsed.TotalSeconds)).Max();
             var timePerRequestWorkerOnly = sumElapsedRequestsSecWorkerOnly * 1000 / requestCount;
 
             // percentile requires sort before calculate
