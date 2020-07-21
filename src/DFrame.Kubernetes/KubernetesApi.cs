@@ -24,6 +24,8 @@ namespace DFrame.KubernetesWorker
     public partial class KubernetesApi
     {
         public bool IsRunningOnKubernetes { get; }
+        public string Namespace => _provider.Namespace;
+
         private IKubernetesClient _provider;
         private KubernetesApiConfig _config = new KubernetesApiConfig();
 

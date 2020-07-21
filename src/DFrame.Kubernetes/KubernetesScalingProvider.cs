@@ -2,7 +2,6 @@
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using DFrame;
 
 namespace DFrame.KubernetesWorker
 {
@@ -13,12 +12,11 @@ namespace DFrame.KubernetesWorker
     }
 
     /// <summary>
-    /// Configuable worker parameters
+    /// Configuable worker environment
     /// </summary>
-    internal class WorkerParameters
+    internal class WorkerEnvironment
     {
         private string _connectTo;
-        private string _ns;
         private string _name;
         private string _image;
         private string _imageTag;
@@ -26,16 +24,10 @@ namespace DFrame.KubernetesWorker
         private string _imagePullPolicy;
         private bool? _preserveWorker;
 
-        // todo: additional worker argument
-
         /// <summary>
         /// Master Host to connect from Worker.
         /// </summary>
         public string ConnectTo => _connectTo ?? (_connectTo = Environment.GetEnvironmentVariable("DFRAME_MASTER_HOST") ?? $"dframe-master.dframe.svc.cluster.local");
-        /// <summary>
-        /// Worker Kubernetes NameSpace
-        /// </summary>
-        public string Namespace => _ns ?? (_ns = Environment.GetEnvironmentVariable("DFRAME_WORKER_NAMESPACE") ?? "dframe");
         /// <summary>
         /// Worker Kubernetes Resource Name.
         /// </summary>
@@ -75,7 +67,8 @@ namespace DFrame.KubernetesWorker
         public ScalingType ScalingType { get; } = ScalingType.Job;
 
         private readonly KubernetesApi _kubeapi;
-        private readonly WorkerParameters _parameters;
+        private readonly WorkerEnvironment _env;
+        private readonly string _ns;
 
         public KubernetesScalingProvider()
         {
@@ -84,7 +77,8 @@ namespace DFrame.KubernetesWorker
                 ResponseHeaderType = HeaderContentType.Yaml,
                 SkipCertificateValidation = true,
             });
-            _parameters = new WorkerParameters();
+            _env = new WorkerEnvironment();
+            _ns = _kubeapi.Namespace;
         }
 
         public KubernetesScalingProvider(ScalingType scalingType) : base()
@@ -102,18 +96,9 @@ namespace DFrame.KubernetesWorker
         /// <returns></returns>
         public async Task StartWorkerAsync(DFrameOptions options, int nodeCount, IServiceProvider provider, CancellationToken cancellationToken)
         {
-            Console.WriteLine($"scale out workers. {_parameters.Namespace}/{_parameters.Name} {ScalingType}");
+            Console.WriteLine($"scale out workers. {_ns}/{_env.Name} {ScalingType}");
 
-            // todo: get current namespace.
-            // todo: create namespace for the worker. default same namespace.
-            //var namespaceManifest = KubernetesManifest.GetNamespace(_ns);
-            //if (!await _kubeapi.ExistsNamespaceAsync(_ns))
-            //{
-            //    _ = await _kubeapi.CreateNamespaceAsync(_ns, namespaceManifest, cancellationToken);
-            //}
-
-            // todo: node count を pod とみなしているので、node = vm の修正が必要。
-            // その場合、node = k8s node, worker = deploy replicas (job parallism).
+            // create worker resource
             switch (ScalingType)
             {
                 case ScalingType.Deployment:
@@ -129,21 +114,21 @@ namespace DFrame.KubernetesWorker
 
         public async ValueTask DisposeAsync()
         {
-            Console.WriteLine($"scale in workers. {_parameters.Namespace}/{_parameters.Name} {ScalingType}");
+            Console.WriteLine($"scale in workers. {_ns}/{_env.Name} {ScalingType}");
 
-            // delete worker resource. namespace は master を含むので残す。
+            // delete worker resource.
             switch (ScalingType)
             {
                 case ScalingType.Deployment:
-                    if (!_parameters.PreserveWorker && await _kubeapi.ExistsDeploymentAsync(_parameters.Namespace, _parameters.Name))
+                    if (!_env.PreserveWorker && await _kubeapi.ExistsDeploymentAsync(_ns, _env.Name))
                     {
-                        await _kubeapi.DeleteDeploymentAsync(_parameters.Namespace, _parameters.Name);
+                        await _kubeapi.DeleteDeploymentAsync(_ns, _env.Name);
                     };
                     break;
                 case ScalingType.Job:
-                    if (!_parameters.PreserveWorker && await _kubeapi.ExistsJobAsync(_parameters.Namespace, _parameters.Name))
+                    if (!_env.PreserveWorker && await _kubeapi.ExistsJobAsync(_ns, _env.Name))
                     {
-                        await _kubeapi.DeleteJobAsync(_parameters.Namespace, _parameters.Name, graceperiodSecond:10);
+                        await _kubeapi.DeleteJobAsync(_ns, _env.Name, graceperiodSecond:10);
                     };
                     break;
                 default:
@@ -163,20 +148,20 @@ namespace DFrame.KubernetesWorker
         /// <returns></returns>
         private async ValueTask CreateJobAsync(int nodeCount, CancellationToken cancellationToken)
         {
-            var manifest = KubernetesManifest.GetJob(_parameters.Name, _parameters.Image, _parameters.ImageTag, _parameters.ConnectTo, _parameters.ImagePullPolicy, _parameters.ImagePullSecret, nodeCount);
+            var manifest = KubernetesManifest.GetJob(_env.Name, _env.Image, _env.ImageTag, _env.ConnectTo, _env.ImagePullPolicy, _env.ImagePullSecret, nodeCount);
 
             try
             {
                 // create resource
-                _ = await _kubeapi.CreateJobAsync(_parameters.Namespace, manifest, cancellationToken);
+                _ = await _kubeapi.CreateJobAsync(_ns, manifest, cancellationToken);
 
                 // confirm worker created successfully
-                var result = await _kubeapi.GetJobAsync(_parameters.Namespace, _parameters.Name);
+                var result = await _kubeapi.GetJobAsync(_ns, _env.Name);
                 Console.WriteLine($"Worker successfully created.\n{result}");
             }
             catch (HttpRequestException ex)
             {
-                Console.WriteLine($"Failed to create worker on Kubernetes Deployment. {_parameters.Namespace}/{_parameters.Name}. {ex.ToString()}");
+                Console.WriteLine($"Failed to create worker on Kubernetes Deployment. {_ns}/{_env.Name}. {ex.ToString()}");
                 Console.WriteLine($"Dump requested manifest.\n{manifest}");
                 throw;
             }
@@ -194,21 +179,20 @@ namespace DFrame.KubernetesWorker
         /// <returns></returns>
         private async ValueTask CreateDeployment(int nodeCount, CancellationToken cancellationToken)
         {
-            var manifest = KubernetesManifest.GetDeployment(_parameters.Name, _parameters.Image, _parameters.ImageTag, _parameters.ConnectTo, _parameters.ImagePullPolicy, _parameters.ImagePullSecret, nodeCount);
-            // Debug Log
+            var manifest = KubernetesManifest.GetDeployment(_env.Name, _env.Image, _env.ImageTag, _env.ConnectTo, _env.ImagePullPolicy, _env.ImagePullSecret, nodeCount);
 
             try
             {
                 // create resource
-                _ = await _kubeapi.CreateDeploymentAsync(_parameters.Namespace, manifest, cancellationToken);
+                _ = await _kubeapi.CreateDeploymentAsync(_ns, manifest, cancellationToken);
 
                 // confirm worker created successfully
-                var result = await _kubeapi.GetDeploymentAsync(_parameters.Namespace, _parameters.Name);
+                var result = await _kubeapi.GetDeploymentAsync(_ns, _env.Name);
                 Console.WriteLine($"Worker successfully created.\n{result}");
             }
             catch (HttpRequestException ex)
             {
-                Console.WriteLine($"Failed to create worker on Kubernetes Deployment. {_parameters.Namespace}/{_parameters.Name}. {ex.ToString()}");
+                Console.WriteLine($"Failed to create worker on Kubernetes Deployment. {_ns}/{_env.Name}. {ex.ToString()}");
                 Console.WriteLine($"Dump requested manifest.\n{manifest}");
                 throw;
             }
