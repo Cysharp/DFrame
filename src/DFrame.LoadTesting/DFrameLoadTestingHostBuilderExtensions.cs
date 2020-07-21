@@ -38,7 +38,7 @@ namespace DFrame
         static void ShowReportAb(ExecuteResult[] results, DFrameOptions options, ExecuteScenario executeScenario)
         {
             var requestCount = executeScenario.NodeCount * executeScenario.WorkerPerNode * executeScenario.ExecutePerWorker;
-            var concurrentExecCount = executeScenario.WorkerPerNode * executeScenario.ExecutePerWorker;
+            var concurrentExecCount = executeScenario.WorkerPerNode;
             var totalRequests = results.Length;
             var completeRequests = results.Where(x => !x.HasError).Count();
             var failedRequests = results.Where(x => x.HasError).Count();
@@ -71,7 +71,7 @@ namespace DFrame
             Console.WriteLine($"NodeCount:              {executeScenario.NodeCount}");
             Console.WriteLine($"WorkerPerNode:          {executeScenario.WorkerPerNode}");
             Console.WriteLine($"ExecutePerWorker:       {executeScenario.ExecutePerWorker}");
-            Console.WriteLine($"Concurrentcy level:     {concurrentExecCount}");
+            Console.WriteLine($"Concurrency level:      {concurrentExecCount}");
             Console.WriteLine($"Complete requests:      {completeRequests}");
             Console.WriteLine($"Failed requests:        {failedRequests}");
             Console.WriteLine($"");
