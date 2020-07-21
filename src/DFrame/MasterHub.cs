@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DFrame
@@ -80,6 +81,8 @@ namespace DFrame
 
         public async void Execute(int executeCount)
         {
+            var progress = coWorkers.Length * executeCount / 10;
+            var increment = 0;
             var result = await Task.WhenAll(coWorkers.Select(async x =>
             {
                 var list = new List<ExecuteResult>(executeCount);
@@ -99,10 +102,11 @@ namespace DFrame
                     var executeResult = new ExecuteResult(x.context.WorkerId, sw.Elapsed, i, (errorMsg != null), errorMsg);
 
                     // TODO:atode kesu.
-                    //if (i % 1000 == 0)
-                    //{
-                    //    Console.WriteLine(i + ":" + sw.Elapsed);
-                    //}
+                    Interlocked.Increment(ref increment);
+                    if (increment % progress == 0)
+                    {
+                        Console.WriteLine($"Completed {increment} executions");
+                    }
 
                     list.Add(executeResult);
                 }
