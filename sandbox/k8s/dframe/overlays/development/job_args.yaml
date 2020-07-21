@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: dframe-master
+spec:
+  template:
+    spec:
+      serviceAccountName: dframe-master
+      nodeSelector:
+        eks.amazonaws.com/nodegroup: dframe
+      containers:
+        - name: dframe-master
+          args:
+            [
+              "-nodeCount",
+              "10",
+              "-workerPerNode",
+              "10",
+              "-executePerWorker",
+              "1000",
+              "-scenarioName",
+              "ConsoleAppK8s.SampleHttpWorker",
+            ]
+          env:
+            - name: DFRAME_MASTER_HOST
+              value: "dframe-master.dframe.svc.cluster.local"
+            - name: DFRAME_WORKER_IMAGE_NAME
+              value: 431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s
+            - name: DFRAME_WORKER_IMAGE_TAG
+              value: "0.1.0"

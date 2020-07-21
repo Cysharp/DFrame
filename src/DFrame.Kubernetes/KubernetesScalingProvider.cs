@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using DFrame;
@@ -54,7 +55,7 @@ namespace DFrame.KubernetesWorker
         /// <summary>
         /// Image PullPolicy for Worker Kubernetes Image. default IfNotPresent.
         /// </summary>
-        public string ImagePullPolicy => _imagePullPolicy ?? (_imagePullSecret = Environment.GetEnvironmentVariable("DFRAME_WORKER_IMAGE_PULL_POLICY") ?? "IfNotPresent");
+        public string ImagePullPolicy => _imagePullPolicy ?? (_imagePullPolicy = Environment.GetEnvironmentVariable("DFRAME_WORKER_IMAGE_PULL_POLICY") ?? "IfNotPresent");
         /// <summary>
         /// Preserve Worker kubernetes resource after execution. default false.
         /// </summary>
@@ -162,21 +163,21 @@ namespace DFrame.KubernetesWorker
         /// <returns></returns>
         private async ValueTask CreateJobAsync(int nodeCount, CancellationToken cancellationToken)
         {
-            var jobManifest = KubernetesManifest.GetJob(_parameters.Name, _parameters.Image, _parameters.ImageTag, _parameters.ConnectTo, _parameters.ImagePullPolicy, _parameters.ImagePullSecret, nodeCount);
-            // Debug Log
-            // Console.WriteLine(jobManifest);
-
-            _ = await _kubeapi.CreateJobAsync(_parameters.Namespace, jobManifest, cancellationToken);
+            var manifest = KubernetesManifest.GetJob(_parameters.Name, _parameters.Image, _parameters.ImageTag, _parameters.ConnectTo, _parameters.ImagePullPolicy, _parameters.ImagePullSecret, nodeCount);
 
             try
             {
+                // create resource
+                _ = await _kubeapi.CreateJobAsync(_parameters.Namespace, manifest, cancellationToken);
+
                 // confirm worker created successfully
                 var result = await _kubeapi.GetJobAsync(_parameters.Namespace, _parameters.Name);
                 Console.WriteLine($"Worker successfully created.\n{result}");
             }
-            catch (Exception ex)
+            catch (HttpRequestException ex)
             {
                 Console.WriteLine($"Failed to create worker on Kubernetes Deployment. {_parameters.Namespace}/{_parameters.Name}. {ex.ToString()}");
+                Console.WriteLine($"Dump requested manifest.\n{manifest}");
                 throw;
             }
         }
@@ -193,21 +194,22 @@ namespace DFrame.KubernetesWorker
         /// <returns></returns>
         private async ValueTask CreateDeployment(int nodeCount, CancellationToken cancellationToken)
         {
-            var deploymentManifest = KubernetesManifest.GetDeployment(_parameters.Name, _parameters.Image, _parameters.ImageTag, _parameters.ConnectTo, _parameters.ImagePullPolicy, _parameters.ImagePullSecret, nodeCount);
+            var manifest = KubernetesManifest.GetDeployment(_parameters.Name, _parameters.Image, _parameters.ImageTag, _parameters.ConnectTo, _parameters.ImagePullPolicy, _parameters.ImagePullSecret, nodeCount);
             // Debug Log
-            // Console.WriteLine(deploymentManifest);
-
-            _ = await _kubeapi.CreateDeploymentAsync(_parameters.Namespace, deploymentManifest, cancellationToken);
 
             try
             {
+                // create resource
+                _ = await _kubeapi.CreateDeploymentAsync(_parameters.Namespace, manifest, cancellationToken);
+
                 // confirm worker created successfully
                 var result = await _kubeapi.GetDeploymentAsync(_parameters.Namespace, _parameters.Name);
                 Console.WriteLine($"Worker successfully created.\n{result}");
             }
-            catch (Exception ex)
+            catch (HttpRequestException ex)
             {
                 Console.WriteLine($"Failed to create worker on Kubernetes Deployment. {_parameters.Namespace}/{_parameters.Name}. {ex.ToString()}");
+                Console.WriteLine($"Dump requested manifest.\n{manifest}");
                 throw;
             }
         }

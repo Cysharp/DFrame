@@ -4,6 +4,7 @@ using DFrame.KubernetesWorker;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,7 +16,7 @@ namespace ConsoleAppK8s
         static async Task Main(string[] args)
         {
             Console.WriteLine($"dframe begin. {nameof(KubernetesScalingProvider)}");
-            var host = "localhost";
+            var host = "0.0.0.0";
             // TODO:test args.
             if (args.Length == 0)
             {
@@ -24,10 +25,8 @@ namespace ConsoleAppK8s
                 //args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 1000 -scenarioName ConsoleAppK8s.SampleHttpWorker".Split(' ');
                 args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 10000 -scenarioName ConsoleAppK8s.SampleHttpWorker".Split(' ');
                 //args = "-nodeCount 10 -workerPerNode 10 -executePerWorker 1000 -scenarioName ConsoleAppK8s.SampleHttpWorker".Split(' ');
-                // listen on
-                host = "0.0.0.0";
             }
-            else
+            else if (args.Contains("--worker-flag"))
             {
                 // worker
                 // connect to
