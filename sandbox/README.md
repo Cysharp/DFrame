@@ -1,3 +1,27 @@
+## Getting Started
+
+Use ConsoleApp to try DFrame with InProcessScalingProvider and LoadTest to HTTP(S) Server.
+
+**Visual Studio**
+
+Open DFrame.sln and launch EchoServer then ConsoleApp.
+
+> If you are using [SwitchStartupProject for VS2019](https://heptapod.host/thirteen/switchstartupproject) use `ConsoleApp + EchoServer`.
+
+**dotnet cli**
+
+run echo server.
+
+```shell
+docker run -it --rm -p 5000:80 cysharp/dframe-echoserver:latest
+```
+
+run sample ConsoleApp.
+
+```shell
+dotnet run --project sandbox/ConsoleApp
+```
+
 ## Docker samples
 
 ### Out of Process Scaling Provider (oop)
@@ -64,7 +88,16 @@ kubectl run -it --rm --restart=Never -n dframe --image=431046970529.dkr.ecr.ap-n
 kubectl run -i --rm --restart=Never -n dframe --image=mocoso/apachebench apachebench -- bash -c "ab -n 10000 -c 10 http://77948c50-apiserver-apiserv-98d9-538745285.ap-northeast-1.elb.amazonaws.com/healthz"
 ```
 
-### deploy api server
+### api server
+
+build
+
+```shell
+docker build -t cysharp/dframe-echoserver:0.0.1 -f sandbox/EchoServer/Dockerfile .
+docker tag cysharp/dframe-echoserver:0.0.1 cysharp/dframe-echoserver:latest
+docker push cysharp/dframe-echoserver:0.0.1
+docker push cysharp/dframe-echoserver:latest
+```
 
 let's launch apiserver to try httpclient access bench through dframe worker.
 
@@ -73,7 +106,7 @@ local
 ```shell
 kubectl kustomize sandbox/k8s/apiserver/overlays/local | kubectl apply -f -
 kubens apiserver
-curl http://localhost:8080/api/weatherforecast
+curl http://localhost:5000
 ```
 
 aws
@@ -81,7 +114,11 @@ aws
 ```shell
 kubectl kustomize sandbox/k8s/apiserver/overlays/aws | kubectl apply -f -
 kubens apiserver
-curl http://localhost:8080/api/weatherforecast
+curl "http://$(kubectl get ingress -o jsonpath='{.items[].status.loadBalancer.ingress[].hostname}')"
+```
 
+remove kubernetes resource.
+
+```shell
 kubectl kustomize sandbox/k8s/apiserver/overlays/aws | kubectl delete -f -
 ```
