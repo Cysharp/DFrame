@@ -11,14 +11,17 @@ namespace DFrame
     public class OutOfProcessScalingProvider : IScalingProvider
     {
         CancellationTokenSource cts = new CancellationTokenSource();
+        IFailSignal failSignal = default!;
 
-        public async Task StartWorkerAsync(DFrameOptions options, int nodeCount, IServiceProvider provider, CancellationToken cancellationToken)
+        public async Task StartWorkerAsync(DFrameOptions options, int processCount, IServiceProvider provider, IFailSignal failSignal, CancellationToken cancellationToken)
         {
+            this.failSignal = failSignal;
+
             var location = Assembly.GetEntryAssembly().Location;
 
             var cmd = $"dotnet \"{location}\" --worker-flag";
 
-            for (int i = 0; i < nodeCount; i++)
+            for (int i = 0; i < processCount; i++)
             {
                 var startProcessTask = ProcessX.StartAsync(cmd);
                 WriteAll(startProcessTask);
@@ -31,11 +34,13 @@ namespace DFrame
             {
                 await foreach (var item in e.WithCancellation(cts.Token))
                 {
-                    Console.WriteLine(item); // TODO:logger?
+                    Console.WriteLine(item);
                 }
             }
-            catch (OperationCanceledException)
+            catch (Exception ex)
             {
+                if (ex is OperationCanceledException) return;
+                failSignal.TrySetException(ex);
             }
         }
 

@@ -31,9 +31,6 @@ namespace DFrame
                 return;
             }
 
-            // TODO: 雑
-            ThreadPool.SetMinThreads(1000, 1000);
-
             if (args.Length != 0 && args.Contains("--worker-flag"))
             {
                 await hostBuilder
@@ -82,42 +79,46 @@ namespace DFrame
             this.options = options;
         }
 
-        public async Task Main(int nodeCount, int workerPerNode, int executePerWorker, string scenarioName)
+        public async Task Main(int processCount, int workerPerProcess, int executePerProcess, string workerName)
         {
+            ThreadPoolUtility.SetMinThread(workerPerProcess);
+
+            var failSignal = new TaskFailSignal();
+
             using (masterHost = StartMasterHost())
             await using (options.ScalingProvider)
             {
                 var reporter = masterHost.Services.GetRequiredService<Reporter>();
-                reporter.Reset(nodeCount);
+                reporter.Reset(processCount);
 
                 logger.LogInformation("Starting worker nodes.");
-                await options.ScalingProvider.StartWorkerAsync(options, nodeCount, provider, Context.CancellationToken).WithCancellation(Context.CancellationToken);
+                await options.ScalingProvider.StartWorkerAsync(options, processCount, provider, failSignal, Context.CancellationToken).WithCancellation(Context.CancellationToken);
 
-                // 
-
-                await reporter.OnConnected.Waiter.WithCancellation(Context.CancellationToken);
+                await Task.WhenAny(reporter.OnConnected.Waiter.WithCancellation(Context.CancellationToken), failSignal.Task);
 
                 var broadcaster = reporter.Broadcaster;
 
                 logger.LogTrace("Send CreateWorker command to workers and wait complete message.");
-                broadcaster.CreateCoWorker(workerPerNode, scenarioName);
-                await reporter.OnCreateCoWorker.Waiter.WithCancellation(Context.CancellationToken);
+                broadcaster.CreateCoWorker(workerPerProcess, workerName);
+                await Task.WhenAny(reporter.OnCreateCoWorker.Waiter.WithCancellation(Context.CancellationToken), failSignal.Task);
 
                 logger.LogTrace("Send Setup command to workers and wait complete message.");
                 broadcaster.Setup();
-                await reporter.OnSetup.Waiter.WithCancellation(Context.CancellationToken);
+                await Task.WhenAny(reporter.OnSetup.Waiter.WithCancellation(Context.CancellationToken), failSignal.Task);
 
                 logger.LogTrace("Send Execute command to workers and wait complete message.");
-                broadcaster.Execute(executePerWorker);
-                await reporter.OnExecute.Waiter.WithCancellation(Context.CancellationToken);
+                broadcaster.Execute(executePerProcess);
+                await Task.WhenAny(reporter.OnExecute.Waiter.WithCancellation(Context.CancellationToken), failSignal.Task);
 
                 logger.LogTrace("Send SetTeardownup command to workers and wait complete message.");
                 broadcaster.Teardown();
-                await reporter.OnTeardown.Waiter.WithCancellation(Context.CancellationToken);
+                await Task.WhenAny(reporter.OnTeardown.Waiter.WithCancellation(Context.CancellationToken), failSignal.Task);
 
-                options.OnExecuteResult?.Invoke(reporter.ExecuteResult.ToArray(), options, new ExecuteScenario(scenarioName, nodeCount, workerPerNode, executePerWorker));
+                options.OnExecuteResult?.Invoke(reporter.ExecuteResult.ToArray(), options, new ExecuteScenario(workerName, processCount, workerPerProcess, executePerProcess));
 
                 broadcaster.Shutdown();
+
+                await Task.Delay(TimeSpan.FromSeconds(1)); // wait Shutdown complete?
             }
 
             logger.LogInformation("Master shutdown.");
@@ -192,7 +193,7 @@ namespace DFrame
         {
             logger.LogInformation("Starting DFrame worker node");
 
-            var channel = new Channel(options.WorkerConnectToHostAndPort, ChannelCredentials.Insecure, 
+            var channel = new Channel(options.WorkerConnectToHostAndPort, ChannelCredentials.Insecure,
                 new[] {
                     // keep alive
                     new ChannelOption("grpc.keepalive_time_ms", 2000),

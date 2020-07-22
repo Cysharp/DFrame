@@ -88,7 +88,7 @@ namespace DFrame.KubernetesWorker
         /// <param name="provider"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task StartWorkerAsync(DFrameOptions options, int nodeCount, IServiceProvider provider, CancellationToken cancellationToken)
+        public async Task StartWorkerAsync(DFrameOptions options, int processCount, IServiceProvider provider, IFailSignal failSignal, CancellationToken cancellationToken)
         {
             Console.WriteLine($"scale out workers. {_ns}/{_env.Name} {_env.ScalingType}");
 
@@ -96,10 +96,10 @@ namespace DFrame.KubernetesWorker
             switch (_env.ScalingType)
             {
                 case ScalingType.Deployment:
-                    await CreateDeployment(nodeCount, cancellationToken);
+                    await CreateDeployment(processCount, cancellationToken);
                     break;
                 case ScalingType.Job:
-                    await CreateJobAsync(nodeCount, cancellationToken);
+                    await CreateJobAsync(processCount, cancellationToken);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(ScalingType));

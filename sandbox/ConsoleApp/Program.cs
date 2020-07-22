@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using System.Threading;
 using ZLogger;
+using Grpc.Core;
 
 namespace ConsoleApp
 {
@@ -14,14 +15,16 @@ namespace ConsoleApp
     {
         static async Task Main(string[] args)
         {
+            // GrpcEnvironment.SetLogger(new Grpc.Core.Logging.ConsoleLogger());
+
             var host = "localhost";
             // TODO:test args.
             if (args.Length == 0)
             {
                 // master
-                //args = "-nodeCount 3 -workerPerNode 3 -executePerWorker 3 -scenarioName ConsoleApp.SampleWorker".Split(' ');
+                args = "-processCount 3 -workerPerProcess 3 -executePerProcess 3 -workerName ConsoleApp.SampleWorker".Split(' ');
                 //args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 100 -scenarioName ConsoleApp.SampleHttpWorker".Split(' ');
-                args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 10000 -scenarioName ConsoleApp.SampleHttpWorker".Split(' ');
+                //args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 10000 -scenarioName ConsoleApp.SampleHttpWorker".Split(' ');
                 // listen on
                 // host = "0.0.0.0";
             }
@@ -41,7 +44,7 @@ namespace ConsoleApp
                 .ConfigureLogging(logging =>
                 {
                     logging.ClearProviders();
-                    logging.SetMinimumLevel(LogLevel.Trace);
+                    //logging.SetMinimumLevel(LogLevel.Trace);
                     logging.AddZLoggerConsole(options =>
                     {
                         options.EnableStructuredLogging = false;

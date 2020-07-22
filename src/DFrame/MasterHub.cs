@@ -56,6 +56,8 @@ namespace DFrame
 
         public void CreateCoWorker(int createCount, string typeName)
         {
+            ThreadPoolUtility.SetMinThread(createCount);
+
             // TODO:Entry?
             var type = Assembly.GetEntryAssembly().GetType(typeName);
 
@@ -81,8 +83,10 @@ namespace DFrame
 
         public async void Execute(int executeCount)
         {
-            var progress = coWorkers.Length * executeCount / 10;
-            var increment = 0;
+            // TODO:add progress...
+            //var progress = coWorkers.Length * executeCount / 10;
+            //var increment = 0;
+
             var result = await Task.WhenAll(coWorkers.Select(async x =>
             {
                 var list = new List<ExecuteResult>(executeCount);
@@ -100,14 +104,6 @@ namespace DFrame
                     }
 
                     var executeResult = new ExecuteResult(x.context.WorkerId, sw.Elapsed, i, (errorMsg != null), errorMsg);
-
-                    // TODO:atode kesu.
-                    Interlocked.Increment(ref increment);
-                    if (increment % progress == 0)
-                    {
-                        Console.WriteLine($"Completed {increment} executions");
-                    }
-
                     list.Add(executeResult);
                 }
                 return list;
@@ -182,7 +178,6 @@ namespace DFrame
 
         protected override ValueTask OnDisconnected()
         {
-            Console.WriteLine("Disconnected!");
             return base.OnDisconnected();
         }
 
