@@ -38,7 +38,7 @@ namespace DFrame
 
                 foreach (var worker in types)
                 {
-                    if (typeof(Worker).IsAssignableFrom(worker) && worker != typeof(Worker))
+                    if (typeof(Worker).IsAssignableFrom(worker) && !worker.IsAbstract)
                     {
                         var attr = worker.GetCustomAttribute<WorkerAttribute>(false);
                         var master = GetMasterType(worker);

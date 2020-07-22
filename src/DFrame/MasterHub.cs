@@ -16,37 +16,32 @@ using System.Threading.Tasks;
 
 namespace DFrame
 {
-
-
-
-
-
-
-
-
-
     public interface IWorkerReceiver
     {
-        void CreateCoWorker(int createCount, string typeName);
+        void CreateCoWorker(int createCount, string workerName);
         void Setup();
         void Execute(int executeCount);
         void Teardown();
         void Shutdown();
     }
 
-    public class WorkerReceiver : IWorkerReceiver
+    internal class WorkerReceiver : IWorkerReceiver
     {
         // readonly ILogger<WorkerReceiver> logger;
         readonly Channel channel;
         readonly Guid nodeId;
+        readonly DFrameWorkerCollection workerCollection;
+        readonly IServiceProvider serviceProvider;
         readonly TaskCompletionSource<object?> receiveShutdown;
         (WorkerContext context, Worker worker)[] coWorkers = default!;
 
-        public WorkerReceiver(Channel channel, Guid nodeId)
+        internal WorkerReceiver(Channel channel, Guid nodeId, IServiceProvider serviceProvider)
         {
             // this.logger = logger;
             this.channel = channel;
             this.nodeId = nodeId;
+            this.workerCollection = (DFrameWorkerCollection)serviceProvider.GetService(typeof(DFrameWorkerCollection));
+            this.serviceProvider = serviceProvider;
             this.receiveShutdown = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
@@ -54,21 +49,18 @@ namespace DFrame
 
         public Task WaitShutdown => receiveShutdown.Task;
 
-        public void CreateCoWorker(int createCount, string typeName)
+        public void CreateCoWorker(int createCount, string workerName)
         {
             ThreadPoolUtility.SetMinThread(createCount);
-
-            // TODO:Entry?
-            var type = Assembly.GetEntryAssembly().GetType(typeName);
+            if (!workerCollection.TryGetWorker(workerName, out var description))
+            {
+                throw new InvalidOperationException($"Worker:{workerName} does not found in assembly.");
+            }
 
             this.coWorkers = new (WorkerContext, Worker)[createCount];
             for (int i = 0; i < coWorkers.Length; i++)
             {
-                // TODO: ExpressionTree Lambda
-                // register to DI.
-                //var coWorker = typeof(IServiceLocator).GetMethod("GetService").MakeGenericMethod(type)
-                //    .Invoke(this.Context.ServiceLocator, null);
-                var coWorker = Activator.CreateInstance(type);
+                var coWorker = serviceProvider.GetService(description.WorkerType);
                 coWorkers[i] = (new WorkerContext(channel), (Worker)coWorker);
             }
 

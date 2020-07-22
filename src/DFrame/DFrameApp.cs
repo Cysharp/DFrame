@@ -31,25 +31,25 @@ namespace DFrame
                 return;
             }
 
+            hostBuilder = hostBuilder
+                .ConfigureServices(x =>
+                {
+                    x.AddSingleton(options);
+                    x.AddSingleton(workerCollection);
+
+                    foreach (var item in workerCollection.All)
+                    {
+                        x.AddTransient(item.WorkerType);
+                    }
+                });
+
             if (args.Length != 0 && args.Contains("--worker-flag"))
             {
-                await hostBuilder
-                    .ConfigureServices(x =>
-                    {
-                        x.AddSingleton(options);
-                        x.AddSingleton(workerCollection);
-                    })
-                    .RunConsoleAppFrameworkAsync<DFrameWorkerApp>(args);
+                await hostBuilder.RunConsoleAppFrameworkAsync<DFrameWorkerApp>(args);
             }
             else
             {
-                await hostBuilder
-                    .ConfigureServices(x =>
-                    {
-                        x.AddSingleton(options);
-                        x.AddSingleton(workerCollection);
-                    })
-                    .RunConsoleAppFrameworkAsync<DFrameApp>(args);
+                await hostBuilder.RunConsoleAppFrameworkAsync<DFrameApp>(args);
             }
         }
 
@@ -86,6 +86,11 @@ namespace DFrame
             int executePerProcess = 10)
         {
             ThreadPoolUtility.SetMinThread(workerPerProcess);
+            // validate worker is exists.
+            if (!workers.TryGetWorker(workerName, out var _))
+            {
+                throw new InvalidOperationException($"Worker:{workerName} does not found in assembly.");
+            }
 
             var failSignal = new TaskFailSignal();
 
@@ -205,7 +210,7 @@ namespace DFrame
                     new ChannelOption("grpc.http2.min_time_between_pings_ms", 5000),
                 });
             var nodeId = Guid.NewGuid();
-            var receiver = new WorkerReceiver(channel, nodeId);
+            var receiver = new WorkerReceiver(channel, nodeId, provider);
             var client = StreamingHubClient.Connect<IMasterHub, IWorkerReceiver>(channel, receiver);
             receiver.Client = client;
 
