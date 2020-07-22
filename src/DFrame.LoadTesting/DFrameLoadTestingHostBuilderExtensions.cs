@@ -32,8 +32,8 @@ namespace DFrame
         /// <param name="options"></param>
         static void AbReport(ExecuteResult[] results, DFrameOptions options, ExecuteScenario executeScenario)
         {
-            var requestCount = executeScenario.NodeCount * executeScenario.WorkerPerNode * executeScenario.ExecutePerWorker;
-            var concurrency = executeScenario.WorkerPerNode;
+            var requestCount = executeScenario.ProcessCount * executeScenario.WorkerPerProcess * executeScenario.ExecutePerWorker;
+            var concurrency = executeScenario.WorkerPerProcess;
             var totalRequests = results.Length;
             var completeRequests = results.Where(x => !x.HasError).Count();
             var failedRequests = results.Where(x => x.HasError).Count();
@@ -62,9 +62,9 @@ namespace DFrame
 Scaling Type:           {options.ScalingProvider.GetType().Name}
 
 Request count:          {requestCount}
-NodeCount:              {executeScenario.NodeCount}
-WorkerPerNode:          {executeScenario.WorkerPerNode}
-ExecutePerWorker:       {executeScenario.ExecutePerWorker}
+{nameof(executeScenario.ProcessCount)}:           {executeScenario.ProcessCount}
+{nameof(executeScenario.WorkerPerProcess)}:       {executeScenario.WorkerPerProcess}
+{nameof(executeScenario.ExecutePerWorker)}:       {executeScenario.ExecutePerWorker}
 Concurrency level:      {concurrency}
 Complete requests:      {completeRequests}
 Failed requests:        {failedRequests}

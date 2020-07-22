@@ -34,15 +34,15 @@ namespace DFrame
     public struct ExecuteScenario
     {
         public string ScenarioName { get; }
-        public int NodeCount { get; }
-        public int WorkerPerNode { get; }
+        public int ProcessCount { get; }
+        public int WorkerPerProcess { get; }
         public int ExecutePerWorker { get; }
 
-        public ExecuteScenario(string scenarioName, int nodeCount, int workerPerNode, int executePerWorker)
+        public ExecuteScenario(string scenarioName, int processCount, int workerPerProcess, int executePerWorker)
         {
             ScenarioName = scenarioName;
-            NodeCount = nodeCount;
-            WorkerPerNode = workerPerNode;
+            ProcessCount = processCount;
+            WorkerPerProcess = workerPerProcess;
             ExecutePerWorker = executePerWorker;
         }
     }
