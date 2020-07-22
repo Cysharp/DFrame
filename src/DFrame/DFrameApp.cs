@@ -83,7 +83,7 @@ namespace DFrame
             string workerName,
             int processCount = 1,
             int workerPerProcess = 10,
-            int executePerProcess = 10)
+            int executePerWorker = 10)
         {
             ThreadPoolUtility.SetMinThread(workerPerProcess);
             // validate worker is exists.
@@ -116,14 +116,14 @@ namespace DFrame
                 await Task.WhenAny(reporter.OnSetup.Waiter.WithCancellation(Context.CancellationToken), failSignal.Task);
 
                 logger.LogTrace("Send Execute command to workers and wait complete message.");
-                broadcaster.Execute(executePerProcess);
+                broadcaster.Execute(executePerWorker);
                 await Task.WhenAny(reporter.OnExecute.Waiter.WithCancellation(Context.CancellationToken), failSignal.Task);
 
                 logger.LogTrace("Send SetTeardownup command to workers and wait complete message.");
                 broadcaster.Teardown();
                 await Task.WhenAny(reporter.OnTeardown.Waiter.WithCancellation(Context.CancellationToken), failSignal.Task);
 
-                options.OnExecuteResult?.Invoke(reporter.ExecuteResult.ToArray(), options, new ExecuteScenario(workerName, processCount, workerPerProcess, executePerProcess));
+                options.OnExecuteResult?.Invoke(reporter.ExecuteResult.ToArray(), options, new ExecuteScenario(workerName, processCount, workerPerProcess, executePerWorker));
 
                 broadcaster.Shutdown();
 
