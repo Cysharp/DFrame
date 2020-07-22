@@ -14,40 +14,36 @@ namespace DFrame.KubernetesWorker
     /// <summary>
     /// Configuable worker environment
     /// </summary>
-    internal class WorkerEnvironment
+    public class KubernetesEnvironment
     {
-        private string _connectTo;
-        private string _name;
-        private string _image;
-        private string _imageTag;
-        private string _imagePullSecret;
-        private string _imagePullPolicy;
-        private bool? _preserveWorker;
-
+        /// <summary>
+        /// Worker scaling type.
+        /// </summary>
+        public ScalingType ScalingType { get; set; } = ScalingType.Job;
         /// <summary>
         /// Master Host to connect from Worker.
         /// </summary>
-        public string ConnectTo => _connectTo ?? (_connectTo = Environment.GetEnvironmentVariable("DFRAME_MASTER_HOST") ?? $"dframe-master.dframe.svc.cluster.local");
+        public string ConnectTo { get; set; } = Environment.GetEnvironmentVariable("DFRAME_MASTER_HOST") ?? $"dframe-master.dframe.svc.cluster.local";
         /// <summary>
         /// Worker Kubernetes Resource Name.
         /// </summary>
-        public string Name => _name ?? (_name = Environment.GetEnvironmentVariable("DFRAME_WORKER_NAME") ?? "dframe-worker");
+        public string Name { get; set; } = Environment.GetEnvironmentVariable("DFRAME_WORKER_NAME") ?? "dframe-worker";
         /// <summary>
         /// Image Name for Worker Kubernetes Image.
         /// </summary>
-        public string Image => _image ?? (_image = Environment.GetEnvironmentVariable("DFRAME_WORKER_IMAGE_NAME") ?? "");
+        public string Image { get; set; } = Environment.GetEnvironmentVariable("DFRAME_WORKER_IMAGE_NAME") ?? "";
         /// <summary>
         /// Image Tag for Worker Kubernetes Image.
         /// </summary>
-        public string ImageTag => _imageTag ?? (_imageTag = Environment.GetEnvironmentVariable("DFRAME_WORKER_IMAGE_TAG") ?? "");
+        public string ImageTag { get; set; } = Environment.GetEnvironmentVariable("DFRAME_WORKER_IMAGE_TAG") ?? "";
         /// <summary>
         /// Image PullSecret for Worker Kubernetes Image. default empty.
         /// </summary>
-        public string ImagePullSecret => _imagePullSecret ?? (_imagePullSecret = Environment.GetEnvironmentVariable("DFRAME_WORKER_IMAGE_PULL_SECERT") ?? "");
+        public string ImagePullSecret { get; set; } = Environment.GetEnvironmentVariable("DFRAME_WORKER_IMAGE_PULL_SECERT") ?? "";
         /// <summary>
         /// Image PullPolicy for Worker Kubernetes Image. default IfNotPresent.
         /// </summary>
-        public string ImagePullPolicy => _imagePullPolicy ?? (_imagePullPolicy = Environment.GetEnvironmentVariable("DFRAME_WORKER_IMAGE_PULL_POLICY") ?? "IfNotPresent");
+        public string ImagePullPolicy { get; set; } = Environment.GetEnvironmentVariable("DFRAME_WORKER_IMAGE_PULL_POLICY") ?? "IfNotPresent";
         /// <summary>
         /// Preserve Worker kubernetes resource after execution. default false.
         /// </summary>
@@ -55,7 +51,7 @@ namespace DFrame.KubernetesWorker
         /// any value => true
         /// null => false
         /// </remarks>
-        public bool PreserveWorker => _preserveWorker ?? (bool)(_preserveWorker = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DFRAME_WORKER_PRESERVE")));
+        public bool PreserveWorker { get; set; } = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DFRAME_WORKER_PRESERVE"));
     }
 
     /// <summary>
@@ -64,10 +60,8 @@ namespace DFrame.KubernetesWorker
     /// </summary>
     public class KubernetesScalingProvider : IScalingProvider
     {
-        public ScalingType ScalingType { get; } = ScalingType.Job;
-
         private readonly KubernetesApi _kubeapi;
-        private readonly WorkerEnvironment _env;
+        private readonly KubernetesEnvironment _env;
         private readonly string _ns;
 
         public KubernetesScalingProvider()
@@ -77,13 +71,13 @@ namespace DFrame.KubernetesWorker
                 ResponseHeaderType = HeaderContentType.Yaml,
                 SkipCertificateValidation = true,
             });
-            _env = new WorkerEnvironment();
+            _env = new KubernetesEnvironment();
             _ns = _kubeapi.Namespace;
         }
 
-        public KubernetesScalingProvider(ScalingType scalingType) : base()
+        public KubernetesScalingProvider(KubernetesEnvironment kubernetesEnvironment) : base()
         {
-            this.ScalingType = scalingType;
+            _env = kubernetesEnvironment;
         }
 
         /// <summary>
@@ -96,10 +90,10 @@ namespace DFrame.KubernetesWorker
         /// <returns></returns>
         public async Task StartWorkerAsync(DFrameOptions options, int nodeCount, IServiceProvider provider, CancellationToken cancellationToken)
         {
-            Console.WriteLine($"scale out workers. {_ns}/{_env.Name} {ScalingType}");
+            Console.WriteLine($"scale out workers. {_ns}/{_env.Name} {_env.ScalingType}");
 
             // create worker resource
-            switch (ScalingType)
+            switch (_env.ScalingType)
             {
                 case ScalingType.Deployment:
                     await CreateDeployment(nodeCount, cancellationToken);
@@ -114,10 +108,10 @@ namespace DFrame.KubernetesWorker
 
         public async ValueTask DisposeAsync()
         {
-            Console.WriteLine($"scale in workers. {_ns}/{_env.Name} {ScalingType}");
+            Console.WriteLine($"scale in workers. {_ns}/{_env.Name} {_env.ScalingType}");
 
             // delete worker resource.
-            switch (ScalingType)
+            switch (_env.ScalingType)
             {
                 case ScalingType.Deployment:
                     if (!_env.PreserveWorker && await _kubeapi.ExistsDeploymentAsync(_ns, _env.Name))
