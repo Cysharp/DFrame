@@ -22,7 +22,7 @@ namespace ConsoleApp
             if (args.Length == 0)
             {
                 // master
-                args = "-processCount 3 -workerPerProcess 3 -executePerProcess 3 -workerName SampleWorker".Split(' ');
+                args = "-processCount 3 -workerPerProcess 3 -executePerWorker 3 -workerName SampleWorker".Split(' ');
                 //args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 100 -scenarioName ConsoleApp.SampleHttpWorker".Split(' ');
                 //args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 10000 -scenarioName ConsoleApp.SampleHttpWorker".Split(' ');
                 // listen on
