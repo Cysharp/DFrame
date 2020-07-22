@@ -87,8 +87,8 @@ Show Load Testing result report.
 Finished 10000 requests
 Scaling Type:           InProcessScalingProvider
 Request count:          10000
-NodeCount:              1
-WorkerPerNode:          10
+ProcessCount:              1
+WorkerPerProcess:          10
 ExecutePerWorker:       1000
 Concurrency level:      10
 Complete requests:      10000
