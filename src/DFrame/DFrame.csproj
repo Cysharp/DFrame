@@ -11,6 +11,7 @@
         <PackageReference Include="MagicOnion" Version="3.0.13" />
         <PackageReference Include="MagicOnion.Hosting" Version="3.0.13" />
         <PackageReference Include="ConsoleAppFramework" Version="2.4.0" />
+        <PackageReference Include="ZLogger" Version="1.2.1" />
     </ItemGroup>
 
 </Project>

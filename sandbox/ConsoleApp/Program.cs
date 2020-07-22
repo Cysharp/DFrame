@@ -6,6 +6,7 @@ using System;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.Threading;
+using ZLogger;
 
 namespace ConsoleApp
 {
@@ -37,9 +38,14 @@ namespace ConsoleApp
             }
 
             await Host.CreateDefaultBuilder(args)
-                .ConfigureLogging(x =>
+                .ConfigureLogging(logging =>
                 {
-                    x.SetMinimumLevel(LogLevel.Trace);
+                    logging.ClearProviders();
+                    logging.SetMinimumLevel(LogLevel.Trace);
+                    logging.AddZLoggerConsole(options =>
+                    {
+                        options.EnableStructuredLogging = false;
+                    });
                 })
                 .RunDFrameLoadTestingAsync(args, new DFrameOptions(host + ":12345", host + ":12345", new InProcessScalingProvider())
                 {

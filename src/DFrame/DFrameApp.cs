@@ -15,6 +15,7 @@ using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
+using ZLogger;
 
 namespace DFrame
 {
@@ -150,6 +151,15 @@ namespace DFrame
                 {
                     x.AddSingleton<Reporter>();
                     x.AddSingleton(typeof(KeyedValueProvider<>));
+                })
+                .ConfigureLogging(logging =>
+                {
+                    logging.ClearProviders();
+                    logging.AddZLoggerConsole(options =>
+                    {
+                        // todo: configure structured logging
+                        options.EnableStructuredLogging = false;
+                    });
                 })
                 .Build();
 

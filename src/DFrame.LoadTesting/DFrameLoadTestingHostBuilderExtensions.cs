@@ -54,7 +54,7 @@ namespace DFrame
             Console.WriteLine($"");
 
             // connection info
-            Console.WriteLine($"Server Host:Port:        {options.MasterListenHostAndPort}");
+            Console.WriteLine($"Server Host:Port:       {options.MasterListenHostAndPort}");
             Console.WriteLine($"");
             Console.WriteLine($"Scaling Type:           {options.ScalingProvider.GetType().Name}");
             Console.WriteLine($"");
