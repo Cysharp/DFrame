@@ -151,7 +151,7 @@ namespace DFrame.KubernetesWorker
 
                 // confirm worker created successfully
                 var result = await _kubeapi.GetJobAsync(_ns, _env.Name);
-                Console.WriteLine($"Worker successfully created.\n{result}");
+                Console.WriteLine($"Worker successfully created. {_ns}/{_env.Name}");
             }
             catch (HttpRequestException ex)
             {
@@ -182,7 +182,7 @@ namespace DFrame.KubernetesWorker
 
                 // confirm worker created successfully
                 var result = await _kubeapi.GetDeploymentAsync(_ns, _env.Name);
-                Console.WriteLine($"Worker successfully created.\n{result}");
+                Console.WriteLine($"Worker successfully created. {_ns}/{_env.Name}");
             }
             catch (HttpRequestException ex)
             {

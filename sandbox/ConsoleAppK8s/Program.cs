@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using ZLogger;
 
 namespace ConsoleAppK8s
 {
@@ -40,13 +41,17 @@ namespace ConsoleAppK8s
 
             Console.WriteLine($"args {string.Join(", ", args)}, host {host}");
             await Host.CreateDefaultBuilder(args)
-                .ConfigureLogging(x =>
+                .ConfigureLogging(logging =>
                 {
-                    x.SetMinimumLevel(LogLevel.Trace);
+                    logging.ClearProviders();
+                    logging.SetMinimumLevel(LogLevel.Trace);
+                    logging.AddZLoggerConsole(options =>
+                    {
+                        options.EnableStructuredLogging = false;
+                    });
                 })
                 .RunDFrameLoadTestingAsync(args, new DFrameOptions(host + ":12345", host + ":12345", new KubernetesScalingProvider())
                 {
-
                 });
         }
     }
