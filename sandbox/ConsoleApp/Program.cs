@@ -22,9 +22,10 @@ namespace ConsoleApp
             if (args.Length == 0)
             {
                 // master
-                args = "-processCount 10 -workerPerProcess 3 -executePerWorker 3 -workerName SampleWorker".Split(' ');
-                //args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 100 -scenarioName ConsoleApp.SampleHttpWorker".Split(' ');
-                //args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 10000 -scenarioName ConsoleApp.SampleHttpWorker".Split(' ');
+                args = "-processCount 3 -workerPerProcess 3 -executePerWorker 3 -workerName SampleWorker".Split(' ');
+                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleHttpWorker".Split(' ');
+                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 10000 -workerName SampleHttpWorker".Split(' ');
+                //args = "-processCount 10 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleHttpWorker".Split(' ');
                 // listen on
                 // host = "0.0.0.0";
             }
