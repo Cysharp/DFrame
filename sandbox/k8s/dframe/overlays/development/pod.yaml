@@ -9,7 +9,7 @@ spec:
   containers:
     - name: dframe-master
       env:
-        - name: DFRAME_MASTER_HOST
+        - name: DFRAME_MASTER_CONNECT_TO_HOST
           value: "dframe-master.dframe.svc.cluster.local"
         - name: DFRAME_WORKER_IMAGE_NAME
           value: 431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s

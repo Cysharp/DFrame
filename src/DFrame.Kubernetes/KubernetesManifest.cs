@@ -7,7 +7,7 @@ namespace DFrame.KubernetesWorker
     // may use T4 to gen manifests.
     public class KubernetesManifest
     {
-        public static string GetJob(string name, string image, string imageTag, string host, string imagePullPolicy = "IfNotPresent", string imagePullSecret = "", int parallelism = 1)
+        public static string GetJob(string name, string image, string imageTag, string host, int port, string imagePullPolicy = "IfNotPresent", string imagePullSecret = "", int parallelism = 1)
         {
             // backofflimit = 0 to run only once regardless success or failure.
             // todo: resources and limits should be same value to avoid pod move on resource exhaust
@@ -34,8 +34,10 @@ spec:
           imagePullPolicy: {imagePullPolicy}
           args: [""--worker-flag""]
           env:
-            - name: DFRAME_MASTER_HOST
+            - name: DFRAME_MASTER_CONNECT_TO_HOST
               value: ""{host}""
+            - name: DFRAME_MASTER_CONNECT_TO_PORT
+              value: ""{port}""
           resources:
             requests:
               cpu: 100m
@@ -49,7 +51,7 @@ spec:
             return LinuxNewLine(manifest);
         }
 
-        public static string GetDeployment(string name, string image, string imageTag, string host, string imagePullPolicy = "IfNotPresent", string imagePullSecret = "", int replicas = 1)
+        public static string GetDeployment(string name, string image, string imageTag, string host, int port, string imagePullPolicy = "IfNotPresent", string imagePullSecret = "", int replicas = 1)
         {
             var manifest = $@"---
 apiVersion: apps/v1
@@ -74,8 +76,10 @@ spec:
           imagePullPolicy: {imagePullPolicy}
           args: [""--worker-flag""]
           env:
-            - name: DFRAME_MASTER_HOST
+            - name: DFRAME_MASTER_CONNECT_TO_HOST
               value: ""{host}""
+            - name: DFRAME_MASTER_CONNECT_TO_PORT
+              value: ""{port}""
           resources:
             requests:
               cpu: 100m

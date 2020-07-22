@@ -21,10 +21,6 @@ namespace DFrame.KubernetesWorker
         /// </summary>
         public ScalingType ScalingType { get; set; } = ScalingType.Job;
         /// <summary>
-        /// Master Host to connect from Worker.
-        /// </summary>
-        public string ConnectTo { get; set; } = Environment.GetEnvironmentVariable("DFRAME_MASTER_HOST") ?? $"dframe-master.dframe.svc.cluster.local";
-        /// <summary>
         /// Worker Kubernetes Resource Name.
         /// </summary>
         public string Name { get; set; } = Environment.GetEnvironmentVariable("DFRAME_WORKER_NAME") ?? "dframe-worker";
@@ -56,7 +52,7 @@ namespace DFrame.KubernetesWorker
 
     /// <summary>
     /// Kubernetes Scaling Provider offers DFrame Worker runs on Kubernetes Job.
-    /// If rbac is enabled on cluster, make sure you have service account / role / rolebindings for dframe-master.
+    /// If rbac is enabled on cluster, you have to prepare service account / role / rolebindings for dframe-master.
     /// </summary>
     public class KubernetesScalingProvider : IScalingProvider
     {
@@ -80,14 +76,6 @@ namespace DFrame.KubernetesWorker
             _env = kubernetesEnvironment;
         }
 
-        /// <summary>
-        /// Create workers via kubernetes client api.
-        /// </summary>
-        /// <param name="options"></param>
-        /// <param name="nodeCount"></param>
-        /// <param name="provider"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
         public async Task StartWorkerAsync(DFrameOptions options, int processCount, IServiceProvider provider, IFailSignal failSignal, CancellationToken cancellationToken)
         {
             Console.WriteLine($"scale out workers. {_ns}/{_env.Name} {_env.ScalingType}");
@@ -96,10 +84,10 @@ namespace DFrame.KubernetesWorker
             switch (_env.ScalingType)
             {
                 case ScalingType.Deployment:
-                    await CreateDeployment(processCount, cancellationToken);
+                    await CreateDeployment(processCount, options.WorkerConnectToHost, options.WorkerConnectToPort, cancellationToken);
                     break;
                 case ScalingType.Job:
-                    await CreateJobAsync(processCount, cancellationToken);
+                    await CreateJobAsync(processCount, options.WorkerConnectToHost, options.WorkerConnectToPort, cancellationToken);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(ScalingType));
@@ -134,15 +122,14 @@ namespace DFrame.KubernetesWorker
         /// create kubernetes job. (recommended)
         /// retry will not happen when worker cause error on scenario.
         /// </summary>
-        /// <param name="image"></param>
-        /// <param name="imageTag"></param>
-        /// <param name="connectTo"></param>
         /// <param name="nodeCount"></param>
+        /// <param name="connectToHost"></param>
+        /// <param name="connectToPort"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async ValueTask CreateJobAsync(int nodeCount, CancellationToken cancellationToken)
+        private async ValueTask CreateJobAsync(int nodeCount, string connectToHost, int connectToPort, CancellationToken cancellationToken)
         {
-            var manifest = KubernetesManifest.GetJob(_env.Name, _env.Image, _env.ImageTag, _env.ConnectTo, _env.ImagePullPolicy, _env.ImagePullSecret, nodeCount);
+            var manifest = KubernetesManifest.GetJob(_env.Name, _env.Image, _env.ImageTag, connectToHost, connectToPort, _env.ImagePullPolicy, _env.ImagePullSecret, nodeCount);
 
             try
             {
@@ -165,15 +152,14 @@ namespace DFrame.KubernetesWorker
         /// create kubernetes deployment. (not recommended)
         /// retry will happen when worker cause error on scenario. not recommeneded.
         /// </summary>
-        /// <param name="image"></param>
-        /// <param name="imageTag"></param>
-        /// <param name="connectTo"></param>
         /// <param name="nodeCount"></param>
+        /// <param name="connectToHost"></param>
+        /// <param name="connectToPort"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async ValueTask CreateDeployment(int nodeCount, CancellationToken cancellationToken)
+        private async ValueTask CreateDeployment(int nodeCount, string connectToHost, int connectToPort, CancellationToken cancellationToken)
         {
-            var manifest = KubernetesManifest.GetDeployment(_env.Name, _env.Image, _env.ImageTag, _env.ConnectTo, _env.ImagePullPolicy, _env.ImagePullSecret, nodeCount);
+            var manifest = KubernetesManifest.GetDeployment(_env.Name, _env.Image, _env.ImageTag, connectToHost, connectToPort, _env.ImagePullPolicy, _env.ImagePullSecret, nodeCount);
 
             try
             {

@@ -1,6 +1,7 @@
 ﻿using DFrame;
 using DFrame.Collections;
 using DFrame.KubernetesWorker;
+using Grpc.Core;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
@@ -16,27 +17,25 @@ namespace ConsoleAppK8s
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine($"dframe begin. {nameof(KubernetesScalingProvider)}");
+            //GrpcEnvironment.SetLogger(new Grpc.Core.Logging.ConsoleLogger());
+
             var host = "0.0.0.0";
+            var port = int.Parse(Environment.GetEnvironmentVariable("DFRAME_MASTER_CONNECT_TO_PORT") ?? "12345");
+            var workerConnectToHost = Environment.GetEnvironmentVariable("DFRAME_MASTER_CONNECT_TO_HOST") ?? $"dframe-master.dframe.svc.cluster.local";
             // TODO:test args.
             if (args.Length == 0)
             {
                 // master
-                //args = "-nodeCount 3 -workerPerNode 3 -executePerWorker 3 -scenarioName ConsoleAppK8s.SampleWorker".Split(' ');
-                //args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 1000 -scenarioName ConsoleAppK8s.SampleHttpWorker".Split(' ');
-                args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 10000 -scenarioName ConsoleAppK8s.SampleHttpWorker".Split(' ');
-                //args = "-nodeCount 10 -workerPerNode 10 -executePerWorker 1000 -scenarioName ConsoleAppK8s.SampleHttpWorker".Split(' ');
+                args = "-processCount 3 -workerPerProcess 3 -executePerWorker 3 -workerName SampleWorker".Split(' ');
+                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleHttpWorker".Split(' ');
+                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 10000 -workerName SampleHttpWorker".Split(' ');
+                //args = "-processCount 10 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleHttpWorker".Split(' ');
             }
             else if (args.Contains("--worker-flag"))
             {
                 // worker
                 // connect to
-                var envHost = Environment.GetEnvironmentVariable("DFRAME_MASTER_HOST");
-                host = args.Length >= 2
-                    ? args[1]
-                    : !string.IsNullOrEmpty(envHost)
-                        ? envHost
-                        : "localhost";
+                host = workerConnectToHost;
             }
 
             Console.WriteLine($"args {string.Join(", ", args)}, host {host}");
@@ -50,7 +49,7 @@ namespace ConsoleAppK8s
                         options.EnableStructuredLogging = false;
                     });
                 })
-                .RunDFrameLoadTestingAsync(args, new DFrameOptions(host, 12345, host, 12345, new KubernetesScalingProvider())
+                .RunDFrameLoadTestingAsync(args, new DFrameOptions(host, port, workerConnectToHost, port, new KubernetesScalingProvider())
                 {
                 });
         }
