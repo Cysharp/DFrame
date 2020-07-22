@@ -19,6 +19,12 @@ namespace DFrame
         static void SummaryResult(ExecuteResult[] results, DFrameOptions options, ExecuteScenario executeScenario)
         {
             // TODO: Logger
+            if (!results.Any())
+            {
+                // canceled
+                Console.WriteLine("No execution result found, quit result report.");
+                return;
+            }
             Console.WriteLine("Show Load Testing result report.");
 
             // Output req/sec and other calcutlation report.
