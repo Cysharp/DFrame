@@ -47,24 +47,17 @@ namespace DFrame
             // percentile requires sort before calculate
             var sortedResultsElapsedMs = results.Select(x => x.Elapsed.TotalMilliseconds).OrderBy(x => x).ToArray();
             var percecs = new[] { 0.5, 0.66, 0.75, 0.80, 0.90, 0.95, 0.98, 0.99, 1.00 };
-            var percentiles = percecs.Select((percec, i) =>
+            var percentiles = percecs.Select((x, i) =>
             {
-                var percent = (int)(percec * 100);
-                var percentile = (int)Percentile(sortedResultsElapsedMs, percec);
-                if (i != percecs.Length - 1)
-                {
-                    return $"{percent,3}%      {percentile}";
-                }
-                else
-                {
-                    return $"{percent,3}%      {percentile} (longest request)";
-                }
+                var percent = (int)(x * 100);
+                var percentile = (int)Percentile(sortedResultsElapsedMs, x);
+                return i != percecs.Length - 1 
+                    ? $"{percent,3}%      {percentile}"
+                    : $"{percent,3}%      {percentile} (longest request)";
             })
-                .ToArray();
+            .ToArray();
 
             Console.WriteLine($@"Finished {requestCount} requests
-
-Server Host:Port:       {options.MasterListenHostAndPort}
 
 Scaling Type:           {options.ScalingProvider.GetType().Name}
 
