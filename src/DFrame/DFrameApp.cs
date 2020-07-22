@@ -82,8 +82,8 @@ namespace DFrame
         public async Task Main(
             string workerName,
             int processCount = 1,
-            int workerPerProcess = 10,
-            int executePerWorker = 10)
+            int workerPerProcess = 1,
+            int executePerWorker = 1)
         {
             ThreadPoolUtility.SetMinThread(workerPerProcess);
             // validate worker is exists.

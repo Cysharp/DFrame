@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <!-- NuGet Packaging -->
+    <PackageVersion>$(Version)</PackageVersion>
+    <Authors>Cysharp</Authors>
+    <Company>Cysharp</Company>
+    <Copyright>© Cysharp, Inc.</Copyright>
+    <PackageProjectUrl>https://github.com/Cysharp/DFrame</PackageProjectUrl>
+    <RepositoryUrl>$(PackageProjectUrl)</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>batch,console,cli,loadtesting,kubernetes</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageIcon>Icon.png</PackageIcon>
+  </PropertyGroup>
+</Project>

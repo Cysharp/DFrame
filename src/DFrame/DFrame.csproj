@@ -5,8 +5,17 @@
         <LangVersion>8.0</LangVersion>
         <Nullable>enable</Nullable>
         <RootNamespace>DFrame</RootNamespace>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+        <!-- NuGet -->
+        <PackageId>DFrame</PackageId>
+        <Description>Kubernetes based Micro Distributed Batch Framework and Load Testing Library for C#.</Description>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <NoWarn>1701;1702;1591</NoWarn>
+    </PropertyGroup>
+    
     <ItemGroup>
         <PackageReference Include="MagicOnion" Version="3.0.13" />
         <PackageReference Include="MagicOnion.Hosting" Version="3.0.13" />
@@ -14,4 +23,8 @@
         <PackageReference Include="ZLogger" Version="1.2.1" />
     </ItemGroup>
 
+    <ItemGroup>
+        <None Include="Icon.png" Pack="true" PackagePath="/" />
+    </ItemGroup>
+    
 </Project>

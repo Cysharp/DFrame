@@ -22,7 +22,7 @@ namespace ConsoleApp
             if (args.Length == 0)
             {
                 // master
-                args = "-processCount 3 -workerPerProcess 3 -executePerWorker 3 -workerName SampleWorker".Split(' ');
+                args = "-processCount 10 -workerPerProcess 3 -executePerWorker 3 -workerName SampleWorker".Split(' ');
                 //args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 100 -scenarioName ConsoleApp.SampleHttpWorker".Split(' ');
                 //args = "-nodeCount 1 -workerPerNode 10 -executePerWorker 10000 -scenarioName ConsoleApp.SampleHttpWorker".Split(' ');
                 // listen on
@@ -73,7 +73,7 @@ namespace ConsoleApp
         {
             var randI = (int)new Random().Next(1, 3999);
             //Console.WriteLine($"Enqueue from {Environment.MachineName} {context.WorkerId}: {randI}");
-
+            
             await queue.EnqueueAsync(randI);
         }
 
