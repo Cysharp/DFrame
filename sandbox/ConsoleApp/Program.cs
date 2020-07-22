@@ -94,7 +94,7 @@ namespace ConsoleApp
     {
         private static HttpClient httpClient;
 
-        private readonly string _url = "http://77948c50-apiserver-apiserv-98d9-538745285.ap-northeast-1.elb.amazonaws.com/healthz";
+        private readonly string _url = "http://localhost:5000";
         private CancellationTokenSource cts;
 
         static SampleHttpWorker()
@@ -116,7 +116,6 @@ namespace ConsoleApp
         public override async Task ExecuteAsync(WorkerContext context)
         {
             await httpClient.GetAsync(_url, cts.Token);
-            //await httpClient.GetAsync(_url);
         }
 
         public override async Task TeardownAsync(WorkerContext context)
