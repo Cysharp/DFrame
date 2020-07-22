@@ -21,8 +21,8 @@ Getting started
 ---
 Install via NuGet
 
-> Install-Package DFrame
-> Install-Package DFrame.LoadTesting
+> Install-Package DFrame  
+> Install-Package DFrame.LoadTesting  
 
 Sample code of HTTP/1 load testing.
 
