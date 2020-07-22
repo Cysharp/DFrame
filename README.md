@@ -9,6 +9,12 @@ Preview `0.0.1`, currently you can try standalone batch framework and load testi
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 ## Table of Contents
+
+- [Getting started](#getting-started)
+- [Distributed Collections](#distributed-collections)
+- [Kubernetes](#kubernetes)
+- [License](#license)
+
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 Getting started
