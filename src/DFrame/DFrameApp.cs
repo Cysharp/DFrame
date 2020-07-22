@@ -192,7 +192,7 @@ namespace DFrame
         {
             logger.LogInformation("Starting DFrame worker node");
 
-            var channel = new Channel(options.WorkerConnectToHotAndPort, ChannelCredentials.Insecure, 
+            var channel = new Channel(options.WorkerConnectToHostAndPort, ChannelCredentials.Insecure, 
                 new[] {
                     // keep alive
                     new ChannelOption("grpc.keepalive_time_ms", 2000),

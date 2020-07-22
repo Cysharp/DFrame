@@ -7,16 +7,16 @@ namespace DFrame
     public class DFrameOptions
     {
         public string MasterListenHostAndPort { get; }
-        public string WorkerConnectToHotAndPort { get; }
+        public string WorkerConnectToHostAndPort { get; }
         public IScalingProvider ScalingProvider { get; }
         public Func<string?[], IHostBuilder> HostBuilderFactory { get; set; }
 
         public Action<ExecuteResult[], DFrameOptions, ExecuteScenario>? OnExecuteResult { get; set; }
 
-        public DFrameOptions(string masterListenHostAndPort, string workerConnectToHotAndPort, IScalingProvider scalingProvider)
+        public DFrameOptions(string masterListenHostAndPort, string workerConnectToHostAndPort, IScalingProvider scalingProvider)
         {
             MasterListenHostAndPort = masterListenHostAndPort;
-            WorkerConnectToHotAndPort = workerConnectToHotAndPort;
+            WorkerConnectToHostAndPort = workerConnectToHostAndPort;
             ScalingProvider = scalingProvider;
             HostBuilderFactory = args => Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder(args);
         }
