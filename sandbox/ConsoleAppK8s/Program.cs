@@ -96,7 +96,7 @@ namespace ConsoleAppK8s
     {
         private static HttpClient httpClient;
 
-        private readonly string _url = "http://77948c50-apiserver-apiserv-98d9-538745285.ap-northeast-1.elb.amazonaws.com/healthz";
+        private readonly string _url = "http://77948c50-apiserver-apiserv-98d9-538745285.ap-northeast-1.elb.amazonaws.com/";
         private CancellationTokenSource cts;
 
         static SampleHttpWorker()

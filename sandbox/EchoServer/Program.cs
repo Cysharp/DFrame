@@ -15,7 +15,6 @@ namespace EchoServer
                 {
                     builder
                     .UseKestrel()
-                    .UseUrls("http://localhost:9999")
                     .UseStartup<Startup>();
                 })
                 .RunConsoleAsync();

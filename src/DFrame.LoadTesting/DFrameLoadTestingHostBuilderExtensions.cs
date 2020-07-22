@@ -18,13 +18,11 @@ namespace DFrame
 
         static void SummaryResult(ExecuteResult[] results, DFrameOptions options, ExecuteScenario executeScenario)
         {
+            // TODO: Logger
+            Console.WriteLine("Show Load Testing result report.");
+
             // Output req/sec and other calcutlation report.
             AbReport(results, options, executeScenario);
-
-            //foreach (var item in results)
-            //{
-            //    Console.WriteLine("Time taken for tests:" + item.Elapsed);
-            //}
         }
 
         /// <summary>
@@ -35,61 +33,49 @@ namespace DFrame
         static void AbReport(ExecuteResult[] results, DFrameOptions options, ExecuteScenario executeScenario)
         {
             var requestCount = executeScenario.NodeCount * executeScenario.WorkerPerNode * executeScenario.ExecutePerWorker;
-            var concurrentExecCount = executeScenario.WorkerPerNode;
+            var concurrency = executeScenario.WorkerPerNode;
             var totalRequests = results.Length;
             var completeRequests = results.Where(x => !x.HasError).Count();
             var failedRequests = results.Where(x => x.HasError).Count();
 
-            // Get sum of IWorkerReciever.Execute time on each workerId, max execution time will be actual execution time.
-            var sumElapsedRequestsSecWorkerOnly = results.GroupBy(x => x.WorkerId).Select(xs => xs.Sum(x => x.Elapsed.TotalSeconds)).Max();
-            var timePerRequestWorkerOnly = sumElapsedRequestsSecWorkerOnly * 1000 / requestCount;
+            // Time to complete all requests.
+            // * Get sum of IWorkerReciever.Execute time on each workerId, max execution time will be actual execution time.
+            var timeTaken = results.GroupBy(x => x.WorkerId).Select(xs => xs.Sum(x => x.Elapsed.TotalSeconds)).Max();
+            // The average time spent per request. The first value is calculated with the formula `concurrency * timetaken * 1000 / done` while the second value is calculated with the formula `timetaken * 1000 / done`
+            var timePerRequest = timeTaken * 1000 / requestCount;
 
             // percentile requires sort before calculate
             var sortedResultsElapsedMs = results.Select(x => x.Elapsed.TotalMilliseconds).OrderBy(x => x).ToArray();
             var percecs = new[] { 0.5, 0.66, 0.75, 0.80, 0.90, 0.95, 0.98, 0.99, 1.00 };
-
-            // header
-            Console.WriteLine($"Finished {requestCount} requests");
-            Console.WriteLine($"");
-            Console.WriteLine($"");
-
-            // connection info
-            Console.WriteLine($"Server Host:Port:       {options.MasterListenHostAndPort}");
-            Console.WriteLine($"");
-            Console.WriteLine($"Scaling Type:           {options.ScalingProvider.GetType().Name}");
-            Console.WriteLine($"");
-
-            // result summary
-            Console.WriteLine($"Request count:          {requestCount}");
-            Console.WriteLine($"NodeCount:              {executeScenario.NodeCount}");
-            Console.WriteLine($"WorkerPerNode:          {executeScenario.WorkerPerNode}");
-            Console.WriteLine($"ExecutePerWorker:       {executeScenario.ExecutePerWorker}");
-            Console.WriteLine($"Concurrency level:      {concurrentExecCount}");
-            Console.WriteLine($"Complete requests:      {completeRequests}");
-            Console.WriteLine($"Failed requests:        {failedRequests}");
-            Console.WriteLine($"");
-            Console.WriteLine($"Time taken for tests:   {sumElapsedRequestsSecWorkerOnly:F2} seconds"); // すべてのリクエストが完了するのにかかった時間
-            Console.WriteLine($"Requests per seconds:   {totalRequests / sumElapsedRequestsSecWorkerOnly:F2} [#/sec] (mean)"); // リクエスト数 / 合計所要時間
-            Console.WriteLine($"Time per request:       {concurrentExecCount * timePerRequestWorkerOnly:F2} [ms] (mean)"); // 同時実行したリクエストの平均処理時間 = 同時実行数 * 全てのリクエストが完了するのにかかった時間sec * 1000 / 処理したリクエスト数
-            Console.WriteLine($"Time per request:       {timePerRequestWorkerOnly:F2} [ms] (mean, across all concurrent requests)"); // 1リクエストの平均処理時間 = 全てのリクエストが完了するのにかかった時間sec * 1000 / 処理したリクエスト数
-            Console.WriteLine($"");
-
-            // percentile summary
-            Console.WriteLine($"Percentage of the requests served within a certain time (ms)");
-            for (var i = 0; i < percecs.Length; i++)
+            var percentiles = percecs.Select((x, i) =>
             {
-                var percec = percecs[i];
-                var percent = (int)(percec * 100);
-                var percentile = (int)Percentile(sortedResultsElapsedMs, percec);
-                if (i != percecs.Length - 1)
-                {
-                    Console.WriteLine($" {percent,3}%      {percentile}");
-                }
-                else
-                {
-                    Console.WriteLine($" {percent,3}%      {percentile} (longest request)");
-                }
-            }
+                var percent = (int)(x * 100);
+                var percentile = (int)Percentile(sortedResultsElapsedMs, x);
+                return i != percecs.Length - 1 
+                    ? $"{percent,3}%      {percentile}"
+                    : $"{percent,3}%      {percentile} (longest request)";
+            })
+            .ToArray();
+
+            Console.WriteLine($@"Finished {requestCount} requests
+
+Scaling Type:           {options.ScalingProvider.GetType().Name}
+
+Request count:          {requestCount}
+NodeCount:              {executeScenario.NodeCount}
+WorkerPerNode:          {executeScenario.WorkerPerNode}
+ExecutePerWorker:       {executeScenario.ExecutePerWorker}
+Concurrency level:      {concurrency}
+Complete requests:      {completeRequests}
+Failed requests:        {failedRequests}
+
+Time taken for tests:   {timeTaken:F2} seconds
+Requests per seconds:   {totalRequests / timeTaken:F2} [#/sec] (mean)
+Time per request:       {concurrency * timePerRequest:F2} [ms] (mean)
+Time per request:       {timePerRequest:F2} [ms] (mean, across all concurrent requests)
+
+Percentage of the requests served within a certain time (ms)
+{string.Join("\n", percentiles)}");
         }
 
         /// <summary>

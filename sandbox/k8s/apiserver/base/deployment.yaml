@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: apiserver
-          image: guitarrapc/asptnetcoreapi-quickstart:3.1
+          image: cysharp/dframe-echoserver:0.0.1
           ports:
             - name: http
               containerPort: 80

@@ -48,7 +48,6 @@ namespace DFrame.KubernetesWorker
                 gracePeriodSeconds = graceperiodSecond,
             };
             var json = JsonSerializer.Serialize(body);
-            Console.WriteLine(json);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             var res = await DeleteApiAsync($"/apis/batch/v1/namespaces/{@namespace}/jobs/{name}", content, ct);
             return res;
