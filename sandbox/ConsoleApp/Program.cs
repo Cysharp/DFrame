@@ -50,7 +50,8 @@ namespace ConsoleApp
                         options.EnableStructuredLogging = false;
                     });
                 })
-                .RunDFrameLoadTestingAsync(args, new DFrameOptions(host + ":12345", host + ":12345", new InProcessScalingProvider())
+                .RunDFrameLoadTestingAsync(args, new DFrameOptions(host, 12345)
+                //.RunDFrameLoadTestingAsync(args, new DFrameOptions(host + ":12345", host + ":12345", new InProcessScalingProvider())
                 {
 
                 });

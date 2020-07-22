@@ -79,7 +79,11 @@ namespace DFrame
             this.options = options;
         }
 
-        public async Task Main(int processCount, int workerPerProcess, int executePerProcess, string workerName)
+        public async Task Main(
+            string workerName,
+            int processCount = 1,
+            int workerPerProcess = 10,
+            int executePerProcess = 10)
         {
             ThreadPoolUtility.SetMinThread(workerPerProcess);
 
@@ -139,7 +143,7 @@ namespace DFrame
                 {
                     IsReturnExceptionStackTraceInErrorDetail = true,
                     SerializerOptions = MessagePackSerializer.Typeless.DefaultOptions // use Typeless.
-                }, ports: new ServerPort(options.MasterListenHostAndPort.Split(':').First(), int.Parse(options.MasterListenHostAndPort.Split(':').Last()), ServerCredentials.Insecure),
+                }, ports: new ServerPort(options.MasterListenHost, options.MasterListenPort, ServerCredentials.Insecure),
                     new[] { 
                         // body message size
                         new ChannelOption("grpc.max_receive_message_length", int.MaxValue),
@@ -193,7 +197,7 @@ namespace DFrame
         {
             logger.LogInformation("Starting DFrame worker node");
 
-            var channel = new Channel(options.WorkerConnectToHostAndPort, ChannelCredentials.Insecure,
+            var channel = new Channel(options.WorkerConnectToHost, options.WorkerConnectToPort, ChannelCredentials.Insecure,
                 new[] {
                     // keep alive
                     new ChannelOption("grpc.keepalive_time_ms", 2000),
