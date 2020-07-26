@@ -12,14 +12,14 @@ spec:
         - name: dframe-master
           args:
             [
-              "-nodeCount",
+              "-processCount",
               "10",
-              "-workerPerNode",
+              "-workerPerProcess",
               "10",
               "-executePerWorker",
               "1000",
-              "-scenarioName",
-              "ConsoleAppK8s.SampleHttpWorker",
+              "-workerName",
+              "SampleHttpWorker",
             ]
           env:
             - name: DFRAME_MASTER_CONNECT_TO_HOST

@@ -73,10 +73,10 @@ kubectl kustomize sandbox/k8s/dframe/overlays/development | kubectl delete -f -
 ```
 
 If you already deployed service and rbac resources, service account and others, you can try fast load testing itelation by just change args and run  DFrame master as pod.
-Below sample will run as 10 nodes, 10 workers, 1000 execute for SampleHttpWorker.
+Below sample will run 1000000 requests of SampleHttpWorker, includes 10 process 10 workers and 10000 execute.
 
 ```shell
-kubectl run -it --rm --restart=Never -n dframe --image=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "-processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "1000" "-workerName" "SampleHttpWorker"
+kubectl run -it --rm --restart=Never -n dframe --image=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "-processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10000" "-workerName" "SampleHttpWorker"
 ```
 
 ## etc....
