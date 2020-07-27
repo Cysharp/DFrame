@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -56,19 +57,19 @@ namespace DFrame.KubernetesWorker
     /// </summary>
     public class KubernetesScalingProvider : IScalingProvider
     {
-        private readonly KubernetesApi _kubeapi;
+        private readonly Kubernetes _operations;
         private readonly KubernetesEnvironment _env;
         private readonly string _ns;
 
         public KubernetesScalingProvider()
         {
-            _kubeapi = new KubernetesApi(new KubernetesApiConfig
+            _operations = new Kubernetes(new KubernetesApiConfig
             {
-                ResponseHeaderType = HeaderContentType.Yaml,
+                ResponseHeaderType = HeaderContentType.Json,
                 SkipCertificateValidation = true,
             });
             _env = new KubernetesEnvironment();
-            _ns = _kubeapi.Namespace;
+            _ns = _operations.Namespace;
         }
 
         public KubernetesScalingProvider(KubernetesEnvironment kubernetesEnvironment) : base()
@@ -102,15 +103,15 @@ namespace DFrame.KubernetesWorker
             switch (_env.ScalingType)
             {
                 case ScalingType.Deployment:
-                    if (!_env.PreserveWorker && await _kubeapi.ExistsDeploymentAsync(_ns, _env.Name))
+                    if (!_env.PreserveWorker && await _operations.ExistsDeploymentAsync(_ns, _env.Name))
                     {
-                        await _kubeapi.DeleteDeploymentAsync(_ns, _env.Name);
+                        await _operations.DeleteDeploymentAsync(_ns, _env.Name, 10);
                     };
                     break;
                 case ScalingType.Job:
-                    if (!_env.PreserveWorker && await _kubeapi.ExistsJobAsync(_ns, _env.Name))
+                    if (!_env.PreserveWorker && await _operations.ExistsJobAsync(_ns, _env.Name))
                     {
-                        await _kubeapi.DeleteJobAsync(_ns, _env.Name, graceperiodSecond:10);
+                        await _operations.DeleteJobAsync(_ns, _env.Name, 10);
                     };
                     break;
                 default:
@@ -129,21 +130,28 @@ namespace DFrame.KubernetesWorker
         /// <returns></returns>
         private async ValueTask CreateJobAsync(int nodeCount, string connectToHost, int connectToPort, CancellationToken cancellationToken)
         {
-            var manifest = KubernetesManifest.GetJob(_env.Name, _env.Image, _env.ImageTag, connectToHost, connectToPort, _env.ImagePullPolicy, _env.ImagePullSecret, nodeCount);
-
+            var def = _operations.CreateJobDefinition(_env.Name, _env.Image, _env.ImageTag, connectToHost, connectToPort, _env.ImagePullPolicy, _env.ImagePullSecret, nodeCount);
             try
             {
-                // create resource
-                _ = await _kubeapi.CreateJobAsync(_ns, manifest, cancellationToken);
+                // create worker
+                _ = await _operations.CreateJobAsync(_ns, def, cancellationToken);
+
+                // todo: is 5sec enough?
+                // wait begin worker
+                await Task.Delay(TimeSpan.FromSeconds(5));
 
                 // confirm worker created successfully
-                var result = await _kubeapi.GetJobAsync(_ns, _env.Name);
-                Console.WriteLine($"Worker successfully created. {_ns}/{_env.Name}");
+                var result = await _operations.GetJobAsync(_ns, _env.Name);
+                if (result.status.failed != null && result.status.failed.Value > 0)
+                {
+                    throw new InvalidOperationException("DFrame worker got failure launching pod.");
+                }
+                Console.WriteLine($"Worker {_ns}/{_env.Name} successfully created.");
             }
             catch (HttpRequestException ex)
             {
                 Console.WriteLine($"Failed to create worker on Kubernetes Deployment. {_ns}/{_env.Name}. {ex.ToString()}");
-                Console.WriteLine($"Dump requested manifest.\n{manifest}");
+                Console.WriteLine($"Dump requested manifest.\n{def}");
                 throw;
             }
         }
@@ -159,21 +167,28 @@ namespace DFrame.KubernetesWorker
         /// <returns></returns>
         private async ValueTask CreateDeployment(int nodeCount, string connectToHost, int connectToPort, CancellationToken cancellationToken)
         {
-            var manifest = KubernetesManifest.GetDeployment(_env.Name, _env.Image, _env.ImageTag, connectToHost, connectToPort, _env.ImagePullPolicy, _env.ImagePullSecret, nodeCount);
-
+            var def = _operations.CreateDeploymentDefinition(_env.Name, _env.Image, _env.ImageTag, connectToHost, connectToPort, _env.ImagePullPolicy, _env.ImagePullSecret, nodeCount);
             try
             {
-                // create resource
-                _ = await _kubeapi.CreateDeploymentAsync(_ns, manifest, cancellationToken);
+                // create worker
+                _ = await _operations.CreateDeploymentAsync(_ns, def, cancellationToken);
+
+                // todo: is 5sec enough?
+                // wait begin worker
+                await Task.Delay(TimeSpan.FromSeconds(5));
 
                 // confirm worker created successfully
-                var result = await _kubeapi.GetDeploymentAsync(_ns, _env.Name);
-                Console.WriteLine($"Worker successfully created. {_ns}/{_env.Name}");
+                var result = await _operations.GetDeploymentAsync(_ns, _env.Name);
+                if (result.status.unavailableReplicas != null && result.status.unavailableReplicas > 0)
+                {
+                    throw new InvalidOperationException("DFrame worker got failure launching pod.");
+                }
+                Console.WriteLine($"Worker {_ns}/{_env.Name} successfully created.");
             }
             catch (HttpRequestException ex)
             {
                 Console.WriteLine($"Failed to create worker on Kubernetes Deployment. {_ns}/{_env.Name}. {ex.ToString()}");
-                Console.WriteLine($"Dump requested manifest.\n{manifest}");
+                Console.WriteLine($"Dump requested manifest.\n{def}");
                 throw;
             }
         }
