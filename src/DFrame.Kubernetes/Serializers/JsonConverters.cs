@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using DFrame.KubernetesWorker.Models;
+using DFrame.Kubernetes.Models;
 
-namespace DFrame.Kubernetes.Converters
+namespace DFrame.Kubernetes.Serializers
 {
     /// <summary>
     /// Force handle JSON number as string type.
     /// </summary>
-    internal class IntOrStringConverter : JsonConverter<string>
+    public class IntOrStringConverter : JsonConverter<string>
     {
         public override string Read(ref Utf8JsonReader reader, Type type, JsonSerializerOptions options)
         {
@@ -23,10 +23,8 @@ namespace DFrame.Kubernetes.Converters
                 return reader.GetString();
             }
 
-            using (JsonDocument document = JsonDocument.ParseValue(ref reader))
-            {
-                return document.RootElement.Clone().ToString();
-            }
+            using JsonDocument document = JsonDocument.ParseValue(ref reader);
+            return document.RootElement.Clone().ToString();
         }
 
         public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
@@ -35,7 +33,7 @@ namespace DFrame.Kubernetes.Converters
         }
     }
 
-    internal class ResourceQuantityConverter : JsonConverter<ResourceQuantity>
+    public class ResourceQuantityConverter : JsonConverter<ResourceQuantity>
     {
         public override ResourceQuantity Read(ref Utf8JsonReader reader, Type type, JsonSerializerOptions options)
         {
