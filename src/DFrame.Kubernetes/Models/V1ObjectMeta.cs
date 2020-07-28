@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace DFrame.KubernetesWorker.Models
+namespace DFrame.Kubernetes.Models
 {
     public class V1ObjectMeta
     {

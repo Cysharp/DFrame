@@ -5,9 +5,9 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using DFrame.KubernetesWorker.Models;
+using DFrame.Kubernetes.Models;
 
-namespace DFrame.KubernetesWorker
+namespace DFrame.Kubernetes
 {
     public partial class Kubernetes
     {
@@ -200,16 +200,9 @@ namespace DFrame.KubernetesWorker
         }
         public async ValueTask<bool> ExistsDeploymentHttpAsync(string @namespace, string name)
         {
-            try
-            {
-                // 雑 of 雑
-                var res = await GetApiAsync($"/apis/apps/v1/namespaces/{@namespace}/deployments/{name}");
-                return true;
-            }
-            catch (System.Exception)
-            {
-                return false;
-            }
+            var deployments = await GetDeploymentsAsync(@namespace);
+            if (deployments == null || !deployments.items.Any()) return false;
+            return deployments.items.Select(x => x.metadata.name == name).Any();
         }
         public async ValueTask<string> DeleteDeploymentHttpAsync(string @namespace, string name, V1DeleteOptions options, CancellationToken ct = default)
         {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DFrame.KubernetesWorker.Models
+namespace DFrame.Kubernetes.Models
 {
     public class V1JobSpec
     {

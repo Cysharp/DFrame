@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace DFrame.KubernetesWorker.Models
+namespace DFrame.Kubernetes.Models
 {
     public class V1DeploymentList
     {

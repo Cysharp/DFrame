@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 
-namespace DFrame.KubernetesWorker
+namespace DFrame.Kubernetes
 {
     public enum HeaderContentType
     {

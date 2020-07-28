@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DFrame.KubernetesWorker
+namespace DFrame.Kubernetes
 {
     public class KubernetesApiConfig
     {
@@ -25,11 +25,12 @@ namespace DFrame.KubernetesWorker
         public bool IsRunningOnKubernetes { get; }
         public string Namespace => _provider.Namespace;
 
-        private IKubernetesClient _provider;
-        private KubernetesApiConfig _config = new KubernetesApiConfig();
+        private readonly IKubernetesClient _provider;
+        private readonly KubernetesApiConfig _config;
 
         public Kubernetes()
         {
+            _config = new KubernetesApiConfig();
             _provider = GetDefaultProvider();
             SetProviderConfig();
             IsRunningOnKubernetes = _provider.IsRunningOnKubernetes;
@@ -58,12 +59,10 @@ namespace DFrame.KubernetesWorker
         /// <returns></returns>
         private async ValueTask<string> GetApiAsync(string apiPath, string acceptHeader = default)
         {
-            using (var httpClient = _provider.CreateHttpClient())
-            {
-                SetAcceptHeader(httpClient, acceptHeader);
-                var res = await httpClient.GetStringAsync(_provider.KubernetesServiceEndPoint + apiPath);
-                return res;
-            }
+            using var httpClient = _provider.CreateHttpClient();
+            SetAcceptHeader(httpClient, acceptHeader);
+            var res = await httpClient.GetStringAsync(_provider.KubernetesServiceEndPoint + apiPath);
+            return res;
         }
 
         /// <summary>
@@ -76,15 +75,13 @@ namespace DFrame.KubernetesWorker
         /// <returns></returns>
         private async ValueTask<string> PostApiAsync(string apiPath, string body, string bodyContenType = "application/yaml", CancellationToken ct = default)
         {
-            using (var httpClient = _provider.CreateHttpClient())
-            {
-                SetAcceptHeader(httpClient);
-                var content = new StringContent(body, Encoding.UTF8, bodyContenType);
-                var res = await httpClient.PostAsync(_provider.KubernetesServiceEndPoint + apiPath, content, ct);
-                res.EnsureSuccessStatusCode();
-                var responseContent = await res.Content.ReadAsStringAsync();
-                return responseContent;
-            }
+            using var httpClient = _provider.CreateHttpClient();
+            SetAcceptHeader(httpClient);
+            var content = new StringContent(body, Encoding.UTF8, bodyContenType);
+            var res = await httpClient.PostAsync(_provider.KubernetesServiceEndPoint + apiPath, content, ct);
+            res.EnsureSuccessStatusCode();
+            var responseContent = await res.Content.ReadAsStringAsync();
+            return responseContent;
         }
 
         /// <summary>
@@ -97,15 +94,13 @@ namespace DFrame.KubernetesWorker
         /// <returns></returns>
         private async ValueTask<string> PutApiAsync(string apiPath, string body, string bodyContenType = "application/yaml", CancellationToken ct = default)
         {
-            using (var httpClient = _provider.CreateHttpClient())
-            {
-                SetAcceptHeader(httpClient);
-                using var content = new StringContent(body, Encoding.UTF8, bodyContenType);
-                var res = await httpClient.PutAsync(_provider.KubernetesServiceEndPoint + apiPath, content, ct);
-                res.EnsureSuccessStatusCode();
-                var responseContent = await res.Content.ReadAsStringAsync();
-                return responseContent;
-            }
+            using var httpClient = _provider.CreateHttpClient();
+            SetAcceptHeader(httpClient);
+            using var content = new StringContent(body, Encoding.UTF8, bodyContenType);
+            var res = await httpClient.PutAsync(_provider.KubernetesServiceEndPoint + apiPath, content, ct);
+            res.EnsureSuccessStatusCode();
+            var responseContent = await res.Content.ReadAsStringAsync();
+            return responseContent;
         }
 
         /// <summary>
@@ -117,18 +112,16 @@ namespace DFrame.KubernetesWorker
         /// <returns></returns>
         private async ValueTask<string> DeleteApiAsync(string apiPath, HttpContent content, CancellationToken ct = default)
         {
-            using (var httpClient = _provider.CreateHttpClient())
+            using var httpClient = _provider.CreateHttpClient();
+            SetAcceptHeader(httpClient, "application/json");
+            var request = new HttpRequestMessage(HttpMethod.Delete, _provider.KubernetesServiceEndPoint + apiPath)
             {
-                SetAcceptHeader(httpClient, "application/json");
-                var request = new HttpRequestMessage(HttpMethod.Delete, _provider.KubernetesServiceEndPoint + apiPath)
-                {
-                    Content = content,
-                };
-                var res = await httpClient.SendAsync(request, ct);
-                res.EnsureSuccessStatusCode();
-                var responseContent = await res.Content.ReadAsStringAsync();
-                return responseContent;
-            }
+                Content = content,
+            };
+            var res = await httpClient.SendAsync(request, ct);
+            res.EnsureSuccessStatusCode();
+            var responseContent = await res.Content.ReadAsStringAsync();
+            return responseContent;
         }
 
 

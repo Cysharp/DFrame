@@ -1,6 +1,6 @@
 ﻿using DFrame;
 using DFrame.Collections;
-using DFrame.KubernetesWorker;
+using DFrame.Kubernetes;
 using Grpc.Core;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

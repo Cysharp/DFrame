@@ -4,7 +4,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DFrame.KubernetesWorker
+namespace DFrame.Kubernetes
 {
     public enum ScalingType
     {
@@ -136,7 +136,7 @@ namespace DFrame.KubernetesWorker
                 // create worker
                 _ = await _operations.CreateJobAsync(_ns, def, cancellationToken);
 
-                // todo: is 5sec enough?
+                // todo: change to watch and timeout
                 // wait begin worker
                 await Task.Delay(TimeSpan.FromSeconds(5));
 
@@ -150,7 +150,7 @@ namespace DFrame.KubernetesWorker
             }
             catch (HttpRequestException ex)
             {
-                Console.WriteLine($"Failed to create worker on Kubernetes Deployment. {_ns}/{_env.Name}. {ex.ToString()}");
+                Console.WriteLine($"Failed to create worker on Kubernetes Deployment. {_ns}/{_env.Name}. {ex}");
                 Console.WriteLine($"Dump requested manifest.\n{def}");
                 throw;
             }
@@ -173,7 +173,7 @@ namespace DFrame.KubernetesWorker
                 // create worker
                 _ = await _operations.CreateDeploymentAsync(_ns, def, cancellationToken);
 
-                // todo: is 5sec enough?
+                // todo: change to watch and timeout
                 // wait begin worker
                 await Task.Delay(TimeSpan.FromSeconds(5));
 
@@ -187,7 +187,7 @@ namespace DFrame.KubernetesWorker
             }
             catch (HttpRequestException ex)
             {
-                Console.WriteLine($"Failed to create worker on Kubernetes Deployment. {_ns}/{_env.Name}. {ex.ToString()}");
+                Console.WriteLine($"Failed to create worker on Kubernetes Deployment. {_ns}/{_env.Name}. {ex}");
                 Console.WriteLine($"Dump requested manifest.\n{def}");
                 throw;
             }

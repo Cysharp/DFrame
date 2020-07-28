@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
-using DFrame.Kubernetes.Converters;
+using DFrame.Kubernetes.Serializers;
 
-namespace DFrame.KubernetesWorker.Models
+namespace DFrame.Kubernetes.Models
 {
     public class V1RollingUpdateDeployment
     {
