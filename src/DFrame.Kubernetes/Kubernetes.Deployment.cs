@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Text;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using DFrame.Kubernetes.Models;
+using DFrame.Kubernetes.Responses;
+using DFrame.Kubernetes.Serializers;
 
 namespace DFrame.Kubernetes
 {
@@ -146,25 +146,22 @@ namespace DFrame.Kubernetes
             return definition;
         }
 
-        public async ValueTask<V1Deployment> CreateDeploymentAsync(string @namespace, V1Deployment deployment, CancellationToken ct = default)
+        public async ValueTask<V1Deployment> CreateDeploymentAsync(string ns, V1Deployment deployment, CancellationToken ct = default)
         {
-            var res = await CreateDeploymentHttpAsync(@namespace, JsonSerializer.Serialize(deployment), ct);
-            var created = JsonSerializer.Deserialize<V1Deployment>(res);
-            return created;
+            using var res = await CreateDeploymentHttpAsync(ns, JsonConvert.Serialize(deployment), ct).ConfigureAwait(false);
+            return res.Body;
         }
-        public async ValueTask<V1DeploymentList> GetDeploymentsAsync(string @namespace)
+        public async ValueTask<V1DeploymentList> GetDeploymentsAsync(string ns, string labelSelectorParameter = null, int? timeoutSecondsParameter = null)
         {
-            var res = await GetDeploymentsHttpAsync(@namespace);
-            var list = JsonSerializer.Deserialize<V1DeploymentList>(res);
-            return list;
+            using var res = await GetDeploymentsHttpAsync(ns, false, labelSelectorParameter, timeoutSecondsParameter).ConfigureAwait(false);
+            return res.Body;
         }
-        public async ValueTask<V1Deployment> GetDeploymentAsync(string @namespace, string name)
+        public async ValueTask<V1Deployment> GetDeploymentAsync(string ns, string name, string labelSelectorParameter = null, int? timeoutSecondsParameter = null)
         {
-            var res = await GetDeploymentHttpAsync(@namespace, name);
-            var get = JsonSerializer.Deserialize<V1Deployment>(res);
-            return get;
+            using var res = await GetDeploymentHttpAsync(ns, name, labelSelectorParameter, timeoutSecondsParameter).ConfigureAwait(false);
+            return res.Body;
         }
-        public async ValueTask<string> DeleteDeploymentAsync(string @namespace, string name, long? gracePeriodSeconds, CancellationToken ct = default)
+        public async ValueTask<V1Status> DeleteDeploymentAsync(string ns, string name, long? gracePeriodSeconds, string labelSelectorParameter = null, int? timeoutSecondsParameter = null, CancellationToken ct = default)
         {
             // Deployment's REST default deletion propagationPolicy is Orphan.
             // let's use Foreground to avoid pod remains after Deployment deletion.
@@ -172,44 +169,107 @@ namespace DFrame.Kubernetes
             {
                 gracePeriodSeconds = gracePeriodSeconds,
             };
-            var res = await DeleteDeploymentHttpAsync(@namespace, name, options, ct);
-            return res;
+            using var res = await DeleteDeploymentHttpAsync(ns, name, options, ct, labelSelectorParameter, timeoutSecondsParameter).ConfigureAwait(false);
+            return res.Body;
         }
-        public async ValueTask<bool> ExistsDeploymentAsync(string @namespace, string name)
+        public async ValueTask<bool> ExistsDeploymentAsync(string ns, string name, string labelSelectorParameter = null, int? timeoutSecondsParameter = null)
         {
-            var deployments = await GetDeploymentsAsync(@namespace);
-            if (deployments == null || !deployments.items.Any()) return false;
-            return deployments.items.Select(x => x.metadata.name == name).Any();
+            using var exists = await ExistsDeploymentHttpAsync(ns, name, labelSelectorParameter, timeoutSecondsParameter).ConfigureAwait(false);
+            return exists.Body;
         }
 
-        #region api
-        public async ValueTask<string> CreateDeploymentHttpAsync(string @namespace, string manifest, CancellationToken ct = default)
+        #region http
+        public async ValueTask<HttpResponse<V1Deployment>> CreateDeploymentHttpAsync(string ns, string manifest, CancellationToken ct = default)
         {
-            var res = await PostApiAsync($"/apis/apps/v1/namespaces/{@namespace}/deployments", manifest,ct: ct);
-            return res;
+            var res = await PostApiAsync($"/apis/apps/v1/namespaces/{ns}/deployments", null, manifest,ct: ct).ConfigureAwait(false);
+            var deploy = JsonConvert.Deserialize<V1Deployment>(res.Content);
+            return new HttpResponse<V1Deployment>(deploy)
+            {
+                Response = res.HttpResponseMessage,
+            };
         }
-        public async ValueTask<string> GetDeploymentsHttpAsync(string @namespace)
+        public async ValueTask<HttpResponse<V1DeploymentList>> GetDeploymentsHttpAsync(string ns, bool watch = false, string labelSelectorParameter = null, int? timeoutSecondsParameter = null)
         {
-            var res = await GetApiAsync($"/apis/apps/v1/namespaces/{@namespace}/deployments");
-            return res;
+            // build query
+            var query = new StringBuilder();
+            if (watch)
+            {
+                AddQueryParameter(query, "watch", "true");
+            }
+            if (!string.IsNullOrEmpty(labelSelectorParameter))
+            {
+                AddQueryParameter(query, "labelSelector", labelSelectorParameter);
+            }
+            if (timeoutSecondsParameter != null)
+            {
+                AddQueryParameter(query, "timeoutSeconds", timeoutSecondsParameter.Value.ToString());
+            }
+
+            var res = await GetApiAsync($"/apis/apps/v1/namespaces/{ns}/deployments", query).ConfigureAwait(false);
+            var deployments = JsonConvert.Deserialize<V1DeploymentList>(res.Content);
+            return new HttpResponse<V1DeploymentList>(deployments)
+            {
+                Response = res.HttpResponseMessage,
+            };
         }
-        public async ValueTask<string> GetDeploymentHttpAsync(string @namespace, string name)
+        public async ValueTask<HttpResponse<V1Deployment>> GetDeploymentHttpAsync(string ns, string name, string labelSelectorParameter = null, int? timeoutSecondsParameter = null)
         {
-            var res = await GetApiAsync($"/apis/apps/v1/namespaces/{@namespace}/deployments/{name}");
-            return res;
+            // build query
+            var query = new StringBuilder();
+            if (!string.IsNullOrEmpty(labelSelectorParameter))
+            {
+                AddQueryParameter(query, "labelSelector", labelSelectorParameter);
+            }
+            if (timeoutSecondsParameter != null)
+            {
+                AddQueryParameter(query, "timeoutSeconds", timeoutSecondsParameter.Value.ToString());
+            }
+
+            var res = await GetApiAsync($"/apis/apps/v1/namespaces/{ns}/deployments/{name}", query).ConfigureAwait(false);
+            var deployment = JsonConvert.Deserialize<V1Deployment>(res.Content);
+            return new HttpResponse<V1Deployment>(deployment)
+            {
+                Response = res.HttpResponseMessage,
+            };
         }
-        public async ValueTask<bool> ExistsDeploymentHttpAsync(string @namespace, string name)
+        public async ValueTask<HttpResponse<V1Status>> DeleteDeploymentHttpAsync(string ns, string name, V1DeleteOptions options = null, CancellationToken ct = default, string labelSelectorParameter = null, int? timeoutSecondsParameter = null)
         {
-            var deployments = await GetDeploymentsAsync(@namespace);
-            if (deployments == null || !deployments.items.Any()) return false;
-            return deployments.items.Select(x => x.metadata.name == name).Any();
+            // build query
+            var query = new StringBuilder();
+            if (!string.IsNullOrEmpty(labelSelectorParameter))
+            {
+                AddQueryParameter(query, "labelSelector", labelSelectorParameter);
+            }
+            if (timeoutSecondsParameter != null)
+            {
+                AddQueryParameter(query, "timeoutSeconds", timeoutSecondsParameter.Value.ToString());
+            }
+
+            var res = await DeleteApiAsync($"/apis/apps/v1/namespaces/{ns}/deployments/{name}", query, options, ct).ConfigureAwait(false);
+            var status = JsonConvert.Deserialize<V1Status>(res.Content);
+            return new HttpResponse<V1Status>(status)
+            {
+                Response = res.HttpResponseMessage,
+            };
         }
-        public async ValueTask<string> DeleteDeploymentHttpAsync(string @namespace, string name, V1DeleteOptions options, CancellationToken ct = default)
+        public async ValueTask<HttpResponse<bool>> ExistsDeploymentHttpAsync(string ns, string name, string labelSelectorParameter = null, int? timeoutSecondsParameter = null)
         {
-            var json = JsonSerializer.Serialize(options);
-            using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var res = await DeleteApiAsync($"/apis/apps/v1/namespaces/{@namespace}/deployments/{name}", content, ct);
-            return res;
+            var deployments = await GetDeploymentsHttpAsync(ns, false, labelSelectorParameter, timeoutSecondsParameter).ConfigureAwait(false);
+            if (deployments == null || !deployments.Body.items.Any())
+            {
+                return new HttpResponse<bool>(false)
+                {
+                    Response = deployments.Response,
+                };
+            }
+            else
+            {
+                var exists = deployments.Body.items.Select(x => x.metadata.name == name).Any();
+                return new HttpResponse<bool>(exists)
+                {
+                    Response = deployments.Response,
+                };
+            }
         }
         #endregion
     }

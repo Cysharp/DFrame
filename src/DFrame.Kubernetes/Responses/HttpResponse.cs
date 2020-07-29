@@ -11,7 +11,7 @@ namespace DFrame.Kubernetes.Responses
 
         public void Dispose()
         {
-            Response?.Content?.Dispose();
+            Response?.Dispose();
         }
     }
 

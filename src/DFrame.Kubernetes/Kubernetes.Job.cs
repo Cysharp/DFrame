@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Text;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using DFrame.Kubernetes.Models;
+using DFrame.Kubernetes.Responses;
+using DFrame.Kubernetes.Serializers;
 
 namespace DFrame.Kubernetes
 {
@@ -150,25 +149,22 @@ namespace DFrame.Kubernetes
             return definition;
         }
 
-        public async ValueTask<V1Job> CreateJobAsync(string @namespace, V1Job job, CancellationToken ct = default)
+        public async ValueTask<V1Job> CreateJobAsync(string ns, V1Job job, CancellationToken ct = default)
         {
-            var res = await CreateJobHttpAsync(@namespace, JsonSerializer.Serialize(job), ct);
-            var created = JsonSerializer.Deserialize<V1Job>(res);
-            return created;
+            using var res = await CreateJobHttpAsync(ns, JsonConvert.Serialize(job), ct).ConfigureAwait(false);
+            return res.Body;
         }
-        public async ValueTask<V1JobList> GetJobsAsync(string @namespace)
+        public async ValueTask<V1JobList> GetJobsAsync(string ns)
         {
-            var res = await GetJobsHttpAsync(@namespace);
-            var list = JsonSerializer.Deserialize<V1JobList>(res);
-            return list;
+            using var res = await GetJobsHttpAsync(ns).ConfigureAwait(false);
+            return res.Body;
         }
-        public async ValueTask<V1Job> GetJobAsync(string @namespace, string name)
+        public async ValueTask<V1Job> GetJobAsync(string ns, string name)
         {
-            var res = await GetJobHttpAsync(@namespace, name);
-            var get = JsonSerializer.Deserialize<V1Job>(res);
-            return get;
+            using var res = await GetJobHttpAsync(ns, name).ConfigureAwait(false);
+            return res.Body;
         }
-        public async ValueTask<string> DeleteJobAsync(string @namespace, string name, long? gracePeriodSeconds, CancellationToken ct = default)
+        public async ValueTask<V1Job> DeleteJobAsync(string ns, string name, long? gracePeriodSeconds, CancellationToken ct = default)
         {
             // job's REST default deletion propagationPolicy is Orphan.
             // let's use Foreground to avoid pod remains after job deletion.
@@ -177,38 +173,107 @@ namespace DFrame.Kubernetes
                 propagationPolicy = "Foreground",
                 gracePeriodSeconds = gracePeriodSeconds,
             };
-            var res = await DeleteJobHttpAsync(@namespace, name, options, ct);
-            return res;
+            using var res = await DeleteJobHttpAsync(ns, name, options, ct).ConfigureAwait(false);
+            return res.Body;
         }
-        public async ValueTask<bool> ExistsJobAsync(string @namespace, string name)
+        public async ValueTask<bool> ExistsJobAsync(string ns, string name)
         {
-            var jobs = await GetJobsAsync(@namespace);
-            if (jobs == null || !jobs.items.Any()) return false;
-            return jobs.items.Select(x => x.metadata.name == name).Any();
+            using var jobs = await ExistsJobHttpAsync(ns, name).ConfigureAwait(false);
+            return jobs.Body;
         }
 
         #region api
-        private async ValueTask<string> CreateJobHttpAsync(string @namespace, string manifest, CancellationToken ct = default)
+        public async ValueTask<HttpResponse<V1Job>> CreateJobHttpAsync(string ns, string manifest, CancellationToken ct = default)
         {
-            var res = await PostApiAsync($"/apis/batch/v1/namespaces/{@namespace}/jobs", manifest, ct: ct);
-            return res;
+            var res = await PostApiAsync($"/apis/batch/v1/namespaces/{ns}/jobs", null, manifest, ct: ct).ConfigureAwait(false);
+            var job = JsonConvert.Deserialize<V1Job>(res.Content);
+            return new HttpResponse<V1Job>(job)
+            {
+                Response = res.HttpResponseMessage,
+            };
         }
-        private async ValueTask<string> GetJobsHttpAsync(string @namespace)
+        public async ValueTask<HttpResponse<V1JobList>> GetJobsHttpAsync(string ns, bool watch = false, string labelSelectorParameter = null, int? timeoutSecondsParameter = null)
         {
-            var res = await GetApiAsync($"/apis/batch/v1/namespaces/{@namespace}/jobs");
-            return res;
+            // build query
+            var query = new StringBuilder();
+            if (watch)
+            {
+                AddQueryParameter(query, "watch", "true");
+            }
+            if (!string.IsNullOrEmpty(labelSelectorParameter))
+            {
+                AddQueryParameter(query, "labelSelector", labelSelectorParameter);
+            }
+            if (timeoutSecondsParameter != null)
+            {
+                AddQueryParameter(query, "timeoutSeconds", timeoutSecondsParameter.Value.ToString());
+            }
+
+            var res = await GetApiAsync($"/apis/batch/v1/namespaces/{ns}/jobs", query).ConfigureAwait(false);
+            var jobs = JsonConvert.Deserialize<V1JobList>(res.Content);
+            return new HttpResponse<V1JobList>(jobs)
+            {
+                Response = res.HttpResponseMessage,
+            };
         }
-        private async ValueTask<string> GetJobHttpAsync(string @namespace, string name)
+        public async ValueTask<HttpResponse<V1Job>> GetJobHttpAsync(string ns, string name, string labelSelectorParameter = null, int? timeoutSecondsParameter = null)
         {
-            var res = await GetApiAsync($"/apis/batch/v1/namespaces/{@namespace}/jobs/{name}");
-            return res;
+            // build query
+            var query = new StringBuilder();
+            if (!string.IsNullOrEmpty(labelSelectorParameter))
+            {
+                AddQueryParameter(query, "labelSelector", labelSelectorParameter);
+            }
+            if (timeoutSecondsParameter != null)
+            {
+                AddQueryParameter(query, "timeoutSeconds", timeoutSecondsParameter.Value.ToString());
+            }
+
+            var res = await GetApiAsync($"/apis/batch/v1/namespaces/{ns}/jobs/{name}", query).ConfigureAwait(false);
+            var job = JsonConvert.Deserialize<V1Job>(res.Content);
+            return new HttpResponse<V1Job>(job)
+            {
+                Response = res.HttpResponseMessage,
+            };
         }
-        private async ValueTask<string> DeleteJobHttpAsync(string @namespace, string name, V1DeleteOptions options, CancellationToken ct = default)
+        public async ValueTask<HttpResponse<V1Job>> DeleteJobHttpAsync(string ns, string name, V1DeleteOptions options, CancellationToken ct = default, string labelSelectorParameter = null, int? timeoutSecondsParameter = null)
         {
-            var json = JsonSerializer.Serialize(options);
-            using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var res = await DeleteApiAsync($"/apis/batch/v1/namespaces/{@namespace}/jobs/{name}", content, ct);
-            return res;
+            // build query
+            var query = new StringBuilder();
+            if (!string.IsNullOrEmpty(labelSelectorParameter))
+            {
+                AddQueryParameter(query, "labelSelector", labelSelectorParameter);
+            }
+            if (timeoutSecondsParameter != null)
+            {
+                AddQueryParameter(query, "timeoutSeconds", timeoutSecondsParameter.Value.ToString());
+            }
+
+            var res = await DeleteApiAsync($"/apis/batch/v1/namespaces/{ns}/jobs/{name}", query, options, ct).ConfigureAwait(false);
+            var job = JsonConvert.Deserialize<V1Job>(res.Content);
+            return new HttpResponse<V1Job>(job)
+            {
+                Response = res.HttpResponseMessage,
+            };
+        }
+        public async ValueTask<HttpResponse<bool>> ExistsJobHttpAsync(string ns, string name, string labelSelectorParameter = null, int? timeoutSecondsParameter = null)
+        {
+            var jobs = await GetJobsHttpAsync(ns, false, labelSelectorParameter, timeoutSecondsParameter).ConfigureAwait(false);
+            if (jobs == null || !jobs.Body.items.Any())
+            {
+                return new HttpResponse<bool>(false)
+                {
+                    Response = jobs.Response,
+                };
+            }
+            else
+            {
+                var exists = jobs.Body.items.Select(x => x.metadata.name == name).Any();
+                return new HttpResponse<bool>(exists)
+                {
+                    Response = jobs.Response,
+                };
+            }
         }
         #endregion
     }

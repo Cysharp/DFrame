@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 
-namespace DFrame.Kubernetes.Internal.Responses
+namespace DFrame.Kubernetes.Internals.Responses
 {
     internal readonly struct HttpResponseWrapper
     {

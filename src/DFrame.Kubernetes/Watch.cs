@@ -71,7 +71,7 @@ namespace DFrame.Kubernetes
             OnError += onError;
             OnClosed += onClosed;
 
-            _cts = cts;
+            _cts = cts ?? new CancellationTokenSource();
         }
 
         public Watch(
@@ -157,7 +157,7 @@ namespace DFrame.Kubernetes
             return new Watch<T>(async () =>
             {
                 var response = await responseTask.ConfigureAwait(false);
-                if (!(response.Response.Content is Internal.WatcherDelegatingHandler.LineSeparatedHttpContent content))
+                if (!(response.Response.Content is Internals.WatcherDelegatingHandler.LineSeparatedHttpContent content))
                 {
                     throw new KubernetesException("request is not watchable.");
                 }
@@ -172,7 +172,7 @@ namespace DFrame.Kubernetes
             return new Watch<T>(async () =>
             {
                 var response = await responseTask.ConfigureAwait(false);
-                if (!(response.Response.Content is Internal.WatcherDelegatingHandler.LineSeparatedHttpContent content))
+                if (!(response.Response.Content is Internals.WatcherDelegatingHandler.LineSeparatedHttpContent content))
                 {
                     throw new KubernetesException("request is not watchable.");
                 }

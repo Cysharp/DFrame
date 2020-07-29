@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DFrame.Kubernetes.Internal
+namespace DFrame.Kubernetes.Internals
 {
     /// <summary>
     /// This HttpDelegatingHandler is to rewrite the response and return first line to autorest client

@@ -6,6 +6,9 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using DFrame.Kubernetes.Internals.Responses;
+using DFrame.Kubernetes.Models;
+using DFrame.Kubernetes.Serializers;
 
 namespace DFrame.Kubernetes
 {
@@ -44,100 +47,115 @@ namespace DFrame.Kubernetes
             IsRunningOnKubernetes = _provider.IsRunningOnKubernetes;
         }
 
-        #region API
-        private void ConfigureClient(bool skipCertficateValidate)
+        /// <summary>
+        /// OpenAPI Swagger Definition. https://kubernetes.io/ja/docs/concepts/overview/kubernetes-api/
+        /// </summary>
+        /// <returns></returns>
+        internal async ValueTask<string> GetOpenApiSpecAsync()
         {
-            _config.SkipCertificateValidation = skipCertficateValidate;
-            SetProviderConfig();
+            var apiPath = "/openapi/v2";
+            var res = await GetApiAsync(apiPath, null).ConfigureAwait(false);
+            return res.Content;
         }
 
+        #region api
         /// <summary>
         /// Get resource
         /// </summary>
         /// <param name="apiPath"></param>
+        /// <param name="query"></param>
         /// <param name="acceptHeader"></param>
         /// <returns></returns>
-        private async ValueTask<string> GetApiAsync(string apiPath, string acceptHeader = default)
+        private async ValueTask<HttpResponseWrapper> GetApiAsync(string apiPath, StringBuilder query, string acceptHeader = default)
         {
             using var httpClient = _provider.CreateHttpClient();
             SetAcceptHeader(httpClient, acceptHeader);
-            var res = await httpClient.GetStringAsync(_provider.KubernetesServiceEndPoint + apiPath);
-            return res;
+            var url = new UriBuilder(_provider.KubernetesServiceEndPoint + apiPath);
+            SetQuery(url, query);
+            using var request = new HttpRequestMessage(HttpMethod.Get, url.ToString());
+            var res = await httpClient.SendAsync(request).ConfigureAwait(false);
+            res.EnsureSuccessStatusCode();
+
+            var responseContent = await res.Content.ReadAsStringAsync();
+            return new HttpResponseWrapper(res, responseContent);
         }
 
         /// <summary>
         /// Create Resource
         /// </summary>
         /// <param name="apiPath"></param>
+        /// <param name="query"></param>
         /// <param name="body"></param>
         /// <param name="bodyContenType"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        private async ValueTask<string> PostApiAsync(string apiPath, string body, string bodyContenType = "application/yaml", CancellationToken ct = default)
+        private async ValueTask<HttpResponseWrapper> PostApiAsync(string apiPath, StringBuilder query, string body, string bodyContenType = "application/yaml", CancellationToken ct = default)
         {
             using var httpClient = _provider.CreateHttpClient();
             SetAcceptHeader(httpClient);
-            var content = new StringContent(body, Encoding.UTF8, bodyContenType);
-            var res = await httpClient.PostAsync(_provider.KubernetesServiceEndPoint + apiPath, content, ct);
+            var url = new UriBuilder(_provider.KubernetesServiceEndPoint + apiPath);
+            SetQuery(url, query);
+            using var request = new HttpRequestMessage(HttpMethod.Post, url.ToString())
+            {
+                Content = new StringContent(body, Encoding.UTF8, bodyContenType),
+            };
+            var res = await httpClient.SendAsync(request, ct).ConfigureAwait(false);
             res.EnsureSuccessStatusCode();
-            var responseContent = await res.Content.ReadAsStringAsync();
-            return responseContent;
+
+            var responseContent = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            return new HttpResponseWrapper(res, responseContent);
         }
 
         /// <summary>
         /// Replace resource
         /// </summary>
         /// <param name="apiPath"></param>
+        /// <param name="query"></param>
         /// <param name="body"></param>
         /// <param name="bodyContenType"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        private async ValueTask<string> PutApiAsync(string apiPath, string body, string bodyContenType = "application/yaml", CancellationToken ct = default)
+        private async ValueTask<HttpResponseWrapper> PutApiAsync(string apiPath, StringBuilder query, string body, string bodyContenType = "application/yaml", CancellationToken ct = default)
         {
             using var httpClient = _provider.CreateHttpClient();
             SetAcceptHeader(httpClient);
-            using var content = new StringContent(body, Encoding.UTF8, bodyContenType);
-            var res = await httpClient.PutAsync(_provider.KubernetesServiceEndPoint + apiPath, content, ct);
+            var url = new UriBuilder(_provider.KubernetesServiceEndPoint + apiPath);
+            SetQuery(url, query);
+            using var request = new HttpRequestMessage(HttpMethod.Put, url.ToString())
+            {
+                Content = new StringContent(body, Encoding.UTF8, bodyContenType),
+            };
+            var res = await httpClient.SendAsync(request, ct).ConfigureAwait(false);
             res.EnsureSuccessStatusCode();
-            var responseContent = await res.Content.ReadAsStringAsync();
-            return responseContent;
+
+            var responseContent = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            return new HttpResponseWrapper(res, responseContent);
         }
 
-        /// <summary>
         /// <summary>
         /// Delete resource
         /// </summary>
         /// <param name="apiPath"></param>
+        /// <param name="query"></param>
+        /// <param name="options"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        private async ValueTask<string> DeleteApiAsync(string apiPath, HttpContent content, CancellationToken ct = default)
+        private async ValueTask<HttpResponseWrapper> DeleteApiAsync(string apiPath, StringBuilder query, V1DeleteOptions options = null, CancellationToken ct = default)
         {
             using var httpClient = _provider.CreateHttpClient();
-            SetAcceptHeader(httpClient, "application/json");
-            var request = new HttpRequestMessage(HttpMethod.Delete, _provider.KubernetesServiceEndPoint + apiPath)
+            SetAcceptHeader(httpClient);
+            var url = new UriBuilder(_provider.KubernetesServiceEndPoint + apiPath);
+            SetQuery(url, query);
+            using var request = new HttpRequestMessage(HttpMethod.Delete, url.ToString());
+            if (options != null)
             {
-                Content = content,
-            };
-            var res = await httpClient.SendAsync(request, ct);
-            res.EnsureSuccessStatusCode();
-            var responseContent = await res.Content.ReadAsStringAsync();
-            return responseContent;
-        }
-
-
-        /// <summary>
-        /// OpenAPI Swagger Definition. https://kubernetes.io/ja/docs/concepts/overview/kubernetes-api/
-        /// </summary>
-        /// <returns></returns>
-        private async ValueTask<string> GetOpenApiSpecAsync()
-        {
-            using (var httpClient = _provider.CreateHttpClient())
-            {
-                // must be json. do not set ResponseType
-                var apiPath = "/openapi/v2";
-                var res = await httpClient.GetStringAsync(_provider.KubernetesServiceEndPoint + apiPath);
-                return res;
+                request.Content = new StringContent(JsonConvert.Serialize(options), Encoding.UTF8, "application/json");
             }
+            var res = await httpClient.SendAsync(request, ct).ConfigureAwait(false);
+            res.EnsureSuccessStatusCode();
+
+            var responseContent = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            return new HttpResponseWrapper(res, responseContent);
         }
         #endregion
 
@@ -195,6 +213,37 @@ namespace DFrame.Kubernetes
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(HeaderContentType));
+            }
+        }
+
+        /// <summary>
+        /// build query parameters
+        /// </summary>
+        /// <param name="sb"></param>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        private static void AddQueryParameter(StringBuilder sb, string key, string value)
+        {
+            if (sb == null)
+                throw new ArgumentNullException(nameof(sb));
+
+            if (string.IsNullOrEmpty(key))
+                throw new ArgumentNullException(nameof(key));
+
+            sb.Append(sb.Length != 0 ? '&' : '?').Append(Uri.EscapeDataString(key)).Append('=');
+            if (!string.IsNullOrEmpty(value))
+            {
+                sb.Append(Uri.EscapeDataString(value));
+            }
+        }
+        private static void SetQuery(UriBuilder uriBuilder, StringBuilder query)
+        {
+            if (query != null && query.Length > 0)
+            {
+                // UriBuilder.Query not accept leading '?', trim it.
+                uriBuilder.Query = query.Length == 0
+                    ? ""
+                    : query.ToString(1, query.Length - 1);
             }
         }
     }

@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Linq;
 using System.Net.Http;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using DFrame.Kubernetes.Exceptions;
+using DFrame.Kubernetes.Models;
 
 namespace DFrame.Kubernetes
 {
@@ -22,11 +24,11 @@ namespace DFrame.Kubernetes
         /// </summary>
         public ScalingType ScalingType { get; set; } = ScalingType.Job;
         /// <summary>
-        /// Worker Kubernetes Resource Name.
+        /// Worker Kubernetes resource name. default dframe-worker
         /// </summary>
         public string Name { get; set; } = Environment.GetEnvironmentVariable("DFRAME_WORKER_NAME") ?? "dframe-worker";
         /// <summary>
-        /// Image Name for Worker Kubernetes Image.
+        /// Image Tag for Worker Kubernetes Image.
         /// </summary>
         public string Image { get; set; } = Environment.GetEnvironmentVariable("DFRAME_WORKER_IMAGE_NAME") ?? "";
         /// <summary>
@@ -41,6 +43,10 @@ namespace DFrame.Kubernetes
         /// Image PullPolicy for Worker Kubernetes Image. default IfNotPresent.
         /// </summary>
         public string ImagePullPolicy { get; set; } = Environment.GetEnvironmentVariable("DFRAME_WORKER_IMAGE_PULL_POLICY") ?? "IfNotPresent";
+        /// <summary>
+        /// Wait worker pod creationg timeout seconds. default 120 sec.
+        /// </summary>
+        public int WorkerPodCreationTimeout { get; set; } = int.Parse(Environment.GetEnvironmentVariable("DFRAME_WORKER_POD_CREATE_TIMEOUT") ?? "120");
         /// <summary>
         /// Preserve Worker kubernetes resource after execution. default false.
         /// </summary>
@@ -85,10 +91,10 @@ namespace DFrame.Kubernetes
             switch (_env.ScalingType)
             {
                 case ScalingType.Deployment:
-                    await CreateDeployment(processCount, options.WorkerConnectToHost, options.WorkerConnectToPort, cancellationToken);
+                    await ScaleoutDeploymentAsync(processCount, options.WorkerConnectToHost, options.WorkerConnectToPort, cancellationToken);
                     break;
                 case ScalingType.Job:
-                    await CreateJobAsync(processCount, options.WorkerConnectToHost, options.WorkerConnectToPort, cancellationToken);
+                    await ScaleoutJobAsync(processCount, options.WorkerConnectToHost, options.WorkerConnectToPort, cancellationToken);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(ScalingType));
@@ -120,70 +126,124 @@ namespace DFrame.Kubernetes
         }
 
         /// <summary>
-        /// create kubernetes job. (recommended)
-        /// retry will not happen when worker cause error on scenario.
+        /// scale out with kubernetes job. (recommended)
+        /// retry will not happen when worker cause error on worker plan.
         /// </summary>
         /// <param name="nodeCount"></param>
         /// <param name="connectToHost"></param>
         /// <param name="connectToPort"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async ValueTask CreateJobAsync(int nodeCount, string connectToHost, int connectToPort, CancellationToken cancellationToken)
+        private async ValueTask ScaleoutJobAsync(int nodeCount, string connectToHost, int connectToPort, CancellationToken cancellationToken)
         {
             var def = _operations.CreateJobDefinition(_env.Name, _env.Image, _env.ImageTag, connectToHost, connectToPort, _env.ImagePullPolicy, _env.ImagePullSecret, nodeCount);
             try
             {
-                // create worker
-                _ = await _operations.CreateJobAsync(_ns, def, cancellationToken);
-
-                // todo: change to watch and timeout
-                // wait begin worker
-                await Task.Delay(TimeSpan.FromSeconds(5));
-
-                // confirm worker created successfully
-                var result = await _operations.GetJobAsync(_ns, _env.Name);
-                if (result.status.failed != null && result.status.failed.Value > 0)
+                // watch worker pod creation.
+                var added = 0;
+                var pods = _operations.GetPodsHttpAsync(_ns, true, "app=dframe-worker");
+                using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(_env.WorkerPodCreationTimeout)))
+                using (var watch = pods.Watch<V1Pod, V1PodList>((type, item, cts) =>
                 {
-                    throw new InvalidOperationException("DFrame worker got failure launching pod.");
+                    if (type == WatchEventType.Added)
+                    {
+                        added++;
+                        if (added >= nodeCount)
+                        {
+                            // complete
+                            cts.Cancel();
+                        }
+                    }
+                },
+                ex => throw new KubernetesException($"kubernetes could not confirm launching desired count of worker pods.", ex),
+                () => Console.WriteLine($"kubernetes pod watch completed. expected {nodeCount}, result {added}"),
+                cts))
+                {
+                    // begin watch
+                    var watchTask = watch.Execute();
+
+                    // create worker
+                    var createWorkerTask = await _operations.CreateJobAsync(_ns, def, cancellationToken);
+
+                    // wait watch complete
+                    Console.WriteLine($"waiting worker scale out for {_env.WorkerPodCreationTimeout}sec");
+                    await watchTask;
                 }
-                Console.WriteLine($"Worker {_ns}/{_env.Name} successfully created.");
+
+                // confirm result
+                var workerJob = await _operations.GetJobAsync(_ns, _env.Name);
+                if (workerJob.status.failed != null && workerJob.status.failed.Value > 0)
+                    throw new KubernetesException($"failed to scale out worker on kubernetes, job status was failed.");
+                var workerPods = await _operations.GetPodsAsync(_ns, "app=dframe-worker");
+                var terminatedWorkers = workerPods.items.Where(x => x.status?.containerStatuses?.FirstOrDefault()?.lastState?.terminated != null).ToArray();
+                if (terminatedWorkers.Any())
+                    throw new KubernetesException($"failed to scale out worker on kubernetes, {terminatedWorkers.Length} pods status detected terminated.");
+
+                Console.WriteLine($"successfully scale out worker job {_ns}/{_env.Name}.");
             }
             catch (HttpRequestException ex)
             {
-                Console.WriteLine($"Failed to create worker on Kubernetes Deployment. {_ns}/{_env.Name}. {ex}");
-                Console.WriteLine($"Dump requested manifest.\n{def}");
+                Console.WriteLine($"failed to create worker on kubernetes. {_ns}/{_env.Name}. {ex}");
+                Console.WriteLine($"dump requested manifest.\n{def}");
                 throw;
             }
         }
 
         /// <summary>
-        /// create kubernetes deployment. (not recommended)
-        /// retry will happen when worker cause error on scenario. not recommeneded.
+        /// scale out with kubernetes deployment. (not recommended)
+        /// retry will happen when worker cause error on worker plan.
         /// </summary>
         /// <param name="nodeCount"></param>
         /// <param name="connectToHost"></param>
         /// <param name="connectToPort"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async ValueTask CreateDeployment(int nodeCount, string connectToHost, int connectToPort, CancellationToken cancellationToken)
+        private async ValueTask ScaleoutDeploymentAsync(int nodeCount, string connectToHost, int connectToPort, CancellationToken cancellationToken)
         {
             var def = _operations.CreateDeploymentDefinition(_env.Name, _env.Image, _env.ImageTag, connectToHost, connectToPort, _env.ImagePullPolicy, _env.ImagePullSecret, nodeCount);
             try
             {
-                // create worker
-                _ = await _operations.CreateDeploymentAsync(_ns, def, cancellationToken);
-
-                // todo: change to watch and timeout
-                // wait begin worker
-                await Task.Delay(TimeSpan.FromSeconds(5));
-
-                // confirm worker created successfully
-                var result = await _operations.GetDeploymentAsync(_ns, _env.Name);
-                if (result.status.unavailableReplicas != null && result.status.unavailableReplicas > 0)
+                // watch worker pod creation.
+                var added = 0;
+                var pods = _operations.GetPodsHttpAsync(_ns, true, "app=dframe-worker");
+                using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(_env.WorkerPodCreationTimeout)))
+                using (var watch = pods.Watch<V1Pod, V1PodList>((type, item, cts) =>
                 {
-                    throw new InvalidOperationException("DFrame worker got failure launching pod.");
+                    if (type == WatchEventType.Added)
+                    {
+                        added++;
+                        if (added >= nodeCount)
+                        {
+                            // complete
+                            cts.Cancel();
+                        }
+                    }
+                },
+                ex => throw new KubernetesException($"kubernetes could not confirm launching desired count of worker pods.", ex),
+                () => Console.WriteLine($"kubernetes pod watch completed. expected {nodeCount}, result {added}"),
+                cts))
+                {
+                    // begin watch
+                    var watchTask = watch.Execute();
+
+                    // create worker
+                    var createWorkerTask = _operations.CreateDeploymentAsync(_ns, def, cancellationToken);
+
+                    // wait watch complete
+                    Console.WriteLine($"waiting worker scale out for {_env.WorkerPodCreationTimeout}sec");
+                    await watchTask;
                 }
-                Console.WriteLine($"Worker {_ns}/{_env.Name} successfully created.");
+
+                // confirm result
+                var workerDeploy = await _operations.GetDeploymentAsync(_ns, _env.Name);
+                if (workerDeploy.status.unavailableReplicas != null && workerDeploy.status.unavailableReplicas > 0)
+                    throw new KubernetesException($"failed to scale out worker on kubernetes, deploy status was failed.");
+                var workerPods = await _operations.GetPodsAsync(_ns, "app=dframe-worker");
+                var terminatedWorkers = workerPods.items.Where(x => x.status?.containerStatuses?.FirstOrDefault()?.lastState?.terminated != null).ToArray();
+                if (terminatedWorkers.Any())
+                    throw new KubernetesException($"failed to scale out worker on kubernetes, {terminatedWorkers.Length} pods status detected terminated.");
+
+                Console.WriteLine($"successfully scale out worker deploy {_ns}/{_env.Name}.");
             }
             catch (HttpRequestException ex)
             {
