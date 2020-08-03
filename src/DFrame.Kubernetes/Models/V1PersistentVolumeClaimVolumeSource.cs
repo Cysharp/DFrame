@@ -2,7 +2,7 @@
 {
     public class V1PersistentVolumeClaimVolumeSource
     {
-        public string claimName { get; set; }
-        public bool? readOnly { get; set; }
+        public string ClaimName { get; set; }
+        public bool? ReadOnly { get; set; }
     }
 }

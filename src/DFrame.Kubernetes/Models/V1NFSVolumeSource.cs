@@ -2,8 +2,8 @@
 {
     public class V1NFSVolumeSource
     {
-        public string path { get; set; }
-        public bool? readOnly { get; set; }
-        public string server { get; set; }
+        public string Path { get; set; }
+        public bool? ReadOnly { get; set; }
+        public string Server { get; set; }
     }
 }

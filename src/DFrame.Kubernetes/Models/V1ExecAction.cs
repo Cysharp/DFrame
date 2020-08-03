@@ -4,6 +4,6 @@ namespace DFrame.Kubernetes.Models
 {
     public class V1ExecAction
     {
-        public IList<string> command { get; set; }
+        public IList<string> Command { get; set; }
     }
 }

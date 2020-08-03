@@ -2,7 +2,7 @@
 {
     public class V1ContainerStateWaiting
     {
-        public string message { get; set; }
-        public string reason { get; set; }
+        public string Message { get; set; }
+        public string Reason { get; set; }
     }
 }

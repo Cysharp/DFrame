@@ -2,8 +2,8 @@
 {
     public class V1EnvFromSource
     {
-        public V1ConfigMapEnvSource configMapRef { get; set; }
-        public string prefix { get; set; }
-        public V1SecretEnvSource secretRef { get; set; }
+        public V1ConfigMapEnvSource ConfigMapRef { get; set; }
+        public string Prefix { get; set; }
+        public V1SecretEnvSource SecretRef { get; set; }
     }
 }

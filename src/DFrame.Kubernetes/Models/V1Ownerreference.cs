@@ -2,11 +2,11 @@
 {
     public class V1Ownerreference
     {
-        public string apiVersion { get; set; }
-        public bool? blockOwnerDeletion { get; set; }
-        public bool? controller { get; set; }
-        public string kind { get; set; }
-        public string name { get; set; }
-        public string uid { get; set; }
+        public string ApiVersion { get; set; }
+        public bool? BlockOwnerDeletion { get; set; }
+        public bool? Controller { get; set; }
+        public string Kind { get; set; }
+        public string Name { get; set; }
+        public string Uid { get; set; }
     }
 }

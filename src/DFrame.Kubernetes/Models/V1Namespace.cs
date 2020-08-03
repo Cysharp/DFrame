@@ -6,10 +6,10 @@ namespace DFrame.Kubernetes.Models
 {
     public class V1Namespace
     {
-        public string apiVersion { get; set; }
-        public string kind { get; set; }
-        public V1ObjectMeta metadata { get; set; }
-        public V1NamespaceSpec spec { get; set; }
-        public V1NamespaceStatus status { get; set; }
+        public string ApiVersion { get; set; }
+        public string Kind { get; set; }
+        public V1ObjectMeta Metadata { get; set; }
+        public V1NamespaceSpec Spec { get; set; }
+        public V1NamespaceStatus Status { get; set; }
     }
 }

@@ -4,9 +4,9 @@ namespace DFrame.Kubernetes.Models
 {
     public class V1SecretVolumeSource
     {
-        public int? defaultMode { get; set; }
+        public int? DefaultMode { get; set; }
         public IList<V1KeyToPath> Items { get; set; }
-        public bool? optional { get; set; }
-        public string secretName { get; set; }
+        public bool? Optional { get; set; }
+        public string SecretName { get; set; }
     }
 }

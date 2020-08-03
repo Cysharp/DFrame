@@ -2,7 +2,7 @@
 {
     public class V1HostPathVolumeSource
     {
-        public string path { get; set; }
-        public string type { get; set; }
+        public string Path { get; set; }
+        public string Type { get; set; }
     }
 }

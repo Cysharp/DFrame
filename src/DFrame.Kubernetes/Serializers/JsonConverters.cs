@@ -39,15 +39,15 @@ namespace DFrame.Kubernetes.Serializers
         {
             return new ResourceQuantity()
             {
-                value = reader.GetString(),
+                Value = reader.GetString(),
             };
         }
 
         public override void Write(Utf8JsonWriter writer, ResourceQuantity value, JsonSerializerOptions options)
         {
-            if (!string.IsNullOrEmpty(value.value))
+            if (!string.IsNullOrEmpty(value.Value))
             {
-                writer.WriteStringValue(value.value.ToString());
+                writer.WriteStringValue(value.Value.ToString());
             }
         }
     }

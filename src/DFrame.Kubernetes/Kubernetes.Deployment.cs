@@ -69,61 +69,61 @@ namespace DFrame.Kubernetes
             };
             var definition = new V1Deployment
             {
-                apiVersion = "apps/v1",
-                kind = "Deployment",
-                metadata = new V1ObjectMeta
+                ApiVersion = "apps/v1",
+                Kind = "Deployment",
+                Metadata = new V1ObjectMeta
                 {
-                    name = name,
-                    labels = labels
+                    Name = name,
+                    Labels = labels
                 },
-                spec = new V1DeploymentSpec
+                Spec = new V1DeploymentSpec
                 {
-                    replicas = replicas,
-                    selector = new V1LabelSelector
+                    Replicas = replicas,
+                    Selector = new V1LabelSelector
                     {
-                        matchLabels = labels
+                        MatchLabels = labels
                     },
-                    template = new V1PodTemplateSpec
+                    Template = new V1PodTemplateSpec
                     {
-                        metadata = new V1ObjectMeta
+                        Metadata = new V1ObjectMeta
                         {
-                            labels = labels,
+                            Labels = labels,
                         },
-                        spec = new V1PodSpec
+                        Spec = new V1PodSpec
                         {
-                            containers = new[] {
+                            Containers = new[] {
                                 new V1Container
                                 {
-                                    name = name,
-                                    image = $"{image}:{imageTag}",
+                                    Name = name,
+                                    Image = $"{image}:{imageTag}",
                                     // "IfNotPresent" to reuse existing, "Never" to always use latest image for same tag.
-                                    imagePullPolicy = imagePullPolicy,
-                                    args = new [] { "--worker-flag" },
-                                    env = new []
+                                    ImagePullPolicy = imagePullPolicy,
+                                    Args = new [] { "--worker-flag" },
+                                    Env = new []
                                     {
                                         new V1EnvVar
                                         {
-                                            name = "DFRAME_MASTER_CONNECT_TO_HOST",
-                                            value = host,
+                                            Name = "DFRAME_MASTER_CONNECT_TO_HOST",
+                                            Value = host,
                                         },
                                         new V1EnvVar
                                         {
-                                            name = "DFRAME_MASTER_CONNECT_TO_PORT",
-                                            value = port.ToString(),
+                                            Name = "DFRAME_MASTER_CONNECT_TO_PORT",
+                                            Value = port.ToString(),
                                         }
                                     },
-                                    resources = new V1ResourceRequirements
+                                    Resources = new V1ResourceRequirements
                                     {
                                         // todo: should be configuable
-                                        limits = new Dictionary<string, ResourceQuantity>
+                                        Limits = new Dictionary<string, ResourceQuantity>
                                         {
-                                            { "cpu", new ResourceQuantity{ value = "2000m" } },
-                                            { "memory", new ResourceQuantity{ value = "1000Mi" } },
+                                            { "cpu", new ResourceQuantity{ Value = "2000m" } },
+                                            { "memory", new ResourceQuantity{ Value = "1000Mi" } },
                                         },
-                                        requests = new Dictionary<string, ResourceQuantity>
+                                        Requests = new Dictionary<string, ResourceQuantity>
                                         {
-                                            { "cpu", new ResourceQuantity{ value = "100m" } },
-                                            { "memory", new ResourceQuantity{ value = "100Mi" } },
+                                            { "cpu", new ResourceQuantity{ Value = "100m" } },
+                                            { "memory", new ResourceQuantity{ Value = "100Mi" } },
                                         }
                                     },
                                 },
@@ -135,11 +135,11 @@ namespace DFrame.Kubernetes
 
             if (!string.IsNullOrEmpty(imagePullSecret))
             {
-                definition.spec.template.spec.imagePullSecrets = new[]
+                definition.Spec.Template.Spec.ImagePullSecrets = new[]
                 {
                     new V1LocalObjectReference
                     {
-                        name = imagePullSecret,
+                        Name = imagePullSecret,
                     },
                 };
             }
@@ -167,7 +167,7 @@ namespace DFrame.Kubernetes
             // let's use Foreground to avoid pod remains after Deployment deletion.
             var options = new V1DeleteOptions
             {
-                gracePeriodSeconds = gracePeriodSeconds,
+                GracePeriodSeconds = gracePeriodSeconds,
             };
             using var res = await DeleteDeploymentHttpAsync(ns, name, options, ct, labelSelectorParameter, timeoutSecondsParameter).ConfigureAwait(false);
             return res.Body;
@@ -255,7 +255,7 @@ namespace DFrame.Kubernetes
         public async ValueTask<HttpResponse<bool>> ExistsDeploymentHttpAsync(string ns, string name, string labelSelectorParameter = null, int? timeoutSecondsParameter = null)
         {
             var deployments = await GetDeploymentsHttpAsync(ns, false, labelSelectorParameter, timeoutSecondsParameter).ConfigureAwait(false);
-            if (deployments == null || !deployments.Body.items.Any())
+            if (deployments == null || !deployments.Body.Items.Any())
             {
                 return new HttpResponse<bool>(false)
                 {
@@ -264,7 +264,7 @@ namespace DFrame.Kubernetes
             }
             else
             {
-                var exists = deployments.Body.items.Select(x => x.metadata.name == name).Any();
+                var exists = deployments.Body.Items.Select(x => x.Metadata.Name == name).Any();
                 return new HttpResponse<bool>(exists)
                 {
                     Response = deployments.Response,

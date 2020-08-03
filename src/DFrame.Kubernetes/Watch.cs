@@ -141,9 +141,7 @@ namespace DFrame.Kubernetes
 
         public class WatchEvent
         {
-            [JsonPropertyName("type")]
             public WatchEventType Type { get; set; }
-            [JsonPropertyName("object")]
             public T Object { get; set; }
         }
     }

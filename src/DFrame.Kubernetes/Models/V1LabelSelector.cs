@@ -4,7 +4,7 @@ namespace DFrame.Kubernetes.Models
 {
     public class V1LabelSelector
     {
-        public IList<V1LabelSelectorRequirement> matchExpressions { get; set; }
-        public IDictionary<string, string> matchLabels { get; set; }
+        public IList<V1LabelSelectorRequirement> MatchExpressions { get; set; }
+        public IDictionary<string, string> MatchLabels { get; set; }
     }
 }

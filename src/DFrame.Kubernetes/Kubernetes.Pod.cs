@@ -32,7 +32,7 @@ namespace DFrame.Kubernetes
             // let's use Foreground to avoid pod remains after Pod deletion.
             var options = new V1DeleteOptions
             {
-                gracePeriodSeconds = gracePeriodSeconds,
+                GracePeriodSeconds = gracePeriodSeconds,
             };
             using var res = await DeletePodHttpAsync(ns, name, options, ct, labelSelectorParameter, timeoutSecondsParameter).ConfigureAwait(false);
             return res.Body;
@@ -125,7 +125,7 @@ namespace DFrame.Kubernetes
         public async ValueTask<HttpResponse<bool>> ExistsPodHttpAsync(string ns, string name, string labelSelectorParameter = null, int? timeoutSecondsParameter = null)
         {
             var pods = await GetPodsHttpAsync(ns, false, labelSelectorParameter, timeoutSecondsParameter).ConfigureAwait(false);
-            if (pods == null || !pods.Body.items.Any())
+            if (pods == null || !pods.Body.Items.Any())
             {
                 return new HttpResponse<bool>(false)
                 {
@@ -134,7 +134,7 @@ namespace DFrame.Kubernetes
             }
             else
             {
-                var exists = pods.Body.items.Select(x => x.metadata.name == name).Any();
+                var exists = pods.Body.Items.Select(x => x.Metadata.Name == name).Any();
                 return new HttpResponse<bool>(exists)
                 {
                     Response = pods.Response,

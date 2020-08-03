@@ -1,7 +1,7 @@
 ﻿namespace DFrame.Kubernetes.Models
 {
-    public class V1PodIP
+    public class V1PodIp
     {
-        public string ip { get; set; }
+        public string Ip { get; set; }
     }
 }

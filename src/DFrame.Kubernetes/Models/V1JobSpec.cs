@@ -6,13 +6,13 @@ namespace DFrame.Kubernetes.Models
 {
     public class V1JobSpec
     {
-        public long? activeDeadlineSeconds { get; set; }
-        public int? backoffLimit { get; set; }
-        public int? completions { get; set; }
-        public bool? manualSelector { get; set; }
-        public int? parallelism { get; set; }
-        public V1LabelSelector selector { get; set; }
-        public V1PodTemplateSpec template { get; set; }
-        public int? ttlSecondsAfterFinished { get; set; }
+        public long? ActiveDeadlineSeconds { get; set; }
+        public int? BackoffLimit { get; set; }
+        public int? Completions { get; set; }
+        public bool? ManualSelector { get; set; }
+        public int? Parallelism { get; set; }
+        public V1LabelSelector Selector { get; set; }
+        public V1PodTemplateSpec Template { get; set; }
+        public int? TtlSecondsAfterFinished { get; set; }
     }
 }

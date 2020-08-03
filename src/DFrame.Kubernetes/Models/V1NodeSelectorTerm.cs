@@ -4,7 +4,7 @@ namespace DFrame.Kubernetes.Models
 {
     public class V1NodeSelectorTerm
     {
-        public IList<V1NodeSelectorRequirement> matchExpressions { get; set; }
-        public IList<V1NodeSelectorRequirement> matchFields { get; set; }
+        public IList<V1NodeSelectorRequirement> MatchExpressions { get; set; }
+        public IList<V1NodeSelectorRequirement> MatchFields { get; set; }
     }
 }

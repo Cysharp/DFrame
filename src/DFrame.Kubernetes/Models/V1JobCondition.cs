@@ -6,11 +6,11 @@ namespace DFrame.Kubernetes.Models
 {
     public class V1JobCondition
     {
-        public DateTime? lastProbeTime { get; set; }
-        public DateTime? lastTransitionTime { get; set; }
-        public string message { get; set; }
-        public string reason { get; set; }
-        public string status { get; set; }
-        public string type { get; set; }
+        public DateTime? LastProbeTime { get; set; }
+        public DateTime? LastTransitionTime { get; set; }
+        public string Message { get; set; }
+        public string Reason { get; set; }
+        public string Status { get; set; }
+        public string Type { get; set; }
     }
 }

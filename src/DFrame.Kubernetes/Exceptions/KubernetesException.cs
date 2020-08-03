@@ -11,7 +11,7 @@ namespace DFrame.Kubernetes.Exceptions
         {
         }
         public KubernetesException(V1Status status)
-            : this(status?.message)
+            : this(status?.Message)
         {
             this.Status = status;
         }

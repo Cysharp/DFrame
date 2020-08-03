@@ -2,7 +2,7 @@
 {
     public class V1ConfigMapEnvSource
     {
-        public string name { get; set; }
-        public bool? optional { get; set; }
+        public string Name { get; set; }
+        public bool? Optional { get; set; }
     }
 }

@@ -2,7 +2,7 @@
 {
     public class V1VolumeDevice
     {
-        public string devicePath { get; set; }
-        public string name { get; set; }
+        public string DevicePath { get; set; }
+        public string Name { get; set; }
     }
 }

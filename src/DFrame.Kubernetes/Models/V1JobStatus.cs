@@ -6,11 +6,11 @@ namespace DFrame.Kubernetes.Models
 {
     public class V1JobStatus
     {
-        public int? active { get; set; }
-        public DateTime? completionTime { get; set; }
-        public IList<V1JobCondition> conditions { get; set; }
-        public int? failed { get; set; }
-        public DateTime? startTime { get; set; }
-        public int? succeeded { get; set; }
+        public int? Active { get; set; }
+        public DateTime? CompletionTime { get; set; }
+        public IList<V1JobCondition> Conditions { get; set; }
+        public int? Failed { get; set; }
+        public DateTime? StartTime { get; set; }
+        public int? Succeeded { get; set; }
     }
 }

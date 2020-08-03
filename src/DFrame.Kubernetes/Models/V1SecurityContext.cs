@@ -2,15 +2,15 @@
 {
     public class V1SecurityContext
     {
-        public bool? allowPrivilegeEscalation { get; set; }
-        public V1Capabilities capabilities { get; set; }
-        public bool? privileged { get; set; }
-        public string procMount { get; set; }
-        public bool? readOnlyRootFilesystem { get; set; }
-        public long? runAsGroup { get; set; }
-        public bool? runAsNonRoot { get; set; }
-        public long? runAsUser { get; set; }
-        public V1SELinuxOptions seLinuxOptions { get; set; }
-        public V1WindowsSecurityContextOptions windowsOptions { get; set; }
+        public bool? AllowPrivilegeEscalation { get; set; }
+        public V1Capabilities Capabilities { get; set; }
+        public bool? Privileged { get; set; }
+        public string ProcMount { get; set; }
+        public bool? ReadOnlyRootFilesystem { get; set; }
+        public long? RunAsGroup { get; set; }
+        public bool? RunAsNonRoot { get; set; }
+        public long? RunAsUser { get; set; }
+        public V1SELinuxOptions SeLinuxOptions { get; set; }
+        public V1WindowsSecurityContextOptions WindowsOptions { get; set; }
     }
 }

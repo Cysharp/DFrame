@@ -71,62 +71,62 @@ namespace DFrame.Kubernetes
             };
             var definition = new V1Job
             {
-                apiVersion = "batch/v1",
-                kind = "Job",
-                metadata = new V1ObjectMeta
+                ApiVersion = "batch/v1",
+                Kind = "Job",
+                Metadata = new V1ObjectMeta
                 {
-                    name = name,
-                    labels = labels
+                    Name = name,
+                    Labels = labels
                 },
-                spec = new V1JobSpec
+                Spec = new V1JobSpec
                 {
-                    parallelism = parallelism,
-                    completions = parallelism,
+                    Parallelism = parallelism,
+                    Completions = parallelism,
                     // note: must be 0 to prevent pod restart during load testing.
-                    backoffLimit = 0,
-                    template = new V1PodTemplateSpec
+                    BackoffLimit = 0,
+                    Template = new V1PodTemplateSpec
                     {
-                        metadata = new V1ObjectMeta
+                        Metadata = new V1ObjectMeta
                         {
-                            labels = labels,
+                            Labels = labels,
                         },
-                        spec = new V1PodSpec
+                        Spec = new V1PodSpec
                         {
                             // note: must be Never to prevent pod restart during load testing.
-                            restartPolicy = "Never",
-                            containers = new[] {
+                            RestartPolicy = "Never",
+                            Containers = new[] {
                                 new V1Container
                                 {
-                                    name = name,
-                                    image = $"{image}:{imageTag}",
+                                    Name = name,
+                                    Image = $"{image}:{imageTag}",
                                     // "IfNotPresent" to reuse existing, "Never" to always use latest image for same tag.
-                                    imagePullPolicy = imagePullPolicy,
-                                    args = new [] { "--worker-flag" },
-                                    env = new []
+                                    ImagePullPolicy = imagePullPolicy,
+                                    Args = new [] { "--worker-flag" },
+                                    Env = new []
                                     {
                                         new V1EnvVar
                                         {
-                                            name = "DFRAME_MASTER_CONNECT_TO_HOST",
-                                            value = host,
+                                            Name = "DFRAME_MASTER_CONNECT_TO_HOST",
+                                            Value = host,
                                         },
                                         new V1EnvVar
                                         {
-                                            name = "DFRAME_MASTER_CONNECT_TO_PORT",
-                                            value = port.ToString(),
+                                            Name = "DFRAME_MASTER_CONNECT_TO_PORT",
+                                            Value = port.ToString(),
                                         }
                                     },
-                                    resources = new V1ResourceRequirements
+                                    Resources = new V1ResourceRequirements
                                     {
                                         // todo: should be configuable
-                                        limits = new Dictionary<string, ResourceQuantity>
+                                        Limits = new Dictionary<string, ResourceQuantity>
                                         {
-                                            { "cpu", new ResourceQuantity{ value = "2000m" } },
-                                            { "memory", new ResourceQuantity{ value = "1000Mi" } },
+                                            { "cpu", new ResourceQuantity{ Value = "2000m" } },
+                                            { "memory", new ResourceQuantity{ Value = "1000Mi" } },
                                         },
-                                        requests = new Dictionary<string, ResourceQuantity>
+                                        Requests = new Dictionary<string, ResourceQuantity>
                                         {
-                                            { "cpu", new ResourceQuantity{ value = "100m" } },
-                                            { "memory", new ResourceQuantity{ value = "100Mi" } },
+                                            { "cpu", new ResourceQuantity{ Value = "100m" } },
+                                            { "memory", new ResourceQuantity{ Value = "100Mi" } },
                                         }
                                     },
                                 },
@@ -138,11 +138,11 @@ namespace DFrame.Kubernetes
 
             if (!string.IsNullOrEmpty(imagePullSecret))
             {
-                definition.spec.template.spec.imagePullSecrets = new[]
+                definition.Spec.Template.Spec.ImagePullSecrets = new[]
                 {
                     new V1LocalObjectReference
                     {
-                        name = imagePullSecret,
+                        Name = imagePullSecret,
                     },
                 };
             }
@@ -170,8 +170,8 @@ namespace DFrame.Kubernetes
             // let's use Foreground to avoid pod remains after job deletion.
             var options = new V1DeleteOptions
             {
-                propagationPolicy = "Foreground",
-                gracePeriodSeconds = gracePeriodSeconds,
+                PropagationPolicy = "Foreground",
+                GracePeriodSeconds = gracePeriodSeconds,
             };
             using var res = await DeleteJobHttpAsync(ns, name, options, ct).ConfigureAwait(false);
             return res.Body;
@@ -259,7 +259,7 @@ namespace DFrame.Kubernetes
         public async ValueTask<HttpResponse<bool>> ExistsJobHttpAsync(string ns, string name, string labelSelectorParameter = null, int? timeoutSecondsParameter = null)
         {
             var jobs = await GetJobsHttpAsync(ns, false, labelSelectorParameter, timeoutSecondsParameter).ConfigureAwait(false);
-            if (jobs == null || !jobs.Body.items.Any())
+            if (jobs == null || !jobs.Body.Items.Any())
             {
                 return new HttpResponse<bool>(false)
                 {
@@ -268,7 +268,7 @@ namespace DFrame.Kubernetes
             }
             else
             {
-                var exists = jobs.Body.items.Select(x => x.metadata.name == name).Any();
+                var exists = jobs.Body.Items.Select(x => x.Metadata.Name == name).Any();
                 return new HttpResponse<bool>(exists)
                 {
                     Response = jobs.Response,

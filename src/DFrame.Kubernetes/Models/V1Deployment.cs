@@ -2,10 +2,10 @@
 {
     public class V1Deployment
     {
-        public string apiVersion { get; set; }
-        public string kind { get; set; }
-        public V1ObjectMeta metadata { get; set; }
-        public V1DeploymentSpec spec { get; set; }
-        public V1DeploymentStatus status { get; set; }
+        public string ApiVersion { get; set; }
+        public string Kind { get; set; }
+        public V1ObjectMeta Metadata { get; set; }
+        public V1DeploymentSpec Spec { get; set; }
+        public V1DeploymentStatus Status { get; set; }
     }
 }

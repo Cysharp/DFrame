@@ -5,21 +5,21 @@ namespace DFrame.Kubernetes.Models
 {
     public class V1ObjectMeta
     {
-        public IDictionary<string, string> annotations { get; set; }
-        public string clusterName { get; set; }
-        public DateTime? creationTimestamp { get; set; }
-        public long? deletionGracePeriodSeconds { get; set; }
-        public DateTime? deletionTimestamp { get; set; }
-        public IList<string> finalizers { get; set; }
-        public string generateName { get; set; }
-        public long? generation { get; set; }
-        public IDictionary<string, string> labels { get; set; }
-        public IList<V1ManagedFieldsEntry> managedFields { get; set; }
-        public string name { get; set; }
-        public string @namespace { get; set; }
-        public IList<V1Ownerreference> ownerReferences { get; set; }
-        public string resourceVersion { get; set; }
-        public string selfLink { get; set; }
-        public string uid { get; set; }
+        public IDictionary<string, string> Annotations { get; set; }
+        public string ClusterName { get; set; }
+        public DateTime? CreationTimestamp { get; set; }
+        public long? DeletionGracePeriodSeconds { get; set; }
+        public DateTime? DeletionTimestamp { get; set; }
+        public IList<string> Finalizers { get; set; }
+        public string GenerateName { get; set; }
+        public long? Generation { get; set; }
+        public IDictionary<string, string> Labels { get; set; }
+        public IList<V1ManagedFieldsEntry> ManagedFields { get; set; }
+        public string Name { get; set; }
+        public string Namespace { get; set; }
+        public IList<V1Ownerreference> OwnerReferences { get; set; }
+        public string ResourceVersion { get; set; }
+        public string SelfLink { get; set; }
+        public string Uid { get; set; }
     }
 }

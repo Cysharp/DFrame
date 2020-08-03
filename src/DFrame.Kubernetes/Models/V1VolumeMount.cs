@@ -2,11 +2,11 @@
 {
     public class V1VolumeMount
     {
-        public string mountPath { get; set; }
-        public string mountPropagation { get; set; }
-        public string name { get; set; }
-        public bool readOnly { get; set; }
-        public string subPath { get; set; }
-        public string subPathExpr { get; set; }
+        public string MountPath { get; set; }
+        public string MountPropagation { get; set; }
+        public string Name { get; set; }
+        public bool ReadOnly { get; set; }
+        public string SubPath { get; set; }
+        public string SubPathExpr { get; set; }
     }
 }

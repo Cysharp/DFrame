@@ -2,9 +2,9 @@
 {
     public class V1ListMeta
     {
-        public string @continue { get; set; }
-        public long? remainingItemCount { get; set; }
-        public string resourceVersion { get; set; }
-        public string selfLink { get; set; }
+        public string Continue { get; set; }
+        public long? RemainingItemCount { get; set; }
+        public string ResourceVersion { get; set; }
+        public string SelfLink { get; set; }
     }
 }

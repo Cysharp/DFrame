@@ -2,7 +2,7 @@
 {
     public class V1WatchEvent<T>
     {
-        public T @object { get; set; }
-        public string type { get; set; }
+        public T Object { get; set; }
+        public string Type { get; set; }
     }
 }

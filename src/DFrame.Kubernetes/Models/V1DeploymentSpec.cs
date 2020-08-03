@@ -2,13 +2,13 @@
 {
     public class V1DeploymentSpec
     {
-        public int? minReadySeconds { get; set; }
-        public bool? paused { get; set; }
-        public int? progressDeadlineSeconds { get; set; }
-        public int? replicas { get; set; }
-        public int? revisionHistoryLimit { get; set; }
-        public V1LabelSelector selector { get; set; }
-        public V1DeploymentStrategy strategy { get; set; }
-        public V1PodTemplateSpec template { get; set; }
+        public int? MinReadySeconds { get; set; }
+        public bool? Paused { get; set; }
+        public int? ProgressDeadlineSeconds { get; set; }
+        public int? Replicas { get; set; }
+        public int? RevisionHistoryLimit { get; set; }
+        public V1LabelSelector Selector { get; set; }
+        public V1DeploymentStrategy Strategy { get; set; }
+        public V1PodTemplateSpec Template { get; set; }
     }
 }

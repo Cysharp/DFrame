@@ -7,9 +7,9 @@ namespace DFrame.Kubernetes.Models
     {
         [JsonConverter(typeof(IntOrStringConverter))]
 
-        public string maxSurge { get; set; }
+        public string MaxSurge { get; set; }
         [JsonConverter(typeof(IntOrStringConverter))]
 
-        public string maxUnavailable { get; set; }
+        public string MaxUnavailable { get; set; }
     }
 }

@@ -4,8 +4,8 @@ namespace DFrame.Kubernetes.Models
 {
     public class V1PodAffinityTerm
     {
-        public V1LabelSelector labelSelector { get; set; }
-        public IList<string> namespaces { get; set; }
-        public string topologyKey { get; set; }
+        public V1LabelSelector LabelSelector { get; set; }
+        public IList<string> Namespaces { get; set; }
+        public string TopologyKey { get; set; }
     }
 }

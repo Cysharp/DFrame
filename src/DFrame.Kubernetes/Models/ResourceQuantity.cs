@@ -6,6 +6,6 @@ namespace DFrame.Kubernetes.Models
     [JsonConverter(typeof(ResourceQuantityConverter))]
     public class ResourceQuantity
     {
-        public string value { get; set; }
+        public string Value { get; set; }
     }
 }

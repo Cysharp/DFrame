@@ -2,8 +2,8 @@
 {
     public class V1Affinity
     {
-        public V1Nodeaffinity nodeAffinity { get; set; }
-        public V1Podaffinity podAffinity { get; set; }
-        public V1Podantiaffinity podAntiAffinity { get; set; }
+        public V1Nodeaffinity NodeAffinity { get; set; }
+        public V1Podaffinity PodAffinity { get; set; }
+        public V1Podantiaffinity PodAntiAffinity { get; set; }
     }
 }

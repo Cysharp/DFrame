@@ -5,18 +5,18 @@ namespace DFrame.Kubernetes.Models
 {
     public class V1PodStatus
     {
-        public IList<V1PodCondition> conditions { get; set; }
-        public IList<V1ContainerStatus> containerStatuses { get; set; }
-        public IList<V1ContainerStatus> ephemeralContainerStatuses { get; set; }
-        public string hostIP { get; set; }
-        public IList<V1ContainerStatus> initContainerStatuses { get; set; }
-        public string message { get; set; }
-        public string nominatedNodeName { get; set; }
-        public string phase { get; set; }
-        public string podIP { get; set; }
-        public IList<V1PodIP> podIPs { get; set; }
-        public string qosClass { get; set; }
-        public string reason { get; set; }
-        public DateTime? startTime { get; set; }
+        public IList<V1PodCondition> Conditions { get; set; }
+        public IList<V1ContainerStatus> ContainerStatuses { get; set; }
+        public IList<V1ContainerStatus> EphemeralContainerStatuses { get; set; }
+        public string HostIp { get; set; }
+        public IList<V1ContainerStatus> InitContainerStatuses { get; set; }
+        public string Message { get; set; }
+        public string NominatedNodeName { get; set; }
+        public string Phase { get; set; }
+        public string PodIp { get; set; }
+        public IList<V1PodIp> PodIPs { get; set; }
+        public string QosClass { get; set; }
+        public string Reason { get; set; }
+        public DateTime? StartTime { get; set; }
     }
 }

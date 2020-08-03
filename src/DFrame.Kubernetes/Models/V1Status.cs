@@ -2,13 +2,13 @@
 {
     public class V1Status
     {
-        public string apiVersion { get; set; }
-        public int? code { get; set; }
-        public V1StatusDetails details { get; set; }
-        public string kind { get; set; }
-        public string message { get; set; }
-        public V1ListMeta metadata { get; set; }
-        public string reason { get; set; }
-        public string status { get; set; }
+        public string ApiVersion { get; set; }
+        public int? Code { get; set; }
+        public V1StatusDetails Details { get; set; }
+        public string Kind { get; set; }
+        public string Message { get; set; }
+        public V1ListMeta Metadata { get; set; }
+        public string Reason { get; set; }
+        public string Status { get; set; }
     }
 }

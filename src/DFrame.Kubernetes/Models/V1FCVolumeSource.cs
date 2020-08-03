@@ -2,12 +2,12 @@
 
 namespace DFrame.Kubernetes.Models
 {
-    public class V1FCVolumeSource
+    public class V1FcVolumeSource
     {
-        public string fsType { get; set; }
-        public int? lun { get; set; }
-        public bool? readOnly { get; set; }
-        public IList<string> targetWWNs { get; set; }
-        public IList<string> wwids { get; set; }
+        public string FsType { get; set; }
+        public int? Lun { get; set; }
+        public bool? ReadOnly { get; set; }
+        public IList<string> TargetWwNs { get; set; }
+        public IList<string> Wwids { get; set; }
     }
 }

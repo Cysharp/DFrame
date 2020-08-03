@@ -172,10 +172,10 @@ namespace DFrame.Kubernetes
 
                 // confirm result
                 var workerJob = await _operations.GetJobAsync(_ns, _env.Name);
-                if (workerJob.status.failed != null && workerJob.status.failed.Value > 0)
+                if (workerJob.Status.Failed != null && workerJob.Status.Failed.Value > 0)
                     throw new KubernetesException($"failed to scale out worker on kubernetes, job status was failed.");
                 var workerPods = await _operations.GetPodsAsync(_ns, "app=dframe-worker");
-                var terminatedWorkers = workerPods.items.Where(x => x.status?.containerStatuses?.FirstOrDefault()?.lastState?.terminated != null).ToArray();
+                var terminatedWorkers = workerPods.Items.Where(x => x.Status?.ContainerStatuses?.FirstOrDefault()?.LastState?.Terminated != null).ToArray();
                 if (terminatedWorkers.Any())
                     throw new KubernetesException($"failed to scale out worker on kubernetes, {terminatedWorkers.Length} pods status detected terminated.");
 
@@ -236,10 +236,10 @@ namespace DFrame.Kubernetes
 
                 // confirm result
                 var workerDeploy = await _operations.GetDeploymentAsync(_ns, _env.Name);
-                if (workerDeploy.status.unavailableReplicas != null && workerDeploy.status.unavailableReplicas > 0)
+                if (workerDeploy.Status.UnavailableReplicas != null && workerDeploy.Status.UnavailableReplicas > 0)
                     throw new KubernetesException($"failed to scale out worker on kubernetes, deploy status was failed.");
                 var workerPods = await _operations.GetPodsAsync(_ns, "app=dframe-worker");
-                var terminatedWorkers = workerPods.items.Where(x => x.status?.containerStatuses?.FirstOrDefault()?.lastState?.terminated != null).ToArray();
+                var terminatedWorkers = workerPods.Items.Where(x => x.Status?.ContainerStatuses?.FirstOrDefault()?.LastState?.Terminated != null).ToArray();
                 if (terminatedWorkers.Any())
                     throw new KubernetesException($"failed to scale out worker on kubernetes, {terminatedWorkers.Length} pods status detected terminated.");
 

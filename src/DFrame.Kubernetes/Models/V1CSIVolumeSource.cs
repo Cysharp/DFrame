@@ -2,12 +2,12 @@
 
 namespace DFrame.Kubernetes.Models
 {
-    public class V1CSIVolumeSource
+    public class V1CsiVolumeSource
     {
-        public string driver { get; set; }
-        public string fsType { get; set; }
-        public V1LocalObjectReference nodePublishSecretRef { get; set; }
-        public bool? readOnly { get; set; }
-        public IDictionary<string, string> volumeAttributes { get; set; }
+        public string Driver { get; set; }
+        public string FsType { get; set; }
+        public V1LocalObjectReference NodePublishSecretRef { get; set; }
+        public bool? ReadOnly { get; set; }
+        public IDictionary<string, string> VolumeAttributes { get; set; }
     }
 }

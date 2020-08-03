@@ -2,8 +2,8 @@
 {
     public class V1ConfigMapKeySelector
     {
-        public string key { get; set; }
-        public string name { get; set; }
-        public bool? optional { get; set; }
+        public string Key { get; set; }
+        public string Name { get; set; }
+        public bool? Optional { get; set; }
     }
 }

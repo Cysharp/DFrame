@@ -6,11 +6,11 @@ namespace DFrame.Kubernetes.Models
 {
     public class V1HTTPGetAction
     {
-        public string host { get; set; }
-        public IList<V1HTTPHeader> httpHeaders { get; set; }
-        public string path { get; set; }
+        public string Host { get; set; }
+        public IList<V1HTTPHeader> HttpHeaders { get; set; }
+        public string Path { get; set; }
         [JsonConverter(typeof(IntOrStringConverter))]
-        public string port { get; set; }
-        public string scheme { get; set; }
+        public string Port { get; set; }
+        public string Scheme { get; set; }
     }
 }

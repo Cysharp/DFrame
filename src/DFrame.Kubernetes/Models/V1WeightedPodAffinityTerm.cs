@@ -2,7 +2,7 @@
 {
     public class V1WeightedPodAffinityTerm
     {
-        public V1PodAffinityTerm podAffinityTerm { get; set; }
-        public int weight { get; set; }
+        public V1PodAffinityTerm PodAffinityTerm { get; set; }
+        public int Weight { get; set; }
     }
 }

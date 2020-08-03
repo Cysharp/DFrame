@@ -4,8 +4,8 @@ namespace DFrame.Kubernetes.Models
 {
     public class V1NodeSelectorRequirement
     {
-        public string key { get; set; }
-        public string @operator { get; set; }
-        public IList<string> values { get; set; }
+        public string Key { get; set; }
+        public string Operator { get; set; }
+        public IList<string> Values { get; set; }
     }
 }

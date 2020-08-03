@@ -2,7 +2,7 @@
 {
     public class V1Preconditions
     {
-        public string resourceVersion { get; set; }
-        public string uid { get; set; }
+        public string ResourceVersion { get; set; }
+        public string Uid { get; set; }
     }
 }

@@ -5,9 +5,9 @@ namespace DFrame.Kubernetes.Models
 {
     public class V1TCPSocketAction
     {
-        public string host { get; set; }
+        public string Host { get; set; }
         [JsonConverter(typeof(IntOrStringConverter))]
 
-        public string port { get; set; }
+        public string Port { get; set; }
     }
 }

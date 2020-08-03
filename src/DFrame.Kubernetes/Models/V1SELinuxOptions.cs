@@ -2,9 +2,9 @@
 {
     public class V1SELinuxOptions
     {
-        public string level { get; set; }
-        public string role { get; set; }
-        public string type { get; set; }
-        public string user { get; set; }
+        public string Level { get; set; }
+        public string Role { get; set; }
+        public string Type { get; set; }
+        public string User { get; set; }
     }
 }

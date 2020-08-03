@@ -2,7 +2,7 @@
 {
     public class V1DeploymentStrategy
     {
-        public V1RollingUpdateDeployment rollingUpdate { get; set; }
-        public string type { get; set; }
+        public V1RollingUpdateDeployment RollingUpdate { get; set; }
+        public string Type { get; set; }
     }
 }

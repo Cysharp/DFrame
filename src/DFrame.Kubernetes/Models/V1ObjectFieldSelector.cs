@@ -2,7 +2,7 @@
 {
     public class V1ObjectFieldSelector
     {
-        public string apiVersion { get; set; }
-        public string fieldPath { get; set; }
+        public string ApiVersion { get; set; }
+        public string FieldPath { get; set; }
     }
 }

@@ -2,9 +2,9 @@
 {
     public class V1Toleration
     {
-        public string effect { get; set; }
-        public string key { get; set; }
-        public string @operator { get; set; }
-        public long? tolerationSeconds { get; set; }
+        public string Effect { get; set; }
+        public string Key { get; set; }
+        public string Operator { get; set; }
+        public long? TolerationSeconds { get; set; }
     }
 }

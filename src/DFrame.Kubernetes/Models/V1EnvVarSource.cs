@@ -2,9 +2,9 @@
 {
     public class V1EnvVarSource
     {
-        public V1ConfigMapKeySelector configMapKeyRef { get; set; }
-        public V1ObjectFieldSelector fieldRef { get; set; }
-        public V1ResourceFieldSelector resourceFieldRef { get; set; }
-        public V1SecretKeySelector secretKeyRef { get; set; }
+        public V1ConfigMapKeySelector ConfigMapKeyRef { get; set; }
+        public V1ObjectFieldSelector FieldRef { get; set; }
+        public V1ResourceFieldSelector ResourceFieldRef { get; set; }
+        public V1SecretKeySelector SecretKeyRef { get; set; }
     }
 }

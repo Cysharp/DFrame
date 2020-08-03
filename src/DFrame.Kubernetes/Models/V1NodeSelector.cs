@@ -4,6 +4,6 @@ namespace DFrame.Kubernetes.Models
 {
     public class V1NodeSelector
     {
-        public IList<V1NodeSelectorTerm> nodeSelectorTerms { get; set; }
+        public IList<V1NodeSelectorTerm> NodeSelectorTerms { get; set; }
     }
 }

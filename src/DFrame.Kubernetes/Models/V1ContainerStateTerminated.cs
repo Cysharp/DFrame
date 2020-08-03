@@ -4,12 +4,12 @@ namespace DFrame.Kubernetes.Models
 {
     public class V1ContainerStateTerminated
     {
-        public string containerID { get; set; }
-        public int exitCode { get; set; }
-        public DateTime? finishedAt { get; set; }
-        public string message { get; set; }
-        public string reason { get; set; }
-        public int? signal { get; set; }
-        public DateTime? startedAt { get; set; }
+        public string ContainerId { get; set; }
+        public int ExitCode { get; set; }
+        public DateTime? FinishedAt { get; set; }
+        public string Message { get; set; }
+        public string Reason { get; set; }
+        public int? Signal { get; set; }
+        public DateTime? StartedAt { get; set; }
     }
 }
