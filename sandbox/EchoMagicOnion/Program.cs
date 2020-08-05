@@ -32,9 +32,27 @@ namespace EchoMagicOnion
 
     public class EchoHub : StreamingHubBase<IEchoHub, IEchoHubReceiver>, IEchoHub
     {
+        private IEchoHubReceiver _broadcaster;
+        protected override async ValueTask OnConnecting()
+        {
+            var group = await Group.AddAsync("global-masterhub-group");
+            _broadcaster = group.CreateBroadcaster<IEchoHubReceiver>();
+        }
+
         public Task<MessageResponse> EchoAsync(string message)
         {
             var response = new MessageResponse { Message = message };
+
+            return Task.FromResult(response);
+        }
+
+        public Task<MessageResponse> EchoBroadcastAsync(string message)
+        {
+            var response = new MessageResponse { Message = message };
+
+            // broadcast to all client
+            _broadcaster.OnSend(response);
+
             return Task.FromResult(response);
         }
     }

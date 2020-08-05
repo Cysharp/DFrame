@@ -24,11 +24,16 @@ namespace ConsoleApp
             if (args.Length == 0)
             {
                 // master
-                //args = "-processCount 3 -workerPerProcess 3 -executePerWorker 3 -workerName SampleWorker".Split(' ');
+                args = "-processCount 3 -workerPerProcess 3 -executePerWorker 3 -workerName SampleWorker".Split(' ');
                 //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleHttpWorker".Split(' ');
                 //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 10000 -workerName SampleHttpWorker".Split(' ');
                 //args = "-processCount 10 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleHttpWorker".Split(' ');
-                args = "-processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleUnaryWorker".Split(' ');
+                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleUnaryWorker".Split(' ');
+                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 10000 -workerName SampleUnaryWorker".Split(' ');
+                //args = "-processCount 10 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleUnaryWorker".Split(' ');
+                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleStreamWorker".Split(' ');
+                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 10000 -workerName SampleStreamWorker".Split(' ');
+                //args = "-processCount 10 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleStreamWorker".Split(' ');
                 // listen on
                 // host = "0.0.0.0";
             }
@@ -134,20 +139,45 @@ namespace ConsoleApp
     public class SampleUnaryWorker : Worker
     {
         private Channel _channel;
-        private IEchoService _service;
+        private IEchoService _client;
 
         public override async Task SetupAsync(WorkerContext context)
         {
             _channel = new Channel("localhost", 12346, ChannelCredentials.Insecure);
-            _service = MagicOnionClient.Create<IEchoService>(_channel);
+            _client = MagicOnionClient.Create<IEchoService>(_channel);
         }
         public override async Task ExecuteAsync(WorkerContext context)
         {
-            await _service.Echo(context.WorkerId);
+            await _client.Echo(context.WorkerId);
         }
 
         public override async Task TeardownAsync(WorkerContext context)
         {
+            await _channel.ShutdownAsync().ConfigureAwait(false);
+        }
+    }
+
+    public class SampleStreamWorker : Worker
+    {
+        private Channel _channel;
+        private IEchoHub _client;
+
+        public override async Task SetupAsync(WorkerContext context)
+        {
+            _channel = new Channel("localhost", 12346, ChannelCredentials.Insecure);
+            var receiver = new EchoReceiver(_channel);
+            _client = StreamingHubClient.Connect<IEchoHub, IEchoHubReceiver>(_channel, receiver);
+            receiver.Client = _client;
+        }
+        public override async Task ExecuteAsync(WorkerContext context)
+        {
+            await _client.EchoAsync(context.WorkerId);
+            //await _client.EchoBroadcastAsync(context.WorkerId);
+        }
+
+        public override async Task TeardownAsync(WorkerContext context)
+        {
+            await _client.DisposeAsync();
             await _channel.ShutdownAsync().ConfigureAwait(false);
         }
     }
