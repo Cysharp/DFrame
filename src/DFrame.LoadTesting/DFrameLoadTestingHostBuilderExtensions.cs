@@ -66,6 +66,7 @@ namespace DFrame
             Console.WriteLine($@"Finished {requestCount} requests
 
 Scaling Type:           {options.ScalingProvider.GetType().Name}
+Scenario Name:          {executeScenario.ScenarioName}
 
 Request count:          {requestCount}
 {nameof(executeScenario.ProcessCount)}:           {executeScenario.ProcessCount}
