@@ -8,6 +8,8 @@ using System.Net.Http;
 using System.Threading;
 using ZLogger;
 using Grpc.Core;
+using EchoMagicOnion.Shared;
+using MagicOnion.Client;
 
 namespace ConsoleApp
 {
@@ -22,10 +24,11 @@ namespace ConsoleApp
             if (args.Length == 0)
             {
                 // master
-                args = "-processCount 3 -workerPerProcess 3 -executePerWorker 3 -workerName SampleWorker".Split(' ');
+                //args = "-processCount 3 -workerPerProcess 3 -executePerWorker 3 -workerName SampleWorker".Split(' ');
                 //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleHttpWorker".Split(' ');
                 //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 10000 -workerName SampleHttpWorker".Split(' ');
                 //args = "-processCount 10 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleHttpWorker".Split(' ');
+                args = "-processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleUnaryWorker".Split(' ');
                 // listen on
                 // host = "0.0.0.0";
             }
@@ -125,6 +128,27 @@ namespace ConsoleApp
 
         public override async Task TeardownAsync(WorkerContext context)
         {
+        }
+    }
+
+    public class SampleUnaryWorker : Worker
+    {
+        private Channel _channel;
+        private IEchoService _service;
+
+        public override async Task SetupAsync(WorkerContext context)
+        {
+            _channel = new Channel("localhost", 12346, ChannelCredentials.Insecure);
+            _service = MagicOnionClient.Create<IEchoService>(_channel);
+        }
+        public override async Task ExecuteAsync(WorkerContext context)
+        {
+            await _service.Echo(context.WorkerId);
+        }
+
+        public override async Task TeardownAsync(WorkerContext context)
+        {
+            await _channel.ShutdownAsync().ConfigureAwait(false);
         }
     }
 }
