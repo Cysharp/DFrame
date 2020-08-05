@@ -1,0 +1,10 @@
+namespace: apiserver
+bases:
+  - ../../base
+
+resources:
+  - namespace.yaml
+  - service.yaml
+
+patches:
+  - deployment.yaml

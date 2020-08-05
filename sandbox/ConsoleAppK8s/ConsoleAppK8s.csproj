@@ -8,6 +8,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="MagicOnion" Version="3.0.13" />
 		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.8" />
 		<PackageReference Include="ZLogger" Version="1.2.1" />
 	</ItemGroup>
@@ -16,6 +17,7 @@
 		<ProjectReference Include="..\..\src\DFrame\DFrame.csproj" />
 		<ProjectReference Include="..\..\src\DFrame.LoadTesting\DFrame.LoadTesting.csproj" />
 		<ProjectReference Include="..\..\src\DFrame.Kubernetes\DFrame.Kubernetes.csproj" />
+		<ProjectReference Include="..\EchoMagicOnion.Shared\EchoMagicOnion.Shared.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -2,6 +2,9 @@
   "profiles": {
     "EchoMagicOnion": {
       "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
     }
   }
 }

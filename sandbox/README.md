@@ -79,6 +79,16 @@ Below sample will run 1000000 requests of SampleHttpWorker, includes 10 process 
 kubectl run -it --rm --restart=Never -n dframe --image=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "-processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10000" "-workerName" "SampleHttpWorker"
 ```
 
+You can try LoadTest to MagicOnion with SampleUnaryWorker and SampleStreamWorker.
+
+```shell
+kubectl run -it --rm --restart=Never -n dframe --image=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "-processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10000" "-workerName" "SampleUnaryWorker"
+```
+
+```shell
+kubectl run -it --rm --restart=Never -n dframe --image=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "-processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10000" "-workerName" "SampleStreamWorker"
+```
+
 ## etc....
 
 ### ab test on k8s
@@ -88,7 +98,7 @@ kubectl run -it --rm --restart=Never -n dframe --image=431046970529.dkr.ecr.ap-n
 kubectl run -i --rm --restart=Never -n dframe --image=mocoso/apachebench apachebench -- bash -c "ab -n 10000 -c 10 http://77948c50-apiserver-apiserv-98d9-538745285.ap-northeast-1.elb.amazonaws.com/healthz"
 ```
 
-### api server
+### loadtest target server http
 
 build
 
@@ -121,4 +131,39 @@ remove kubernetes resource.
 
 ```shell
 kubectl kustomize sandbox/k8s/apiserver/overlays/aws | kubectl delete -f -
+```
+
+### loadtest target server grpc
+
+build
+
+```shell
+docker build -t cysharp/dframe-magiconion:0.0.1 -f sandbox/EchoMagicOnion/Dockerfile .
+docker tag cysharp/dframe-magiconion:0.0.1 cysharp/dframe-magiconion:latest
+docker push cysharp/dframe-magiconion:0.0.1
+docker push cysharp/dframe-magiconion:latest
+```
+
+let's launch magiconion to try magiconion access bench through dframe worker.
+
+local
+
+```shell
+kubectl kustomize sandbox/k8s/apiserver/overlays/local | kubectl apply -f -
+kubens apiserver
+echo localhost:12346
+```
+
+aws
+
+```shell
+kubectl kustomize sandbox/k8s/magiconionserver/overlays/aws | kubectl apply -f -
+kubens apiserver
+echo "$(kubectl get service magiconion -o jsonpath='{.status.loadBalancer.ingress[].hostname}'):12346"
+```
+
+remove kubernetes resource.
+
+```shell
+kubectl kustomize sandbox/k8s/magiconionserver/overlays/aws | kubectl delete -f -
 ```

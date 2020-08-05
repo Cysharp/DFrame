@@ -141,9 +141,11 @@ namespace ConsoleApp
         private Channel _channel;
         private IEchoService _client;
 
+        private readonly string _host = "localhost";
+
         public override async Task SetupAsync(WorkerContext context)
         {
-            _channel = new Channel("localhost", 12346, ChannelCredentials.Insecure);
+            _channel = new Channel(_host, 12346, ChannelCredentials.Insecure);
             _client = MagicOnionClient.Create<IEchoService>(_channel);
         }
         public override async Task ExecuteAsync(WorkerContext context)
@@ -162,9 +164,11 @@ namespace ConsoleApp
         private Channel _channel;
         private IEchoHub _client;
 
+        private readonly string _host = "localhost";
+
         public override async Task SetupAsync(WorkerContext context)
         {
-            _channel = new Channel("localhost", 12346, ChannelCredentials.Insecure);
+            _channel = new Channel(_host, 12346, ChannelCredentials.Insecure);
             var receiver = new EchoReceiver(_channel);
             _client = StreamingHubClient.Connect<IEchoHub, IEchoHubReceiver>(_channel, receiver);
             receiver.Client = _client;

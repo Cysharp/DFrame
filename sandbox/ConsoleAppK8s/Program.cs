@@ -1,7 +1,9 @@
 ﻿using DFrame;
 using DFrame.Collections;
 using DFrame.Kubernetes;
+using EchoMagicOnion.Shared;
 using Grpc.Core;
+using MagicOnion.Client;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
@@ -30,6 +32,12 @@ namespace ConsoleAppK8s
                 //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleHttpWorker".Split(' ');
                 //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 10000 -workerName SampleHttpWorker".Split(' ');
                 //args = "-processCount 10 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleHttpWorker".Split(' ');
+                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleUnaryWorker".Split(' ');
+                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 10000 -workerName SampleUnaryWorker".Split(' ');
+                //args = "-processCount 10 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleUnaryWorker".Split(' ');
+                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleStreamWorker".Split(' ');
+                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 10000 -workerName SampleStreamWorker".Split(' ');
+                //args = "-processCount 10 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleStreamWorker".Split(' ');
             }
             else if (args.Contains("--worker-flag"))
             {
@@ -122,6 +130,56 @@ namespace ConsoleAppK8s
 
         public override async Task TeardownAsync(WorkerContext context)
         {
+        }
+    }
+
+    public class SampleUnaryWorker : Worker
+    {
+        private Channel _channel;
+        private IEchoService _client;
+
+        private readonly string _host = "a03a0da6478624a279e63219a6b8b4cc-f661441800542a5b.elb.ap-northeast-1.amazonaws.com";
+
+        public override async Task SetupAsync(WorkerContext context)
+        {
+            _channel = new Channel(_host, 12346, ChannelCredentials.Insecure);
+            _client = MagicOnionClient.Create<IEchoService>(_channel);
+        }
+        public override async Task ExecuteAsync(WorkerContext context)
+        {
+            await _client.Echo(context.WorkerId);
+        }
+
+        public override async Task TeardownAsync(WorkerContext context)
+        {
+            await _channel.ShutdownAsync().ConfigureAwait(false);
+        }
+    }
+
+    public class SampleStreamWorker : Worker
+    {
+        private Channel _channel;
+        private IEchoHub _client;
+
+        private readonly string _host = "a03a0da6478624a279e63219a6b8b4cc-f661441800542a5b.elb.ap-northeast-1.amazonaws.com";
+
+        public override async Task SetupAsync(WorkerContext context)
+        {
+            _channel = new Channel(_host, 12346, ChannelCredentials.Insecure);
+            var receiver = new EchoReceiver(_channel);
+            _client = StreamingHubClient.Connect<IEchoHub, IEchoHubReceiver>(_channel, receiver);
+            receiver.Client = _client;
+        }
+        public override async Task ExecuteAsync(WorkerContext context)
+        {
+            await _client.EchoAsync(context.WorkerId);
+            //await _client.EchoBroadcastAsync(context.WorkerId);
+        }
+
+        public override async Task TeardownAsync(WorkerContext context)
+        {
+            await _client.DisposeAsync();
+            await _channel.ShutdownAsync().ConfigureAwait(false);
         }
     }
 }
