@@ -1,0 +1,17 @@
+version: "3"
+
+services:
+  master:
+    depends_on: [worker]
+    image: locustio/locust
+    ports:
+      - "8089:8089"
+    volumes:
+      - ./:/mnt/locust
+    command: -f /mnt/locust/locustfile.py --master -H http://host.docker.internal:5000 --headless -u 10000 -r 2000
+
+  worker:
+    image: locustio/locust
+    volumes:
+      - ./:/mnt/locust
+    command: -f /mnt/locust/locustfile.py --worker --master-host master

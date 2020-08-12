@@ -7,6 +7,8 @@ using MagicOnion.Server;
 using MagicOnion.Server.Hubs;
 using MessagePack;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using ZLogger;
 
 namespace EchoMagicOnion
 {
@@ -17,6 +19,12 @@ namespace EchoMagicOnion
             //GrpcEnvironment.SetLogger(new Grpc.Core.Logging.ConsoleLogger());
 
             await MagicOnionHost.CreateDefaultBuilder()
+                .ConfigureLogging((context, logging) =>
+                {
+                    logging.ClearProviders();
+                    logging.SetMinimumLevel(LogLevel.Trace);
+                    logging.AddZLoggerConsole();
+                })
                 .UseMagicOnion()
                 .RunConsoleAsync();
         }
