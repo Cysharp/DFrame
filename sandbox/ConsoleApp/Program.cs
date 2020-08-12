@@ -24,7 +24,10 @@ namespace ConsoleApp
             if (args.Length == 0)
             {
                 // master
-                args = "-processCount 3 -workerPerProcess 3 -executePerWorker 3 -workerName SampleWorker".Split(' ');
+                args = "-processCount 1 -workerPerProcess 20 -executePerWorker 500 -workerName SampleHttpWorker".Split(' ');
+                //args = "-processCount 1 -workerPerProcess 64     -executePerWorker 10000 -workerName SampleHttpWorker".Split(' ');
+                //args = "-processCount 1 -workerPerProcess 20 -executePerWorker 10000 -workerName SampleUnaryWorker".Split(' ');
+
                 //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleHttpWorker".Split(' ');
                 //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 10000 -workerName SampleHttpWorker".Split(' ');
                 //args = "-processCount 10 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleHttpWorker".Split(' ');
@@ -114,11 +117,15 @@ namespace ConsoleApp
         {
             var handler = new HttpClientHandler
             {
-                MaxConnectionsPerServer = 100,
+                // MaxConnectionsPerServer = 100,
             };
             httpClient = new HttpClient(handler);
             httpClient.DefaultRequestHeaders.Add("ContentType", "application/json");
-            Console.WriteLine($"MaxConnectionsPerServer: {handler.MaxConnectionsPerServer}");
+
+            // keepalive=false
+            //httpClient.DefaultRequestHeaders.Add("Connection", "close");
+
+            // Console.WriteLine($"MaxConnectionsPerServer: {handler.MaxConnectionsPerServer}");
         }
 
         public override async Task SetupAsync(WorkerContext context)
@@ -129,6 +136,7 @@ namespace ConsoleApp
         public override async Task ExecuteAsync(WorkerContext context)
         {
             await httpClient.GetAsync(_url, cts.Token);
+            // await r.Content.ReadAsByteArrayAsync();
         }
 
         public override async Task TeardownAsync(WorkerContext context)

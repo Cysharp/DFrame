@@ -1,8 +1,12 @@
 ﻿using Microsoft.AspNetCore.Builder;
+using Cysharp.Text;
+using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using System.Text;
 using System.Threading.Tasks;
+using ZLogger;
+using System.Threading;
 
 namespace EchoServer
 {
@@ -17,6 +21,12 @@ namespace EchoServer
                     .UseKestrel()
                     .UseStartup<Startup>();
                 })
+                .ConfigureLogging(x=>
+                {
+                    x.ClearProviders();
+                    x.SetMinimumLevel(LogLevel.Trace);
+                    x.AddZLoggerConsole();
+                })
                 .RunConsoleAsync();
 
         }
@@ -24,7 +34,7 @@ namespace EchoServer
 
     class Startup
     {
-        public void Configure(IApplicationBuilder app)
+        public void Configure(IApplicationBuilder app, ILogger<Startup> logger)
         {
             var hello = Encoding.UTF8.GetBytes("hello");
 
