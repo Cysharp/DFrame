@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using MessagePack;
+using MessagePack.Formatters;
+using MessagePack.Resolvers;
+using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 
@@ -11,6 +14,8 @@ namespace DFrame
         public string WorkerConnectToHost { get; }
         public int WorkerConnectToPort { get; }
         public IScalingProvider ScalingProvider { get; }
+
+        public MessagePackSerializerOptions SerializerOptions { get; set; }
         public Func<string?[], IHostBuilder> HostBuilderFactory { get; set; }
 
         public Action<ExecuteResult[], DFrameOptions, ExecuteScenario>? OnExecuteResult { get; set; }
@@ -27,9 +32,11 @@ namespace DFrame
             WorkerConnectToHost = workerConnectToHost;
             WorkerConnectToPort = workerConnectToPort;
             ScalingProvider = scalingProvider;
+            SerializerOptions = TypelessContractlessStandardResolver.Options;
             HostBuilderFactory = args => Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder(args);
         }
     }
+
 
     public struct ExecuteScenario
     {

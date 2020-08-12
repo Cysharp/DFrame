@@ -147,7 +147,7 @@ namespace DFrame
                 }, options: new MagicOnionOptions
                 {
                     IsReturnExceptionStackTraceInErrorDetail = true,
-                    SerializerOptions = MessagePackSerializer.Typeless.DefaultOptions // use Typeless.
+                    SerializerOptions = options.SerializerOptions,
                 }, ports: new ServerPort(options.MasterListenHost, options.MasterListenPort, ServerCredentials.Insecure),
                     new[] { 
                         // body message size
@@ -210,8 +210,8 @@ namespace DFrame
                     new ChannelOption("grpc.http2.min_time_between_pings_ms", 5000),
                 });
             var nodeId = Guid.NewGuid();
-            var receiver = new WorkerReceiver(channel, nodeId, provider);
-            var client = StreamingHubClient.Connect<IMasterHub, IWorkerReceiver>(channel, receiver);
+            var receiver = new WorkerReceiver(channel, nodeId, provider, options);
+            var client = StreamingHubClient.Connect<IMasterHub, IWorkerReceiver>(channel, receiver, serializerOptions: options.SerializerOptions);
             receiver.Client = client;
 
             var disconnect = client.WaitForDisconnect();

@@ -31,17 +31,19 @@ namespace DFrame
         readonly Channel channel;
         readonly Guid nodeId;
         readonly DFrameWorkerCollection workerCollection;
+        readonly DFrameOptions options;
         readonly IServiceProvider serviceProvider;
         readonly TaskCompletionSource<object?> receiveShutdown;
         (WorkerContext context, Worker worker)[] coWorkers = default!;
 
-        internal WorkerReceiver(Channel channel, Guid nodeId, IServiceProvider serviceProvider)
+        internal WorkerReceiver(Channel channel, Guid nodeId, IServiceProvider serviceProvider, DFrameOptions options)
         {
             // this.logger = logger;
             this.channel = channel;
             this.nodeId = nodeId;
             this.workerCollection = (DFrameWorkerCollection)serviceProvider.GetService(typeof(DFrameWorkerCollection));
             this.serviceProvider = serviceProvider;
+            this.options = options;
             this.receiveShutdown = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
@@ -61,7 +63,7 @@ namespace DFrame
             for (int i = 0; i < coWorkers.Length; i++)
             {
                 var coWorker = serviceProvider.GetService(description.WorkerType);
-                coWorkers[i] = (new WorkerContext(channel), (Worker)coWorker);
+                coWorkers[i] = (new WorkerContext(channel, options), (Worker)coWorker);
             }
 
             Client.CreateCoWorkerCompleteAsync().Forget();

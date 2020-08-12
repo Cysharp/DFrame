@@ -10,13 +10,15 @@ namespace DFrame
     public class WorkerContext
     {
         readonly Channel masterChannel;
+        readonly MessagePackSerializerOptions serializerOptions;
 
         public string WorkerId { get; }
 
-        public WorkerContext(Channel masterChannel)
+        public WorkerContext(Channel masterChannel, DFrameOptions options)
         {
             this.masterChannel = masterChannel;
             this.WorkerId = Guid.NewGuid().ToString();
+            this.serializerOptions = options.SerializerOptions;
         }
 
         public IDistributedQueue<T> CreateDistributedQueue<T>(string key)
@@ -49,7 +51,7 @@ namespace DFrame
         {
             return MagicOnionClient.Create<T>(
                     new DefaultCallInvoker(masterChannel),
-                    MessagePackSerializer.Typeless.DefaultOptions)
+                    serializerOptions)
                 .WithHeaders(new Metadata() { { key, value } });
         }
     }
