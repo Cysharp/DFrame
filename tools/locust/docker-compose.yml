@@ -1,6 +1,7 @@
 version: "3"
 
 services:
+  # access http://localhost:8089 for web ui
   master:
     depends_on: [worker]
     image: locustio/locust
