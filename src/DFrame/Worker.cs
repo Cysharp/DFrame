@@ -5,7 +5,6 @@ namespace DFrame
 {
     public abstract class Worker
     {
-        // public Dis Create
         public abstract Task ExecuteAsync(WorkerContext context);
 
         public virtual Task SetupAsync(WorkerContext context)
