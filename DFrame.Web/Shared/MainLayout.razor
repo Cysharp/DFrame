@@ -1,15 +1,46 @@
 ﻿@inherits LayoutComponentBase
 
+@using DFrame.Web.Data
+@inject ISummaryService SummaryService
+
 <div class="sidebar">
     <NavMenu />
 </div>
 
 <div class="main">
     <div class="top-row px-4">
-        <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+        <div class="col-auto offset-1">
+            <div class="row">HOST</div>
+            <div class="row">@summary.Host</div>
+        </div>
+        <div class="col-auto offset-sm-1">
+            <div class="row">STATUS</div>
+            <div class="row">@summary.Status</div>
+        </div>
+        <div class="col-auto offset-md-1">
+            <div class="row">WORKERS</div>
+            <div class="row">@summary.Workers</div>
+        </div>
+        <div class="col-auto offset-1">
+            <div class="row">RPS</div>
+            <div class="row">@string.Format("{0:#.#}", summary.Rps)</div>
+        </div>
+        <div class="col-auto offset-1">
+            <div class="row">FAILURES</div>
+            <div class="row">@string.Format("{0:#}", summary.Failures)%</div>
+        </div>
     </div>
 
     <div class="content px-4">
         @Body
     </div>
 </div>
+
+@code {
+    private Summary summary;
+
+    protected override async Task OnInitializedAsync()
+    {
+        summary = await SummaryService.GetSummaryAsync();
+    }
+}

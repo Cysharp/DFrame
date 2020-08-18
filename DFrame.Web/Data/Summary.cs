@@ -9,8 +9,8 @@ namespace DFrame.Web.Data
     {
         public string Host { get; set; }
         public string Status { get; set; }
-        public int Worker { get; set; }
+        public int Workers { get; set; }
         public double Rps { get; set; }
-        public int Failures { get; set; }
+        public double Failures { get; set; }
     }
 }

@@ -12,9 +12,13 @@ namespace DFrame.Web.Data
         /// </summary>
         public string Name { get; set; }
         /// <summary>
-        /// State of worker. ready, stopped, launching....
+        /// State of worker. running, ready, stopped, launching....
         /// </summary>
         public string State { get; set; }
+        /// <summary>
+        /// State is running.
+        /// </summary>
+        public bool IsRunning => State == "Running";
         /// <summary>
         /// Worker users
         /// </summary>

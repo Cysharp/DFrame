@@ -12,17 +12,25 @@ namespace DFrame.Web.Data
         /// Host Address to load test
         /// </summary>
         string HostAddress { get; set; }
+        /// <summary>
+        /// Cache
+        /// </summary>
+        Statistic[] Cache { get; }
+        /// <summary>
+        /// Aggregated statistic
+        /// </summary>
+        Statistic Aggregated { get; }
 
         /// <summary>
         /// Get statistics
         /// </summary>
         /// <returns></returns>
-        public Task<List<Statistic>> GetStatisticsAsync();
+        Task<Statistic[]> GetStatisticsAsync();
         /// <summary>
         /// Get failures
         /// </summary>
         /// <returns></returns>
-        public Task<Failure[]> GetFailuresAsync();
+        Task<Failure[]> GetFailuresAsync();
     }
 
     /// <summary>
@@ -49,8 +57,10 @@ namespace DFrame.Web.Data
         private Dictionary<(string type, string name), int> _fails;
 
         public string HostAddress { get; set; } = "http://localhost:80";
+        public Statistic[] Cache { get; private set; }
+        public Statistic Aggregated { get; private set; }
 
-        public Task<List<Statistic>> GetStatisticsAsync()
+        public Task<Statistic[]> GetStatisticsAsync()
         {
             var rnd = new Random();
             _requests = new Dictionary<(string type, string name), int>();
@@ -108,10 +118,10 @@ namespace DFrame.Web.Data
                     };
                 })
                 .OrderBy(x => x.Name)
-                .ToList();
+                .ToArray();
             
-            // add aggregate
-            statistics.Add(AggregateStatistics(statistics));
+            Cache = statistics;
+            Aggregated = AggregateStatistics(statistics);
 
             return Task.FromResult(statistics);
         }
@@ -134,7 +144,7 @@ namespace DFrame.Web.Data
         /// </summary>
         /// <param name="statistics"></param>
         /// <returns></returns>
-        private Statistic AggregateStatistics(List<Statistic> statistics)
+        private Statistic AggregateStatistics(Statistic[] statistics)
         {
             return new Statistic
             {
@@ -142,7 +152,15 @@ namespace DFrame.Web.Data
                 Name = "Aggregated",
                 Requests = statistics.Sum(x => x.Requests),
                 Fails = statistics.Sum(x => x.Fails),
-                // memo: omit aggregated data calculations
+                // todo: aggregated data calculations for Median and 90%tile. need all datas....
+                Median = Median(statistics.Select(x => x.Median).ToArray()),
+                Percentile90 = Percentile(statistics.Select(x => x.Percentile90).ToArray(), 90),
+                Average = statistics.Average(x => x.Average),
+                Min = statistics.Min(x => x.Min),
+                Max = statistics.Max(x => x.Max),
+                AverageSize = statistics.Average(x => x.AverageSize),
+                CurrentRps = statistics.Sum(x => x.CurrentRps),
+                CurrentFailuresPerSec = statistics.Sum(x => x.CurrentFailuresPerSec),
             };
         }
 

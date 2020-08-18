@@ -2,7 +2,7 @@
 
 @using DFrame.Web.Data
 @inject IStatisticsService StatisticsService
-
+@inject IWorkersService WorkerService
 
 <div>
     <input @bind="StatisticsService.HostAddress" />
@@ -52,15 +52,30 @@
                         <td>@string.Format("{0:#.#}", statistic.CurrentFailuresPerSec)</td>
                     </tr>
                 }
+                <tr>
+                    <td>@StatisticsService.Aggregated.Type</td>
+                    <td>@StatisticsService.Aggregated.Name</td>
+                    <td>@StatisticsService.Aggregated.Requests</td>
+                    <td>@StatisticsService.Aggregated.Fails</td>
+                    <td>@string.Format("{0:#}", StatisticsService.Aggregated.Median)</td>
+                    <td>@string.Format("{0:#}", StatisticsService.Aggregated.Percentile90)</td>
+                    <td>@string.Format("{0:#}", StatisticsService.Aggregated.Average)</td>
+                    <td>@string.Format("{0:#}", StatisticsService.Aggregated.Min)</td>
+                    <td>@string.Format("{0:#}", StatisticsService.Aggregated.Max)</td>
+                    <td>@string.Format("{0:#}", StatisticsService.Aggregated.AverageSize)</td>
+                    <td>@string.Format("{0:#.#}", StatisticsService.Aggregated.CurrentRps)</td>
+                    <td>@string.Format("{0:#.#}", StatisticsService.Aggregated.CurrentFailuresPerSec)</td>
+                </tr>
             </tbody>
         </table>
     }
 </div>
 @code {
-    private List<Statistic> statistics;
+    private Statistic[] statistics;
 
     protected override async Task OnInitializedAsync()
     {
+        await WorkerService.GetStatisticsAsync();
         statistics = await StatisticsService.GetStatisticsAsync();
     }
 }
