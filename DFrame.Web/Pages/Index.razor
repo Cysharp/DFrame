@@ -1,0 +1,58 @@
+﻿@page "/"
+
+@using DFrame.Web.Data
+@inject StatisticsMockService StatisticsService
+
+@if (statistics == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Name</th>
+                <th># Requests</th>
+                <th># Fails</th>
+                <th>Median (ms)</th>
+                <th>90%ile (ms)</th>
+                <th>Average (ms)</th>
+                <th>Min (ms)</th>
+                <th>Max (ms)</th>
+                <th>Average size (bytes)</th>
+                <th>Current RPS	</th>
+                <th>Current Failures/s</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var statistic in statistics)
+            {
+                <tr>
+                    <td>@statistic.Type</td>
+                    <td>@statistic.Name</td>
+                    <td>@statistic.Requests</td>
+                    <td>@statistic.Fails</td>
+                    <td>@string.Format("{0:#}", statistic.Median)</td>
+                    <td>@string.Format("{0:#}", statistic.Percentile90)</td>
+                    <td>@string.Format("{0:#}", statistic.Average)</td>
+                    <td>@string.Format("{0:#}", statistic.Min)</td>
+                    <td>@string.Format("{0:#}", statistic.Max)</td>
+                    <td>@string.Format("{0:#}", statistic.AverageSize)</td>
+                    <td>@string.Format("{0:#.#}", statistic.CurrentRps)</td>
+                    <td>@string.Format("{0:#.#}", statistic.CurrentFailuresPerSec)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Statistic> statistics;
+
+    protected override async Task OnInitializedAsync()
+    {
+        statistics = await StatisticsService.GetStatisticsAsync();
+    }
+}
