@@ -1,0 +1,46 @@
+﻿@page "/failures"
+
+@using DFrame.Web.Data
+@inject IStatisticsService StatisticsService
+
+<h1>Failures</h1>
+
+<div>
+    @if (failures == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th># fails</th>
+                    <th>Method</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var failure in failures)
+                {
+                    <tr>
+                        <td>@failure.Fails</td>
+                        <td>@failure.Method</td>
+                        <td>@failure.Name</td>
+                        <td>@failure.Type</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    private Failure[] failures;
+
+    protected override async Task OnInitializedAsync()
+    {
+        failures = await StatisticsService.GetFailuresAsync();
+    }
+}

@@ -1,14 +1,34 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace DFrame.Web.Data
 {
+    public interface IStatisticsService
+    {
+        /// <summary>
+        /// Host Address to load test
+        /// </summary>
+        string HostAddress { get; set; }
+
+        /// <summary>
+        /// Get statistics
+        /// </summary>
+        /// <returns></returns>
+        public Task<List<Statistic>> GetStatisticsAsync();
+        /// <summary>
+        /// Get failures
+        /// </summary>
+        /// <returns></returns>
+        public Task<Failure[]> GetFailuresAsync();
+    }
+
     /// <summary>
     /// Mock data
     /// </summary>
-    public class StatisticsMockService
+    public class StatisticsMockService : IStatisticsService
     {
         private static readonly string[] httpTypes = new[]
         {
@@ -25,14 +45,16 @@ namespace DFrame.Web.Data
             "/Begin", "/Questions", "/Faq", "/Post", "/Tasks", "/Cards", "/Display", "/Report",
         };
 
-        private static Dictionary<string, int> _requests;
-        private static Dictionary<string, int> _fails;
+        private Dictionary<(string type, string name), int> _requests;
+        private Dictionary<(string type, string name), int> _fails;
+
+        public string HostAddress { get; set; } = "http://localhost:80";
 
         public Task<List<Statistic>> GetStatisticsAsync()
         {
             var rnd = new Random();
-            _requests = new Dictionary<string, int>();
-            _fails = new Dictionary<string, int>();
+            _requests = new Dictionary<(string type, string name), int>();
+            _fails = new Dictionary<(string type, string name), int>();
 
             var statistics = Enumerable.Range(1, 5)
                 .Select(x =>
@@ -40,9 +62,9 @@ namespace DFrame.Web.Data
                     var type = httpTypes[rnd.Next(httpTypes.Length)];
                     var name = httpNames[rnd.Next(httpNames.Length)];
                     var req = rnd.Next(x, 20000);
-                    _requests.Add(type + name, req);
+                    _requests.Add((type, name), req);
                     var fail = rnd.Next(0, 1000);
-                    _fails.Add(type + name, fail);
+                    _fails.Add((type, name), fail);
 
                     var first = rnd.Next(50, 80);
                     var second = 100 - rnd.Next(81, 90);
@@ -89,12 +111,30 @@ namespace DFrame.Web.Data
                 .ToList();
             
             // add aggregate
-            statistics.Add(Aggregate(statistics));
+            statistics.Add(AggregateStatistics(statistics));
 
             return Task.FromResult(statistics);
         }
 
-        public Statistic Aggregate(List<Statistic> statistics)
+        public Task<Failure[]> GetFailuresAsync()
+        {
+            var fails = _fails.Select(x => new Failure
+            {
+                Fails = x.Value,
+                Method = x.Key.type,
+                Name = x.Key.name,
+                Type = new HttpRequestException($"404 Client Error. NOT FOUND for url: {HostAddress}{x.Key.name}"),
+            })
+            .ToArray();
+            return Task.FromResult(fails);
+        }
+
+        /// <summary>
+        /// Calculate aggregated statistics
+        /// </summary>
+        /// <param name="statistics"></param>
+        /// <returns></returns>
+        private Statistic AggregateStatistics(List<Statistic> statistics)
         {
             return new Statistic
             {
@@ -142,7 +182,6 @@ namespace DFrame.Web.Data
         {
             return Math.Round(value, digit, MidpointRounding.AwayFromZero);
         }
-
         /// <summary>
         /// Calculate Median.
         /// </summary>

@@ -27,7 +27,7 @@ namespace DFrame.Web
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
-            services.AddSingleton<StatisticsMockService>();
+            services.AddSingleton<IStatisticsService, StatisticsMockService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
