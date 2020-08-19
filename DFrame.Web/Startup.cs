@@ -27,6 +27,7 @@ namespace DFrame.Web
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
+
             services.AddSingleton<IStatisticsService, StatisticsMockService>();
             services.AddSingleton<IWorkersService, WorkerMockService>();
             services.AddSingleton<ISummaryService, SummaryMockService>();

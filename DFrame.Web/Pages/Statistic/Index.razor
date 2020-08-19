@@ -1,0 +1,82 @@
+﻿@page "/statistic"
+
+@using DFrame.Web.Data
+@inject IStatisticsService StatisticsService
+@inject IWorkersService WorkerService
+
+<div>
+    <input @bind="StatisticsService.HostAddress" placeholder="http://localhost:8080" />
+</div>
+
+<h1>Statistic</h1>
+
+<div>
+    @if (statistics == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Name</th>
+                    <th># Requests</th>
+                    <th># Fails</th>
+                    <th>Median (ms)</th>
+                    <th>90%ile (ms)</th>
+                    <th>Average (ms)</th>
+                    <th>Min (ms)</th>
+                    <th>Max (ms)</th>
+                    <th>Average size (bytes)</th>
+                    <th>Current RPS	</th>
+                    <th>Current Failures/s</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var statistic in statistics)
+                {
+                    <tr>
+                        <td>@statistic.Type</td>
+                        <td>@statistic.Name</td>
+                        <td>@statistic.Requests</td>
+                        <td>@statistic.Fails</td>
+                        <td>@statistic.Median.ToString("0")</td>
+                        <td>@statistic.Percentile90.ToString("0")</td>
+                        <td>@statistic.Average.ToString("0")</td>
+                        <td>@statistic.Min.ToString("0")</td>
+                        <td>@statistic.Max.ToString("0")</td>
+                        <td>@statistic.AverageSize.ToString("0")</td>
+                        <td>@statistic.CurrentRps.ToString("0.0")</td>
+                        <td>@statistic.CurrentFailuresPerSec.ToString("0.0")</td>
+                    </tr>
+                }
+            <tr>
+                <td>@aggregated.Type</td>
+                <td>@aggregated.Name</td>
+                <td>@aggregated.Requests</td>
+                <td>@aggregated.Fails</td>
+                <td>@aggregated.Median.ToString("0")</td>
+                <td>@aggregated.Percentile90.ToString("0")</td>
+                <td>@aggregated.Average.ToString("0")</td>
+                <td>@aggregated.Min.ToString("0")</td>
+                <td>@aggregated.Max.ToString("0")</td>
+                <td>@aggregated.AverageSize.ToString("0")</td>
+                <td>@aggregated.CurrentRps.ToString("0.0")</td>
+                <td>@aggregated.CurrentFailuresPerSec.ToString("0.0")</td>
+            </tr>
+            </tbody>
+        </table>
+    }
+</div>
+@code {
+    private Statistic[] statistics;
+    private Statistic aggregated;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await WorkerService.IniatilizeAsync();
+        (statistics, aggregated) = await StatisticsService.GetStatisticsAsync();
+    }
+}
