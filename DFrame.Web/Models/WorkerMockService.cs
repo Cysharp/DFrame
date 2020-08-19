@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace DFrame.Web.Data
+namespace DFrame.Web.Models
 {
     public interface IWorkersService
     {

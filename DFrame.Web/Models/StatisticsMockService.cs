@@ -4,18 +4,13 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace DFrame.Web.Data
+namespace DFrame.Web.Models
 {
     public interface IStatisticsService
     {
-        /// <summary>
-        /// Host Address to load test
-        /// </summary>
-        string HostAddress { get; set; }
-
-        event Action<string> OnUpdateHostAddress;
         event Action<Statistic> OnUpdateStatistics;
 
+        void RegisterContext(IExecuteContext executeContext);
         /// <summary>
         /// Get statistics
         /// </summary>
@@ -50,18 +45,14 @@ namespace DFrame.Web.Data
 
         private Dictionary<(string type, string name), int> _requests;
         private Dictionary<(string type, string name), int> _fails;
+        private IExecuteContext _executeContext;
 
-        public event Action<string> OnUpdateHostAddress;
         public event Action<Statistic> OnUpdateStatistics;
 
-        public string HostAddress { 
-            get { return _hostAddress; }
-            set {
-                _hostAddress = value;
-                OnUpdateHostAddress?.Invoke(_hostAddress);
-            }
+        public void RegisterContext(IExecuteContext executeContext)
+        {
+            _executeContext = executeContext;
         }
-        private string _hostAddress;
 
         public Task<(Statistic[] statistics, Statistic aggregated)> GetStatisticsAsync()
         {
@@ -88,7 +79,7 @@ namespace DFrame.Web.Data
                 Fails = x.Value,
                 Method = x.Key.type,
                 Name = x.Key.name,
-                Type = new HttpRequestException($"404 Client Error. NOT FOUND for url: {HostAddress}{x.Key.name}"),
+                Type = new HttpRequestException($"404 Client Error. NOT FOUND for url: {_executeContext?.HostAddress}{x.Key.name}"),
             })
             .ToArray();
             return Task.FromResult(fails);

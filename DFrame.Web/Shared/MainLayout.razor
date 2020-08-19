@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
 
-@using DFrame.Web.Data
+@using DFrame.Web.Models
 @inject ISummaryService SummaryService
 
 <div class="sidebar">
@@ -10,24 +10,28 @@
 <div class="main">
     <div class="top-row px-4">
         <div class="col-auto offset-1">
+            <div class="row">ExecuteId</div>
+            <div class="row">@SummaryService.Summary.ExecuteId</div>
+        </div>
+        <div class="col-auto offset-1">
             <div class="row">HOST</div>
-            <div class="row">@summary.Host</div>
+            <div class="row">@SummaryService.Summary.Host</div>
         </div>
         <div class="col-auto offset-sm-1">
             <div class="row">STATUS</div>
-            <div class="row">@summary.Status</div>
+            <div class="row">@SummaryService.Summary.Status</div>
         </div>
         <div class="col-auto offset-md-1">
             <div class="row">WORKERS</div>
-            <div class="row">@summary.Workers</div>
+            <div class="row">@SummaryService.Summary.Workers</div>
         </div>
         <div class="col-auto offset-1">
             <div class="row">RPS</div>
-            <div class="row">@summary.Rps.ToString("0.0")</div>
+            <div class="row">@SummaryService.Summary.Rps.ToString("0.0")</div>
         </div>
         <div class="col-auto offset-1">
             <div class="row">FAILURES</div>
-            <div class="row">@summary.Failures.ToString("0.0")%</div>
+            <div class="row">@SummaryService.Summary.Failures.ToString("0.0")%</div>
         </div>
     </div>
 
@@ -36,12 +40,3 @@
     </div>
 </div>
 
-@code {
-    private Summary summary;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await SummaryService.IniatilizeAsync();
-        summary = SummaryService.Summary;
-    }
-}

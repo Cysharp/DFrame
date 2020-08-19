@@ -1,6 +1,6 @@
 using System;
 
-namespace DFrame.Web.Data
+namespace DFrame.Web.Models
 {
     public struct Statistic
     {

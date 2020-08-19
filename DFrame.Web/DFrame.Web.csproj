@@ -10,4 +10,9 @@
     <PackageReference Include="ZLogger" Version="1.3.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\src\DFrame.LoadTesting\DFrame.LoadTesting.csproj" />
+    <ProjectReference Include="..\src\DFrame\DFrame.csproj" />
+  </ItemGroup>
+
 </Project>

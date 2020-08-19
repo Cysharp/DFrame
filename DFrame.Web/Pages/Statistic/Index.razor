@@ -1,12 +1,8 @@
 ﻿@page "/statistic"
 
-@using DFrame.Web.Data
+@using DFrame.Web.Models
 @inject IStatisticsService StatisticsService
 @inject IWorkersService WorkerService
-
-<div>
-    <input @bind="StatisticsService.HostAddress" placeholder="http://localhost:8080" />
-</div>
 
 <h1>Statistic</h1>
 

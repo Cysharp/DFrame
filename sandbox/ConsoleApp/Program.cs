@@ -10,6 +10,7 @@ using ZLogger;
 using Grpc.Core;
 using EchoMagicOnion.Shared;
 using MagicOnion.Client;
+using System.Linq;
 
 namespace ConsoleApp
 {

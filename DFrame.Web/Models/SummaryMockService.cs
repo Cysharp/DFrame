@@ -3,15 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DFrame.Web.Data
+namespace DFrame.Web.Models
 {
     public interface ISummaryService
     {
         Summary Summary { get; }
 
-        Task IniatilizeAsync();
+        void RegisterContext(IExecuteContext executeContext);
         void UpdateStatus(string status);
-        void UpdateHostAddress(string hostAddress);
         void UpdateStatistics(Statistic statistic);
         void UpdateWorker(Worker[] workers);
     }
@@ -21,35 +20,31 @@ namespace DFrame.Web.Data
         private Summary _summary;
         public Summary Summary => _summary;
 
-        private IStatisticsService _statisticsService;
-        private IWorkersService _workersService;
+        private IExecuteContext _executeContext;
+        private readonly IStatisticsService _statisticsService;
+        private readonly IWorkersService _workersService;
 
         public SummaryMockService(IStatisticsService statisticsService, IWorkersService workersService)
         {
             _summary = new Summary();
 
             _statisticsService = statisticsService;
-            _statisticsService.OnUpdateHostAddress += UpdateHostAddress;
             _statisticsService.OnUpdateStatistics += UpdateStatistics;
 
             _workersService = workersService;
             _workersService.OnUpdateWorker += UpdateWorker;
-            UpdateStatus("RUNNING");
         }
 
-        public Task IniatilizeAsync()
+        public void RegisterContext(IExecuteContext executeContext)
         {
-            return Task.CompletedTask;
+            _executeContext = executeContext;
+            _summary.Host = executeContext.HostAddress;
+            _summary.ExecuteId = executeContext.ExecuteId;
         }
 
         public void UpdateStatus(string status)
         {
             _summary.Status = status;
-        }
-
-        public void UpdateHostAddress(string hostAddress)
-        {
-            _summary.Host = hostAddress;
         }
 
         public void UpdateStatistics(Statistic statistic)
