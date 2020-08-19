@@ -6,15 +6,11 @@ namespace DFrame.Web.Data
     public interface IWorkersService
     {
         /// <summary>
-        /// Cache
-        /// </summary>
-        Worker[] Cache { get; }
-
-        /// <summary>
         /// Get statistics
         /// </summary>
         /// <returns></returns>
-        public Task<Worker[]> GetStatisticsAsync();
+        public Task<Worker[]> IniatilizeAsync();
+        event Action<Worker[]> OnUpdateWorker;
     }
 
     /// <summary>
@@ -22,9 +18,9 @@ namespace DFrame.Web.Data
     /// </summary>
     public class WorkerMockService : IWorkersService
     {
-        public Worker[] Cache { get; private set; } = Array.Empty<Worker>();
+        public event Action<Worker[]> OnUpdateWorker;
 
-        public Task<Worker[]> GetStatisticsAsync()
+        public Task<Worker[]> IniatilizeAsync()
         {
             var workers = new[]{
                 new Worker
@@ -35,7 +31,8 @@ namespace DFrame.Web.Data
                     Cpu = 10.1d,
                 },
             };
-            Cache = workers;
+
+            OnUpdateWorker?.Invoke(workers);
 
             return Task.FromResult(workers);
         }

@@ -12,20 +12,15 @@ namespace DFrame.Web.Data
         /// Host Address to load test
         /// </summary>
         string HostAddress { get; set; }
-        /// <summary>
-        /// Cache
-        /// </summary>
-        Statistic[] Cache { get; }
-        /// <summary>
-        /// Aggregated statistic
-        /// </summary>
-        Statistic Aggregated { get; }
+
+        event Action<string> OnUpdateHostAddress;
+        event Action<Statistic> OnUpdateStatistics;
 
         /// <summary>
         /// Get statistics
         /// </summary>
         /// <returns></returns>
-        Task<Statistic[]> GetStatisticsAsync();
+        Task<(Statistic[] statistics, Statistic aggregated)> GetStatisticsAsync();
         /// <summary>
         /// Get failures
         /// </summary>
@@ -43,7 +38,7 @@ namespace DFrame.Web.Data
             "Get", "Patch", "Post", "Put", "Delete",
         };
 
-        private static readonly string[] httpNames = new[]
+        private static readonly string[] paths = new[]
         {
             "/",
             "/Hello", "/Item", "/World",
@@ -56,74 +51,34 @@ namespace DFrame.Web.Data
         private Dictionary<(string type, string name), int> _requests;
         private Dictionary<(string type, string name), int> _fails;
 
-        public string HostAddress { get; set; } = "http://localhost:80";
-        public Statistic[] Cache { get; private set; }
-        public Statistic Aggregated { get; private set; }
+        public event Action<string> OnUpdateHostAddress;
+        public event Action<Statistic> OnUpdateStatistics;
 
-        public Task<Statistic[]> GetStatisticsAsync()
+        public string HostAddress { 
+            get { return _hostAddress; }
+            set {
+                _hostAddress = value;
+                OnUpdateHostAddress?.Invoke(_hostAddress);
+            }
+        }
+        private string _hostAddress;
+
+        public Task<(Statistic[] statistics, Statistic aggregated)> GetStatisticsAsync()
         {
             var rnd = new Random();
             _requests = new Dictionary<(string type, string name), int>();
             _fails = new Dictionary<(string type, string name), int>();
 
+            var _temp = new List<string>(paths);
             var statistics = Enumerable.Range(1, 5)
-                .Select(x =>
-                {
-                    var type = httpTypes[rnd.Next(httpTypes.Length)];
-                    var name = httpNames[rnd.Next(httpNames.Length)];
-                    var req = rnd.Next(x, 20000);
-                    _requests.Add((type, name), req);
-                    var fail = rnd.Next(0, 1000);
-                    _fails.Add((type, name), fail);
-
-                    var first = rnd.Next(50, 80);
-                    var second = 100 - rnd.Next(81, 90);
-                    var third = 100 - rnd.Next(91, 95);
-                    var reqFirst = req / 100 * first;
-                    var reqSecond = req / 100 * second;
-                    var reqThird = req / 100 * third;
-                    var reqLast = req - reqFirst - reqSecond - reqThird > 0 
-                        ? req - reqFirst - reqSecond - reqThird
-                        : 0;
-                    var res = Enumerable.Range(0, reqFirst)
-                        .Select(x => new RequestData((double)rnd.Next(2, rnd.Next(2, 100)), rnd.Next(10, 100)))
-                        .Concat(Enumerable.Range(0, reqSecond)
-                            .Select(x => new RequestData((double)rnd.Next(5, rnd.Next(5, 500)), rnd.Next(20, rnd.Next(20, 200))))
-                        )
-                        .Concat(Enumerable.Range(0, reqThird)
-                            .Select(x => new RequestData((double)rnd.Next(20, rnd.Next(20, 500)), rnd.Next(20, rnd.Next(20, 500))))
-                        )
-                        .Concat(Enumerable.Range(0, reqLast)
-                            .Select(x => new RequestData((double)rnd.Next(50, rnd.Next(50, 5000)), rnd.Next(50, rnd.Next(50, 5000))))
-                        );
-                    var sortedRes = res.OrderBy(x => x.Request).ToArray();
-                    var sortedResReq = sortedRes.Select(x => x.Request).ToArray();
-
-                    var timePast = TimeSpan.FromSeconds(rnd.Next(1, 30));
-
-                    return new Statistic
-                    {
-                        Type = type,
-                        Name = name,
-                        Requests = req,
-                        Fails = fail,
-                        Median = Median(sortedResReq),
-                        Percentile90 = Percentile(sortedResReq, 90),
-                        Average = sortedResReq.Average(),
-                        Min = sortedResReq.Min(),
-                        Max = sortedResReq.Max(),
-                        AverageSize = sortedRes.Select(x => x.Size).Average(),
-                        CurrentRps = req / timePast.TotalSeconds,
-                        CurrentFailuresPerSec = fail / timePast.TotalSeconds,
-                    };
-                })
+                .Select(x => MockStatistics(x, rnd, _temp))
                 .OrderBy(x => x.Name)
                 .ToArray();
-            
-            Cache = statistics;
-            Aggregated = AggregateStatistics(statistics);
+            var aggregated = AggregateStatistics(statistics);
 
-            return Task.FromResult(statistics);
+            OnUpdateStatistics?.Invoke(aggregated);
+
+            return Task.FromResult((statistics, aggregated));
         }
 
         public Task<Failure[]> GetFailuresAsync()
@@ -137,6 +92,73 @@ namespace DFrame.Web.Data
             })
             .ToArray();
             return Task.FromResult(fails);
+        }
+
+        private Statistic MockStatistics(int index, Random rnd, IList<string> _temp)
+        {
+            var type = httpTypes[rnd.Next(httpTypes.Length)];
+            var name = _temp[rnd.Next(_temp.Count)];
+            _temp.Remove(name);
+            var req = rnd.Next(index, 20000);
+            _requests.Add((type, name), req);
+            var fail = rnd.Next(0, 1000);
+            _fails.Add((type, name), fail);
+
+            var first = rnd.Next(50, 80);
+            var second = 100 - rnd.Next(81, 90);
+            var third = 100 - rnd.Next(91, 95);
+            var last = 100 - first - second - third;
+            var reqFirst = req / 100 * first;
+            var reqSecond = req / 100 * second;
+            var reqThird = req / 100 * third;
+            var reqLast = last > 0 ? req / 100 * last : 0;
+            var res = Enumerable.Range(0, reqFirst)
+                .Select(x => new RequestData((double)rnd.Next(2, rnd.Next(2, 100)), rnd.Next(10, 100)))
+                .Concat(Enumerable.Range(0, reqSecond)
+                    .Select(x => new RequestData((double)rnd.Next(5, rnd.Next(5, 500)), rnd.Next(20, rnd.Next(20, 200))))
+                )
+                .Concat(Enumerable.Range(0, reqThird)
+                    .Select(x => new RequestData((double)rnd.Next(20, rnd.Next(20, 500)), rnd.Next(20, rnd.Next(20, 500))))
+                )
+                .Concat(Enumerable.Range(0, reqLast)
+                    .Select(x => new RequestData((double)rnd.Next(50, rnd.Next(50, 5000)), rnd.Next(50, rnd.Next(50, 5000))))
+                );
+            var sortedRes = res.OrderBy(x => x.Request).ToArray();
+            var sortedResReq = sortedRes.Select(x => x.Request).ToArray();
+
+            var timePast = TimeSpan.FromSeconds(rnd.Next(1, 30));
+
+            return sortedResReq.Length != 0
+                ? new Statistic
+                {
+                    Type = type,
+                    Name = name,
+                    Requests = req,
+                    Fails = fail,
+                    Median = Median(sortedResReq),
+                    Percentile90 = Percentile(sortedResReq, 90),
+                    Average = sortedResReq.Average(),
+                    Min = sortedResReq.Min(),
+                    Max = sortedResReq.Max(),
+                    AverageSize = sortedRes.Select(x => x.Size).Average(),
+                    CurrentRps = req / timePast.TotalSeconds,
+                    CurrentFailuresPerSec = fail / timePast.TotalSeconds,
+                }
+                : new Statistic
+                {
+                    Type = type,
+                    Name = name,
+                    Requests = req,
+                    Fails = fail,
+                    Median = 0.0,
+                    Percentile90 = 0.0,
+                    Average = 0.0,
+                    Min = 0.0,
+                    Max = 0.0,
+                    AverageSize = 0,
+                    CurrentRps = req / timePast.TotalSeconds,
+                    CurrentFailuresPerSec = fail / timePast.TotalSeconds,
+                };
         }
 
         /// <summary>
@@ -208,7 +230,6 @@ namespace DFrame.Web.Data
         private double Median(double[] sortedSequence)
         {
             double medianValue = 0;
-
             if (sortedSequence.Length % 2 == 0)
             {
                 // count is even, need to get the middle two elements, add them together, then divide by 2

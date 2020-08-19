@@ -7,43 +7,62 @@ namespace DFrame.Web.Data
 {
     public interface ISummaryService
     {
-        /// <summary>
-        /// Get summary
-        /// </summary>
-        /// <returns></returns>
-        Task<Summary> GetSummaryAsync();
-
         Summary Summary { get; }
+
+        Task IniatilizeAsync();
+        void UpdateStatus(string status);
+        void UpdateHostAddress(string hostAddress);
+        void UpdateStatistics(Statistic statistic);
+        void UpdateWorker(Worker[] workers);
     }
 
     public class SummaryMockService : ISummaryService
     {
-        private readonly IStatisticsService _statisticsService;
-        private readonly IWorkersService _workersService;
+        private Summary _summary;
+        public Summary Summary => _summary;
 
-        public Summary Summary { get; private set; } = new Summary();
+        private IStatisticsService _statisticsService;
+        private IWorkersService _workersService;
 
         public SummaryMockService(IStatisticsService statisticsService, IWorkersService workersService)
         {
+            _summary = new Summary();
+
             _statisticsService = statisticsService;
+            _statisticsService.OnUpdateHostAddress += UpdateHostAddress;
+            _statisticsService.OnUpdateStatistics += UpdateStatistics;
+
             _workersService = workersService;
+            _workersService.OnUpdateWorker += UpdateWorker;
+            UpdateStatus("RUNNING");
         }
 
-        public Task<Summary> GetSummaryAsync()
+        public Task IniatilizeAsync()
         {
-            var workers = _workersService.Cache;
-            var summary = new Summary
-            {
-                Host = _statisticsService.HostAddress,
-                Status = "RUNNING",
-                Workers = workers.Length,
-                Rps = _statisticsService.Aggregated.CurrentRps,
-                Failures = _statisticsService.Aggregated.Fails == 0
-                    ? 0
-                    : (double)_statisticsService.Aggregated.Fails / (double)_statisticsService.Aggregated.Requests * 100,
-            };
+            return Task.CompletedTask;
+        }
 
-            return Task.FromResult(summary);
+        public void UpdateStatus(string status)
+        {
+            _summary.Status = status;
+        }
+
+        public void UpdateHostAddress(string hostAddress)
+        {
+            _summary.Host = hostAddress;
+        }
+
+        public void UpdateStatistics(Statistic statistic)
+        {
+            _summary.Rps = statistic.CurrentRps;
+            _summary.Failures = statistic.Fails == 0
+                ? 0
+                : (double)statistic.Fails / (double)statistic.Requests * 100;
+        }
+
+        public void UpdateWorker(Worker[] workers)
+        {
+            _summary.Workers = workers.Length;
         }
     }
 }

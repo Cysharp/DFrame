@@ -41,6 +41,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        workers = await WorkersService.GetStatisticsAsync();
+        workers = await WorkersService.IniatilizeAsync();
     }
 }
