@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using ZLogger;
 
 namespace DFrame.Web
 {
@@ -23,6 +24,15 @@ namespace DFrame.Web
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
+                })
+                .ConfigureLogging(logging =>
+                {
+                    logging.ClearProviders();
+                    //logging.SetMinimumLevel(LogLevel.Trace);
+                    logging.AddZLoggerConsole(options =>
+                    {
+                        options.EnableStructuredLogging = false;
+                    });
                 });
     }
 }
