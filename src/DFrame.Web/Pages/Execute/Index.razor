@@ -1,9 +1,13 @@
 ﻿@page "/execute"
 
 @using DFrame.Web.Models
+@using DFrame.Web.Components 
+
 @inject ExecuteService ExecuteService
 @inject ISummaryService SummaryService
 @inject IStatisticsService StatisticsService
+
+<SummaryComponent Summary="@summary"></SummaryComponent>
 
 <h1>Execute</h1>
 
@@ -35,7 +39,9 @@
 
     <button class="btn btn-primary" @onclick="OnClickExecute" disabled="@disableExecute">Execute</button>
     <button class="btn btn-primary" @onclick="OnClicStop" disabled="@disabledStop">Stop</button>
+</div>
 
+<div>
     <table class="table">
         <thead>
             <tr>
@@ -66,19 +72,23 @@
     private bool disableExecute => DisableExecute();
     private bool disabledStop => DisableStop();
     private IExecuteContext context;
+    private Summary summary;
 
     protected override Task OnInitializedAsync()
     {
         context = ExecuteService.ExecuteContext;
         hostAddress = context?.HostAddress;
         workerName = context?.WorkerName;
+        summary = new Summary();
         return Task.CompletedTask;
     }
 
     private async Task OnClickExecute()
     {
-        await ExecuteService.ExecuteAsync(hostAddress, processCount, workerPerProcess, executePerWorker, workerName);
+        var exec = ExecuteService.ExecuteAsync(hostAddress, processCount, workerPerProcess, executePerWorker, workerName);
         context = ExecuteService.ExecuteContext;
+        summary = SummaryService.Summary;
+        await exec;
     }
 
     private async Task OnClicStop()

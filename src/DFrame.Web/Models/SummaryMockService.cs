@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -27,7 +28,6 @@ namespace DFrame.Web.Models
         public SummaryMockService(IStatisticsService statisticsService, IWorkersService workersService)
         {
             _summary = new Summary();
-
             _statisticsService = statisticsService;
             _statisticsService.OnUpdateStatistics += UpdateStatistics;
 

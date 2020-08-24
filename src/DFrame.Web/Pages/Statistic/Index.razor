@@ -1,8 +1,13 @@
 ﻿@page "/statistic"
 
 @using DFrame.Web.Models
+@using DFrame.Web.Components 
+
+@inject ISummaryService SummaryService
 @inject IStatisticsService StatisticsService
 @inject IWorkersService WorkerService
+
+<SummaryComponent @ref="summaryComponent"></SummaryComponent>
 
 <h1>Statistic</h1>
 
@@ -48,20 +53,20 @@
                         <td>@statistic.CurrentFailuresPerSec.ToString("0.0")</td>
                     </tr>
                 }
-            <tr>
-                <td>@aggregated.Type</td>
-                <td>@aggregated.Name</td>
-                <td>@aggregated.Requests</td>
-                <td>@aggregated.Fails</td>
-                <td>@aggregated.Median.ToString("0")</td>
-                <td>@aggregated.Percentile90.ToString("0")</td>
-                <td>@aggregated.Average.ToString("0")</td>
-                <td>@aggregated.Min.ToString("0")</td>
-                <td>@aggregated.Max.ToString("0")</td>
-                <td>@aggregated.AverageSize.ToString("0")</td>
-                <td>@aggregated.CurrentRps.ToString("0.0")</td>
-                <td>@aggregated.CurrentFailuresPerSec.ToString("0.0")</td>
-            </tr>
+                <tr>
+                    <td>@aggregated.Type</td>
+                    <td>@aggregated.Name</td>
+                    <td>@aggregated.Requests</td>
+                    <td>@aggregated.Fails</td>
+                    <td>@aggregated.Median.ToString("0")</td>
+                    <td>@aggregated.Percentile90.ToString("0")</td>
+                    <td>@aggregated.Average.ToString("0")</td>
+                    <td>@aggregated.Min.ToString("0")</td>
+                    <td>@aggregated.Max.ToString("0")</td>
+                    <td>@aggregated.AverageSize.ToString("0")</td>
+                    <td>@aggregated.CurrentRps.ToString("0.0")</td>
+                    <td>@aggregated.CurrentFailuresPerSec.ToString("0.0")</td>
+                </tr>
             </tbody>
         </table>
     }
@@ -69,6 +74,7 @@
 @code {
     private Statistic[] statistics;
     private Statistic aggregated;
+    private DFrame.Web.Components.SummaryComponent summaryComponent;
 
     protected override async Task OnInitializedAsync()
     {

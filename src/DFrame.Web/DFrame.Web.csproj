@@ -11,8 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\DFrame.LoadTesting\DFrame.LoadTesting.csproj" />
-    <ProjectReference Include="..\src\DFrame\DFrame.csproj" />
+    <ProjectReference Include="..\DFrame.LoadTesting\DFrame.LoadTesting.csproj" />
+    <ProjectReference Include="..\DFrame\DFrame.csproj" />
   </ItemGroup>
 
 </Project>
