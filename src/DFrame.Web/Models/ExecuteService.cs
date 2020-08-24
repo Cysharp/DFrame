@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using DFrame.Web.Infrastructure;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ZLogger;
@@ -14,15 +15,17 @@ namespace DFrame.Web.Models
         private readonly ILogger<ExecuteService> _logger;
         private readonly ISummaryService _summaryService;
         private readonly IStatisticsService _statisticsService;
+        private readonly ILoggingService _loggingService;
 
         private ExecuteContext _executeContext = default;
         public ExecuteContext ExecuteContext => _executeContext;
 
-        public ExecuteService(ILogger<ExecuteService> logger, ISummaryService summaryService, IStatisticsService statisticsService)
+        public ExecuteService(ILogger<ExecuteService> logger, ISummaryService summaryService, IStatisticsService statisticsService, ILoggingService loggingService, LogProcessorOptions logOptions)
         {
             _logger = logger;
             _summaryService = summaryService;
             _statisticsService = statisticsService;
+            _loggingService = loggingService;
         }
 
         public ExecuteContext CreateContext(string hostAddress, int processCount, int workerPerProcess, int executePerWorker, string workerName)
@@ -48,6 +51,9 @@ namespace DFrame.Web.Models
 
         public async Task ExecuteAsync()
         {
+            // clear current
+            _loggingService.Clear();
+
             // update context status
             await _executeContext.ExecuteAsync();
             _summaryService.UpdateStatus(_executeContext.Status);
@@ -57,11 +63,8 @@ namespace DFrame.Web.Models
                 .ConfigureLogging(logging =>
                 {
                     logging.ClearProviders();
-                    //logging.SetMinimumLevel(LogLevel.Trace);
-                    logging.AddZLoggerConsole(options =>
-                    {
-                        options.EnableStructuredLogging = false;
-                    });
+                    logging.SetMinimumLevel(_loggingService.ExecuteLogProcessor.LogLevel);
+                    logging.AddZLoggerLogProcessor(_loggingService.ExecuteLogProcessor);
                 })
                 .RunDFrameLoadTestingAsync(_executeContext.ExecuteArgument.Arguments, new DFrameOptions(_executeContext.HostAddress, 12345));
 

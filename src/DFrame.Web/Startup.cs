@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using DFrame.Web.Models;
+using DFrame.Web.Infrastructure;
 
 namespace DFrame.Web
 {
@@ -31,6 +32,11 @@ namespace DFrame.Web
             services.AddSingleton<IStatisticsService, StatisticsMockService>();
             services.AddSingleton<IWorkersService, WorkerMockService>();
             services.AddSingleton<ISummaryService, SummaryMockService>();
+            services.AddSingleton<ILoggingService, LoggingService>();
+            services.AddSingleton<LogProcessorOptions>(new LogProcessorOptions()
+            {
+                LoggerOptions = new ZLogger.ZLoggerOptions(),
+            }); 
             services.AddSingleton<ExecuteService>();
         }
 

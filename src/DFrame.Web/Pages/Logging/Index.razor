@@ -1,0 +1,53 @@
+﻿@page "/logging"
+
+@using DFrame.Web.Models
+@using DFrame.Web.Components
+@inject ISummaryService SummaryService
+@inject ILoggingService LoggingService
+
+<SummaryComponent Summary="@summary"></SummaryComponent>
+
+<h1>Logging</h1>
+
+<div>
+    @if (logs == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Log</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var log in logs)
+                {
+                    <tr>
+                        <td>@log</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <button class="btn btn-primary" @onclick="Refresh">Refresh</button>
+    }
+</div>
+
+@code {
+    private string[] logs;
+    private Summary summary;
+
+    protected override async Task OnInitializedAsync()
+    {
+        logs = LoggingService.GetLogs();
+        summary = SummaryService.Summary;
+    }
+
+    private void Refresh()
+    {
+        logs = LoggingService.GetLogs();
+    }
+}
