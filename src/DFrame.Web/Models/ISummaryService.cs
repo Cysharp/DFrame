@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DFrame.Web.Data;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -13,19 +14,19 @@ namespace DFrame.Web.Models
         void RegisterContext(IExecuteContext executeContext);
         void UpdateStatus(string status);
         void UpdateStatistics(Statistic statistic);
-        void UpdateWorker(Worker[] workers);
+        void UpdateWorker(WorkerData[] workers);
     }
 
-    public class SummaryMockService : ISummaryService
+    public class SummaryService : ISummaryService
     {
-        private Summary _summary;
+        private readonly Summary _summary;
         public Summary Summary => _summary;
 
         private IExecuteContext _executeContext;
         private readonly IStatisticsService _statisticsService;
         private readonly IWorkersService _workersService;
 
-        public SummaryMockService(IStatisticsService statisticsService, IWorkersService workersService)
+        public SummaryService(IStatisticsService statisticsService, IWorkersService workersService)
         {
             _summary = new Summary();
             _statisticsService = statisticsService;
@@ -55,7 +56,7 @@ namespace DFrame.Web.Models
                 : (double)statistic.Fails / (double)statistic.Requests * 100;
         }
 
-        public void UpdateWorker(Worker[] workers)
+        public void UpdateWorker(WorkerData[] workers)
         {
             _summary.Workers = workers.Length;
         }

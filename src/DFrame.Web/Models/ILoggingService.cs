@@ -1,4 +1,6 @@
-﻿using DFrame.Web.Infrastructure;
+﻿using DFrame.Web.Data;
+using DFrame.Web.Infrastructure;
+using System.Linq;
 
 namespace DFrame.Web.Models
 {
@@ -6,13 +8,16 @@ namespace DFrame.Web.Models
     {
         IExecuteLogProcessor ExecuteLogProcessor { get; }
 
-        string[] GetLogs();
-        string[] GetExceptionLogs();
+        void RegisterContext(IExecuteContext executeContext);
+        LogMessage[] GetLogs();
+        Failure[] GetExceptionLogs();
         void Clear();
     }
 
     public class LoggingService : ILoggingService
     {
+        private IExecuteContext _executeContext;
+
         public IExecuteLogProcessor ExecuteLogProcessor { get; }
 
         public LoggingService(LogProcessorOptions options)
@@ -20,13 +25,19 @@ namespace DFrame.Web.Models
             ExecuteLogProcessor = new ExecuteLogProcessor(options);
         }
 
-        public string[] GetLogs()
+        public void RegisterContext(IExecuteContext executeContext)
+        {
+            _executeContext = executeContext;
+        }
+
+        public LogMessage[] GetLogs()
         {
             return ExecuteLogProcessor.GetAll();
         }
 
-        public string[] GetExceptionLogs()
+        public Failure[] GetExceptionLogs()
         {
+            var g = ExecuteLogProcessor.GetExceptions().GroupBy(x => new { x.Method, x.Path, x.Message });
             return ExecuteLogProcessor.GetExceptions();
         }
 

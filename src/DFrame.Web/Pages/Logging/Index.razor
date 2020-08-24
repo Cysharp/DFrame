@@ -1,5 +1,6 @@
 ﻿@page "/logging"
 
+@using DFrame.Web.Data
 @using DFrame.Web.Models
 @using DFrame.Web.Components
 @inject ISummaryService SummaryService
@@ -19,25 +20,28 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th>Log</th>
+                    <th>TimeStamp</th>
+                    <th>Message</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var log in logs)
                 {
                     <tr>
-                        <td>@log</td>
+                        <td>@log.TimeStamp</td>
+                        <td>@log.Message</td>
                     </tr>
                 }
             </tbody>
         </table>
 
         <button class="btn btn-primary" @onclick="Refresh">Refresh</button>
+        <button class="btn btn-warning" @onclick="Clear">Clear</button>
     }
 </div>
 
 @code {
-    private string[] logs;
+    private LogMessage[] logs;
     private Summary summary;
 
     protected override async Task OnInitializedAsync()
@@ -49,5 +53,10 @@
     private void Refresh()
     {
         logs = LoggingService.GetLogs();
+    }
+    private void Clear()
+    {
+        LoggingService.Clear();
+        logs = Array.Empty<LogMessage>();
     }
 }

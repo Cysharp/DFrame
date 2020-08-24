@@ -1,16 +1,17 @@
 ﻿@page "/failure"
 
+@using DFrame.Web.Data
 @using DFrame.Web.Models
 @using DFrame.Web.Components
 @inject ISummaryService SummaryService
-@inject IStatisticsService StatisticsService
+@inject ILoggingService LoggingService
 
 <SummaryComponent Summary="@summary"></SummaryComponent>
 
 <h1>Failure</h1>
 
 <div>
-    @if (failures == null)
+    @if (logs == null)
     {
         <p><em>Loading...</em></p>
     }
@@ -19,34 +20,47 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th># fails</th>
+                    <th>TimeStamp</th>
                     <th>Method</th>
-                    <th>Name</th>
-                    <th>Type</th>
+                    <th>Path</th>
+                    <th>Message</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var failure in failures)
+                @foreach (var log in logs)
                 {
                     <tr>
-                        <td>@failure.Fails</td>
-                        <td>@failure.Method</td>
-                        <td>@failure.Name</td>
-                        <td>@failure.Type</td>
+                        <td>@log.TimeStamp</td>
+                        <td>@log.Method</td>
+                        <td>@log.Path</td>
+                        <td>@log.Message</td>
                     </tr>
                 }
             </tbody>
         </table>
+
+        <button class="btn btn-primary" @onclick="Refresh">Refresh</button>
+        <button class="btn btn-warning" @onclick="Clear">Clear</button>
     }
 </div>
 
 @code {
-    private Failure[] failures;
+    private Failure[] logs;
     private Summary summary;
 
     protected override async Task OnInitializedAsync()
     {
-        failures = await StatisticsService.GetFailuresAsync();
+        logs = LoggingService.GetExceptionLogs();
         summary = SummaryService.Summary;
+    }
+
+    private void Refresh()
+    {
+        logs = LoggingService.GetExceptionLogs();
+    }
+    private void Clear()
+    {
+        LoggingService.Clear();
+        logs = Array.Empty<Failure>();
     }
 }

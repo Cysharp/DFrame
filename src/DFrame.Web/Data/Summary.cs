@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DFrame.Web.Models
+namespace DFrame.Web.Data
 {
     public class Summary
     {

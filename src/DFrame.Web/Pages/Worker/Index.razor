@@ -1,5 +1,6 @@
 ﻿@page "/worker"
 
+@using DFrame.Web.Data
 @using DFrame.Web.Models
 @using DFrame.Web.Components
 @inject ISummaryService SummaryService
@@ -41,7 +42,7 @@
 </div>
 
 @code {
-    private Worker[] workers;
+    private WorkerData[] workers;
     private Summary summary;
 
     protected override async Task OnInitializedAsync()

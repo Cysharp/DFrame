@@ -10,6 +10,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using DFrame.Web.Models;
 using DFrame.Web.Infrastructure;
+using ZLogger;
+using Cysharp.Text;
 
 namespace DFrame.Web
 {
@@ -31,11 +33,15 @@ namespace DFrame.Web
 
             services.AddSingleton<IStatisticsService, StatisticsMockService>();
             services.AddSingleton<IWorkersService, WorkerMockService>();
-            services.AddSingleton<ISummaryService, SummaryMockService>();
+            services.AddSingleton<ISummaryService, SummaryService>();
+            //services.AddSingleton<ILoggingService, LoggingMockService>();
             services.AddSingleton<ILoggingService, LoggingService>();
             services.AddSingleton<LogProcessorOptions>(new LogProcessorOptions()
             {
-                LoggerOptions = new ZLogger.ZLoggerOptions(),
+                LoggerOptions = new ZLoggerOptions
+                {
+                    ExceptionFormatter = (writer, ex) => ZString.Utf8Format(writer, "{0} {1}", ex.Message, ex.StackTrace),
+                },
             }); 
             services.AddSingleton<ExecuteService>();
         }

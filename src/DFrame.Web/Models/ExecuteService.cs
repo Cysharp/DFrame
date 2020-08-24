@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
-using DFrame.Web.Infrastructure;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ZLogger;
@@ -12,7 +8,6 @@ namespace DFrame.Web.Models
 {
     public class ExecuteService
     {
-        private readonly ILogger<ExecuteService> _logger;
         private readonly ISummaryService _summaryService;
         private readonly IStatisticsService _statisticsService;
         private readonly ILoggingService _loggingService;
@@ -20,9 +15,8 @@ namespace DFrame.Web.Models
         private ExecuteContext _executeContext = default;
         public ExecuteContext ExecuteContext => _executeContext;
 
-        public ExecuteService(ILogger<ExecuteService> logger, ISummaryService summaryService, IStatisticsService statisticsService, ILoggingService loggingService, LogProcessorOptions logOptions)
+        public ExecuteService(ISummaryService summaryService, IStatisticsService statisticsService, ILoggingService loggingService)
         {
-            _logger = logger;
             _summaryService = summaryService;
             _statisticsService = statisticsService;
             _loggingService = loggingService;
@@ -43,17 +37,13 @@ namespace DFrame.Web.Models
             _executeContext = context;
 
             // register context
-            _summaryService.RegisterContext(_executeContext);
-            _statisticsService.RegisterContext(_executeContext);
+            RegisterContext(context);
 
             return context;
         }
 
         public async Task ExecuteAsync()
         {
-            // clear current
-            _loggingService.Clear();
-
             // update context status
             await _executeContext.ExecuteAsync();
             _summaryService.UpdateStatus(_executeContext.Status);
@@ -65,6 +55,8 @@ namespace DFrame.Web.Models
                     logging.ClearProviders();
                     logging.SetMinimumLevel(_loggingService.ExecuteLogProcessor.LogLevel);
                     logging.AddZLoggerLogProcessor(_loggingService.ExecuteLogProcessor);
+                    // todo: remove console logger?
+                    logging.AddZLoggerConsole();
                 })
                 .RunDFrameLoadTestingAsync(_executeContext.ExecuteArgument.Arguments, new DFrameOptions(_executeContext.HostAddress, 12345));
 
@@ -82,6 +74,13 @@ namespace DFrame.Web.Models
 
             // update status
             _summaryService.UpdateStatus(_executeContext.Status);
+        }
+
+        private void RegisterContext(IExecuteContext context)
+        {
+            _summaryService?.RegisterContext(context);
+            _statisticsService?.RegisterContext(context);
+            _loggingService?.RegisterContext(context);
         }
     }
 }

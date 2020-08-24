@@ -1,50 +1,17 @@
-﻿using System;
+﻿using DFrame.Web.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace DFrame.Web.Models
 {
-    public interface IStatisticsService
-    {
-        event Action<Statistic> OnUpdateStatistics;
-
-        void RegisterContext(IExecuteContext executeContext);
-        /// <summary>
-        /// Get statistics
-        /// </summary>
-        /// <returns></returns>
-        Task<(Statistic[] statistics, Statistic aggregated)> GetStatisticsAsync();
-        /// <summary>
-        /// Get failures
-        /// </summary>
-        /// <returns></returns>
-        Task<Failure[]> GetFailuresAsync();
-    }
-
     /// <summary>
     /// Mock data
     /// </summary>
     public class StatisticsMockService : IStatisticsService
     {
-        private static readonly string[] httpTypes = new[]
-        {
-            "Get", "Patch", "Post", "Put", "Delete",
-        };
-
-        private static readonly string[] paths = new[]
-        {
-            "/",
-            "/Hello", "/Item", "/World",
-            "/Hoge", "/Fuga", "/Piyo", "/Foo", "/Bar",
-            "/Logout", "/Login", "/Auth", "/Register",
-            "/Healthz", "/Liveness", "/Readiness", "/Stats",
-            "/Begin", "/Questions", "/Faq", "/Post", "/Tasks", "/Cards", "/Display", "/Report",
-        };
-
-        private Dictionary<(string type, string name), int> _requests;
-        private Dictionary<(string type, string name), int> _fails;
+        private Dictionary<(string method, string name), int> _requests;
         private IExecuteContext _executeContext;
 
         public event Action<Statistic> OnUpdateStatistics;
@@ -58,11 +25,10 @@ namespace DFrame.Web.Models
         {
             var rnd = new Random();
             _requests = new Dictionary<(string type, string name), int>();
-            _fails = new Dictionary<(string type, string name), int>();
 
-            var _temp = new List<string>(paths);
+            var temp = new List<string>(MockData.Paths);
             var statistics = Enumerable.Range(1, 5)
-                .Select(x => MockStatistics(x, rnd, _temp))
+                .Select(x => GenerateMockData(x, rnd, temp))
                 .OrderBy(x => x.Name)
                 .ToArray();
             var aggregated = AggregateStatistics(statistics);
@@ -72,28 +38,14 @@ namespace DFrame.Web.Models
             return Task.FromResult((statistics, aggregated));
         }
 
-        public Task<Failure[]> GetFailuresAsync()
+        private Statistic GenerateMockData(int index, Random rnd, IList<string> temp)
         {
-            var fails = _fails.Select(x => new Failure
-            {
-                Fails = x.Value,
-                Method = x.Key.type,
-                Name = x.Key.name,
-                Type = new HttpRequestException($"404 Client Error. NOT FOUND for url: {_executeContext?.HostAddress}{x.Key.name}"),
-            })
-            .ToArray();
-            return Task.FromResult(fails);
-        }
-
-        private Statistic MockStatistics(int index, Random rnd, IList<string> _temp)
-        {
-            var type = httpTypes[rnd.Next(httpTypes.Length)];
-            var name = _temp[rnd.Next(_temp.Count)];
-            _temp.Remove(name);
+            var method = MockData.HttpTypes[rnd.Next(MockData.HttpTypes.Length)];
+            var path = temp[rnd.Next(temp.Count)];
+            temp.Remove(path);
             var req = rnd.Next(index, 20000);
-            _requests.Add((type, name), req);
+            _requests.Add((method, path), req);
             var fail = rnd.Next(0, 1000);
-            _fails.Add((type, name), fail);
 
             var first = rnd.Next(50, 80);
             var second = 100 - rnd.Next(81, 90);
@@ -122,8 +74,8 @@ namespace DFrame.Web.Models
             return sortedResReq.Length != 0
                 ? new Statistic
                 {
-                    Type = type,
-                    Name = name,
+                    Method = method,
+                    Name = path,
                     Requests = req,
                     Fails = fail,
                     Median = Median(sortedResReq),
@@ -137,8 +89,8 @@ namespace DFrame.Web.Models
                 }
                 : new Statistic
                 {
-                    Type = type,
-                    Name = name,
+                    Method = method,
+                    Name = path,
                     Requests = req,
                     Fails = fail,
                     Median = 0.0,
@@ -161,7 +113,7 @@ namespace DFrame.Web.Models
         {
             return new Statistic
             {
-                Type = "",
+                Method = "",
                 Name = "Aggregated",
                 Requests = statistics.Sum(x => x.Requests),
                 Fails = statistics.Sum(x => x.Fails),
@@ -246,6 +198,28 @@ namespace DFrame.Web.Models
             {
                 Request = request;
                 Size = size;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is RequestData data &&
+                       Request == data.Request &&
+                       Size == data.Size;
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(Request, Size);
+            }
+
+            public static bool operator ==(RequestData left, RequestData right)
+            {
+                return left.Equals(right);
+            }
+
+            public static bool operator !=(RequestData left, RequestData right)
+            {
+                return !(left == right);
             }
         }
     }

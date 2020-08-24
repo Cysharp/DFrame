@@ -1,29 +1,20 @@
 ﻿using System;
 using System.Threading.Tasks;
+using DFrame.Web.Data;
 
 namespace DFrame.Web.Models
 {
-    public interface IWorkersService
-    {
-        /// <summary>
-        /// Get statistics
-        /// </summary>
-        /// <returns></returns>
-        public Task<Worker[]> IniatilizeAsync();
-        event Action<Worker[]> OnUpdateWorker;
-    }
-
     /// <summary>
     /// Mock data
     /// </summary>
     public class WorkerMockService : IWorkersService
     {
-        public event Action<Worker[]> OnUpdateWorker;
+        public event Action<WorkerData[]> OnUpdateWorker;
 
-        public Task<Worker[]> IniatilizeAsync()
+        public Task<WorkerData[]> IniatilizeAsync()
         {
             var workers = new[]{
-                new Worker
+                new WorkerData
                 {
                     Name = Environment.MachineName,
                     State = "ready",
@@ -37,4 +28,6 @@ namespace DFrame.Web.Models
             return Task.FromResult(workers);
         }
     }
+
+    // todo: prepare WorkerService. Get DFrameWorker Info from Dframe
 }

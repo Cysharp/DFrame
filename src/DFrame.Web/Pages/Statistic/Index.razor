@@ -1,5 +1,6 @@
 ﻿@page "/statistic"
 
+@using DFrame.Web.Data
 @using DFrame.Web.Models
 @using DFrame.Web.Components
 @inject ISummaryService SummaryService
@@ -38,7 +39,7 @@
                 @foreach (var statistic in statistics)
                 {
                     <tr>
-                        <td>@statistic.Type</td>
+                        <td>@statistic.Method</td>
                         <td>@statistic.Name</td>
                         <td>@statistic.Requests</td>
                         <td>@statistic.Fails</td>
@@ -53,7 +54,7 @@
                     </tr>
                 }
                 <tr>
-                    <td>@aggregated.Type</td>
+                    <td>@aggregated.Method</td>
                     <td>@aggregated.Name</td>
                     <td>@aggregated.Requests</td>
                     <td>@aggregated.Fails</td>
@@ -70,6 +71,7 @@
         </table>
     }
 </div>
+
 @code {
     private Statistic[] statistics;
     private Statistic aggregated;

@@ -9,9 +9,10 @@ namespace DFrame.Web.Workers
     {
         IDistributedQueue<int> queue;
 
-        public override async Task SetupAsync(WorkerContext context)
+        public override Task SetupAsync(WorkerContext context)
         {
             queue = context.CreateDistributedQueue<int>("sampleworker-testq");
+            return Task.CompletedTask;
         }
 
         public override async Task ExecuteAsync(WorkerContext context)
