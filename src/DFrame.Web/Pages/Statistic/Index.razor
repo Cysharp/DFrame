@@ -1,13 +1,12 @@
 ﻿@page "/statistic"
 
 @using DFrame.Web.Models
-@using DFrame.Web.Components 
-
+@using DFrame.Web.Components
 @inject ISummaryService SummaryService
 @inject IStatisticsService StatisticsService
 @inject IWorkersService WorkerService
 
-<SummaryComponent @ref="summaryComponent"></SummaryComponent>
+<SummaryComponent Summary="@summary"></SummaryComponent>
 
 <h1>Statistic</h1>
 
@@ -75,10 +74,12 @@
     private Statistic[] statistics;
     private Statistic aggregated;
     private DFrame.Web.Components.SummaryComponent summaryComponent;
+    private Summary summary;
 
     protected override async Task OnInitializedAsync()
     {
         await WorkerService.IniatilizeAsync();
         (statistics, aggregated) = await StatisticsService.GetStatisticsAsync();
+        summary = SummaryService.Summary;
     }
 }

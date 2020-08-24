@@ -1,8 +1,7 @@
 ﻿@page "/execute"
 
 @using DFrame.Web.Models
-@using DFrame.Web.Components 
-
+@using DFrame.Web.Components
 @inject ExecuteService ExecuteService
 @inject ISummaryService SummaryService
 @inject IStatisticsService StatisticsService
@@ -56,7 +55,7 @@
                 <td>@context?.ExecuteId</td>
                 <td>@context?.HostAddress</td>
                 <td>@context?.Status</td>
-                <td>@context?.Arg</td>
+                <td>@string.Join(" ", context?.ExecuteArgument.Arguments ?? Array.Empty<string>())</td>
             </tr>
         </tbody>
     </table>
@@ -65,9 +64,9 @@
 
 @code {
     private string hostAddress;
-    private int processCount = 1;
-    private int workerPerProcess = 20;
-    private int executePerWorker = 500;
+    private int processCount;
+    private int workerPerProcess;
+    private int executePerWorker;
     private string workerName;
     private bool disableExecute => DisableExecute();
     private bool disabledStop => DisableStop();
@@ -78,16 +77,18 @@
     {
         context = ExecuteService.ExecuteContext;
         hostAddress = context?.HostAddress;
-        workerName = context?.WorkerName;
-        summary = new Summary();
+        processCount = context?.ExecuteArgument.ProcessCount ?? 1;
+        workerPerProcess = context?.ExecuteArgument.WorkerPerProcess ?? 20;
+        executePerWorker = context?.ExecuteArgument.ExecutePerWorker ?? 500;
+        workerName = context?.ExecuteArgument.WorkerName;
+        summary = SummaryService.Summary;
         return Task.CompletedTask;
     }
 
     private async Task OnClickExecute()
     {
-        var exec = ExecuteService.ExecuteAsync(hostAddress, processCount, workerPerProcess, executePerWorker, workerName);
-        context = ExecuteService.ExecuteContext;
-        summary = SummaryService.Summary;
+        context = ExecuteService.CreateContext(hostAddress, processCount, workerPerProcess, executePerWorker, workerName);
+        var exec = ExecuteService.ExecuteAsync();
         await exec;
     }
 

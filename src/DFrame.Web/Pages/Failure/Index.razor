@@ -1,7 +1,11 @@
 ﻿@page "/failure"
 
 @using DFrame.Web.Models
+@using DFrame.Web.Components
+@inject ISummaryService SummaryService
 @inject IStatisticsService StatisticsService
+
+<SummaryComponent Summary="@summary"></SummaryComponent>
 
 <h1>Failure</h1>
 
@@ -38,9 +42,11 @@
 
 @code {
     private Failure[] failures;
+    private Summary summary;
 
     protected override async Task OnInitializedAsync()
     {
         failures = await StatisticsService.GetFailuresAsync();
+        summary = SummaryService.Summary;
     }
 }

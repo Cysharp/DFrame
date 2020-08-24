@@ -1,7 +1,11 @@
 ﻿@page "/worker"
 
 @using DFrame.Web.Models
+@using DFrame.Web.Components
+@inject ISummaryService SummaryService
 @inject IWorkersService WorkersService
+
+<SummaryComponent Summary="@summary"></SummaryComponent>
 
 <h1>Worker</h1>
 
@@ -38,9 +42,11 @@
 
 @code {
     private Worker[] workers;
+    private Summary summary;
 
     protected override async Task OnInitializedAsync()
     {
         workers = await WorkersService.IniatilizeAsync();
+        summary = SummaryService.Summary;
     }
 }

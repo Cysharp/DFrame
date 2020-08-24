@@ -25,23 +25,35 @@ namespace DFrame.Web.Models
             _statisticsService = statisticsService;
         }
 
-        public async Task ExecuteAsync(string hostAddress, int processCount, int workerPerProcess, int executePerWorker, string workerName)
+        public ExecuteContext CreateContext(string hostAddress, int processCount, int workerPerProcess, int executePerWorker, string workerName)
         {
             var contextId = Guid.NewGuid().ToString();
-            var args = $"--master -processCount {processCount} -workerPerProcess {workerPerProcess} -executePerWorker {executePerWorker} -workerName {workerName}";
-            var context = new ExecuteContext(contextId, hostAddress, workerName, args);
+            var executeArguments = new ExecuteArgument
+            {
+                WorkerName = workerName,
+                ProcessCount = processCount,
+                WorkerPerProcess = workerPerProcess,
+                ExecutePerWorker = executePerWorker,
+                Arguments = $"--master -processCount {processCount} -workerPerProcess {workerPerProcess} -executePerWorker {executePerWorker} -workerName {workerName}".Split(' '),
+            };
+            var context = new ExecuteContext(contextId, hostAddress, executeArguments);
             _executeContext = context;
 
             // register context
             _summaryService.RegisterContext(_executeContext);
             _statisticsService.RegisterContext(_executeContext);
 
-            // update context
+            return context;
+        }
+
+        public async Task ExecuteAsync()
+        {
+            // update context status
             await _executeContext.ExecuteAsync();
             _summaryService.UpdateStatus(_executeContext.Status);
 
             // run dframe
-            await Host.CreateDefaultBuilder(context.Args)
+            await Host.CreateDefaultBuilder(_executeContext.ExecuteArgument.Arguments)
                 .ConfigureLogging(logging =>
                 {
                     logging.ClearProviders();
@@ -51,7 +63,7 @@ namespace DFrame.Web.Models
                         options.EnableStructuredLogging = false;
                     });
                 })
-                .RunDFrameLoadTestingAsync(_executeContext.Args, new DFrameOptions(_executeContext.HostAddress, 12345));
+                .RunDFrameLoadTestingAsync(_executeContext.ExecuteArgument.Arguments, new DFrameOptions(_executeContext.HostAddress, 12345));
 
             // update status
             await _executeContext.StopAsync();

@@ -22,14 +22,21 @@ namespace DFrame.Web
         /// </summary>
         string HostAddress { get; }
         /// <summary>
-        /// WorkerName to run
+        /// Execute Arguments
         /// </summary>
-        string WorkerName { get; }
-        string[] Args { get; }
-        string Arg { get; }
+        ExecuteArgument ExecuteArgument { get; }
 
         Task ExecuteAsync();
         Task StopAsync();
+    }
+
+    public class ExecuteArgument
+    {
+        public int ProcessCount { get; set; } = 1;
+        public int WorkerPerProcess { get; set; } = 20;
+        public int ExecutePerWorker { get; set; } = 500;
+        public string WorkerName { get; set; }
+        public string[] Arguments { get; set; }
     }
 
     public class ExecuteContext : IExecuteContext
@@ -37,17 +44,13 @@ namespace DFrame.Web
         public string ExecuteId { get; }
         public string Status { get; private set; }
         public string HostAddress { get; }
-        public string WorkerName { get; }
-        public string[] Args { get; private set; } = Array.Empty<string>();
-        public string Arg { get; }
+        public ExecuteArgument ExecuteArgument { get; }
 
-        public ExecuteContext(string executeId, string hostAddress, string workerName, string arg)
+        public ExecuteContext(string executeId, string hostAddress, ExecuteArgument arguments)
         {
             ExecuteId = executeId;
             HostAddress = hostAddress;
-            WorkerName = workerName;
-            Arg = arg;
-            Args = Arg.Split(' ');
+            ExecuteArgument = arguments;
             Environment.SetEnvironmentVariable("DFRAME_MASTER_HOST", hostAddress, EnvironmentVariableTarget.Process);
         }
 
