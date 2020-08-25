@@ -10,36 +10,7 @@
 
 <h1>Worker</h1>
 
-<div>
-    @if (workers == null)
-    {
-        <p><em>Loading...</em></p>
-    }
-    else
-    {
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Worker</th>
-                    <th>State</th>
-                    <th># users</th>
-                    <th>CPU usage</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var worker in workers)
-                {
-                    <tr>
-                        <td>@worker.Name</td>
-                        <td>@worker.State</td>
-                        <td>@worker.Users</td>
-                        <td>@string.Format("{0:#.#}", worker.Cpu)%</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-</div>
+<WorkerComponent Workers="@workers"></WorkerComponent>
 
 @code {
     private WorkerData[] workers;
