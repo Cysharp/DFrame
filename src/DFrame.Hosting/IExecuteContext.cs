@@ -27,6 +27,7 @@ namespace DFrame.Hosting
         ExecuteArgument ExecuteArgument { get; }
 
         Task ExecuteAsync();
+        Task ErrorAsync();
         Task StopAsync();
     }
 
@@ -48,6 +49,12 @@ namespace DFrame.Hosting
         public Task ExecuteAsync()
         {
             Status = "RUNNING";
+            return Task.CompletedTask;
+        }
+
+        public Task ErrorAsync()
+        {
+            Status = "ERROR";
             return Task.CompletedTask;
         }
 

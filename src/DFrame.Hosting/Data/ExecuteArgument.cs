@@ -2,9 +2,9 @@
 {
     public class ExecuteArgument
     {
-        public int ProcessCount { get; set; }
-        public int WorkerPerProcess { get; set; }
-        public int ExecutePerWorker { get; set; }
+        public int ProcessCount { get; set; } = 1;
+        public int WorkerPerProcess { get; set; } = 1;
+        public int ExecutePerWorker { get; set; } = 1;
         public string WorkerName { get; set; }
         public string[] Arguments { get; set; }
     }

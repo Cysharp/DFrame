@@ -19,6 +19,7 @@ namespace DFrame.Hosting.Infrastructure
     public interface IExecuteLogProcessor : IAsyncLogProcessor
     {
         LogLevel LogLevel { get; }
+
         LogMessage[] GetAll();
         FailureMessage[] GetExceptions();
         LogMessage Remove();
