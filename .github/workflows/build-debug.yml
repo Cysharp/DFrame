@@ -28,8 +28,11 @@ jobs:
       - run: dotnet build -c Debug ./src/DFrame.Kubernetes
       - run: dotnet build -c Debug ./src/DFrame.LoadTesting
       - run: dotnet build -c Debug ./src/DFrame.OutOfProcess
+      - run: dotnet build -c Debug ./src/DFrame.Hosting
+      - run: dotnet build -c Debug ./src/DFrame.ComponentLibrary
       # build sandbox
       - run: dotnet build -c Debug ./sandbox/ConsoleApp
       - run: dotnet build -c Debug ./sandbox/ConsoleAppK8s
+      - run: dotnet build -c Debug ./sandbox/WebApp
       # tests
       #- run: dotnet test -c Debug --no-build ./tests/DFrame.Tests/DFrame.Tests.csproj
