@@ -28,7 +28,8 @@ namespace WebApp
             services.AddRazorPages();
             services.AddServerSideBlazor();
 
-            services.AddDFrameWeb();
+            // add DFrame
+            services.AddDFrameHosting();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

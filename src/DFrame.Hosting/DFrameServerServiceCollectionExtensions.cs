@@ -8,7 +8,7 @@ namespace DFrame.Hosting
 {
     public static class DFrameServerServiceCollectionExtensions
     {
-        public static IServiceCollection AddDFrameWeb(this IServiceCollection services)
+        public static IServiceCollection AddDFrameHosting(this IServiceCollection services)
         {
             services.AddSingleton<ExecuteService>();
             services.AddSingleton<ISummaryService, SummaryService>();
