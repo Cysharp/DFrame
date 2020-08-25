@@ -300,11 +300,17 @@ namespace DFrame
         public void Reset(int nodeCount)
         {
             this.nodeCount = nodeCount;
-            this.OnConnected = new CountReporting(nodeCount);
+            this.OnConnected = new CountReporting(nodeCount)
+            {
+                OnIncrement = count => WorkerProgressNotifier.OnConnected.PublishAsync(count).ConfigureAwait(false),
+            };
             this.OnCreateCoWorker = new CountReporting(nodeCount);
             this.OnSetup = new CountReporting(nodeCount);
             this.OnExecute = new CountReporting(nodeCount);
-            this.OnTeardown = new CountReporting(nodeCount);
+            this.OnTeardown = new CountReporting(nodeCount)
+            {
+                OnIncrement = count => WorkerProgressNotifier.OnTeardown.PublishAsync(count).ConfigureAwait(false),
+            };
         }
 
         public void AddExecuteResult(ExecuteResult[] results)
@@ -312,6 +318,33 @@ namespace DFrame
             lock (executeResult)
             {
                 executeResult.AddRange(results);
+            }
+        }
+    }
+
+    public static class WorkerProgressNotifier
+    {
+        public static WorkerProgress OnConnected = new WorkerProgress();
+        public static WorkerProgress OnTeardown = new WorkerProgress();
+
+        public class WorkerProgress
+        {
+            public System.Threading.Channels.Channel<int> WorkerChannel { get; }
+            public Action<int> OnPublished { get; set; } = count => { };
+
+            public WorkerProgress()
+            {
+                // 1 writer : n reader
+                WorkerChannel = System.Threading.Channels.Channel.CreateUnbounded<int>(new System.Threading.Channels.UnboundedChannelOptions
+                {
+                    SingleWriter = true,
+                });
+            }
+
+            public async ValueTask PublishAsync(int count)
+            {
+                await WorkerChannel.Writer.WriteAsync(count);
+                OnPublished?.Invoke(count);
             }
         }
     }

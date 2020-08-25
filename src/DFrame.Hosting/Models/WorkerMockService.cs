@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using DFrame.Hosting.Data;
 
@@ -9,25 +10,27 @@ namespace DFrame.Hosting.Models
     /// </summary>
     public class WorkerMockService : IWorkersService
     {
-        public event Action<WorkerData[]> OnUpdateWorker;
+        public Action<int> OnWorkerUpdate { get; set; }
 
-        public Task<WorkerData[]> IniatilizeAsync()
+        public Task<WorkerData[]> GetWorkers()
         {
-            var workers = new[]{
-                new WorkerData
-                {
-                    Name = Environment.MachineName,
-                    State = "ready",
-                    Users = 0,
-                    Cpu = 10.1d,
-                },
+            var worker = new WorkerData
+            {
+                Id = 0,
+                Name = Environment.MachineName,
+                State = "ready",
+                Users = 0,
+                Cpu = 10.1d,
             };
+            var workers = new[] { worker };
 
-            OnUpdateWorker?.Invoke(workers);
-
+            OnWorkerUpdate?.Invoke(workers.Length);
             return Task.FromResult(workers);
         }
-    }
 
-    // todo: prepare WorkerService. Get DFrameWorker Info from Dframe
+        public Task IniatilizeAsync()
+        {
+            return Task.CompletedTask;
+        }
+    }
 }

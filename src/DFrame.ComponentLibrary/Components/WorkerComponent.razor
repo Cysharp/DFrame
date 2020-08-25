@@ -21,7 +21,7 @@
                         <td>@worker.Name</td>
                         <td>@worker.State</td>
                         <td>@worker.Users</td>
-                        <td>@string.Format("{0:#.#}", worker.Cpu)%</td>
+                        <td>@worker.Cpu.ToString("0.0")%</td>
                     </tr>
                 }
             </tbody>

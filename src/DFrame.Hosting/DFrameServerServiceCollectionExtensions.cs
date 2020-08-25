@@ -15,8 +15,7 @@ namespace DFrame.Hosting
             services.AddSingleton<ILoggingService, LoggingService>();
             // todo: replace StatisticsMockService
             services.AddSingleton<IStatisticsService, StatisticsMockService>();
-            // todo: replace WorkerMockService
-            services.AddSingleton<IWorkersService, WorkerMockService>();
+            services.AddSingleton<IWorkersService, WorkersService>();
             services.AddSingleton<LogProcessorOptions>(new LogProcessorOptions()
             {
                 LoggerOptions = new ZLoggerOptions

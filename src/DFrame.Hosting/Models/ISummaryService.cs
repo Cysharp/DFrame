@@ -14,7 +14,7 @@ namespace DFrame.Hosting.Models
         void RegisterContext(IExecuteContext executeContext);
         void UpdateStatus(string status);
         void UpdateStatistics(Statistic statistic);
-        void UpdateWorker(WorkerData[] workers);
+        void UpdateWorker(int workerCount);
     }
 
     public class SummaryService : ISummaryService
@@ -33,7 +33,7 @@ namespace DFrame.Hosting.Models
             _statisticsService.OnUpdateStatistics += UpdateStatistics;
 
             _workersService = workersService;
-            _workersService.OnUpdateWorker += UpdateWorker;
+            _workersService.OnWorkerUpdate += UpdateWorker;
         }
 
         public void RegisterContext(IExecuteContext executeContext)
@@ -56,9 +56,9 @@ namespace DFrame.Hosting.Models
                 : (double)statistic.Fails / (double)statistic.Requests * 100;
         }
 
-        public void UpdateWorker(WorkerData[] workers)
+        public void UpdateWorker(int workerCount)
         {
-            _summary.Workers = workers.Length;
+            _summary.Workers = workerCount;
         }
     }
 }

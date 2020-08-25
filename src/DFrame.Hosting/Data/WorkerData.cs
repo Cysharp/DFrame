@@ -8,6 +8,10 @@ namespace DFrame.Hosting.Data
     public struct WorkerData
     {
         /// <summary>
+        /// Id of worker machine
+        /// </summary>
+        public int Id { get; set; }
+        /// <summary>
         /// Name of worker machine
         /// </summary>
         public string Name { get; set; }
