@@ -28,7 +28,7 @@ namespace DFrame
             Console.WriteLine("Show Load Testing result report.");
 
             // Output req/sec and other calcutlation report.
-            AbReport(results, options, executeScenario);
+            OutputReportAb(results, options, executeScenario);
         }
 
         /// <summary>
@@ -36,62 +36,111 @@ namespace DFrame
         /// </summary>
         /// <param name="results"></param>
         /// <param name="options"></param>
-        static void AbReport(ExecuteResult[] results, DFrameOptions options, ExecuteScenario executeScenario)
+        static void OutputReportAb(ExecuteResult[] results, DFrameOptions options, ExecuteScenario executeScenario)
         {
-            var requestCount = executeScenario.ProcessCount * executeScenario.WorkerPerProcess * executeScenario.ExecutePerWorker;
-            var concurrency = executeScenario.WorkerPerProcess;
-            var totalRequests = results.Length;
-            var completeRequests = results.Where(x => !x.HasError).Count();
-            var failedRequests = results.Where(x => x.HasError).Count();
+            var scalingType = options.ScalingProvider.GetType().Name;
+            var abReport = new AbReport(results, executeScenario, scalingType);
+
+            Console.WriteLine(abReport.ToString());
+        }
+    }
+
+    public class AbReport
+    {
+        public string ScalingType { get; }
+        public string ScenarioName { get; }
+        public int RequestCount { get; }
+        public int ProcessCount { get; }
+        public int WorkerPerProcess { get; }
+        public int ExecutePerWorker { get; }
+        public int Concurrency { get; }
+        public int CompleteRequests { get; }
+        public int FailedRequests { get; }
+        public double TimeTaken { get; }
+        public int TotalRequests { get; }
+        public double TimePerRequest { get; }
+        public PercentileData[] Percentiles { get; }
+
+        public class PercentileData
+        {
+            public int Range { get; }
+            public int Value { get; set; }
+            public string Note { get; set; }
+            public PercentileData(int range, int value, string note)
+            {
+                Range = range;
+                Value = value;
+                Note = note;
+            }
+        }
+
+        public AbReport(ExecuteResult[] results, ExecuteScenario executeScenario, string scalingType)
+        {
+            ScalingType = scalingType;
+            ScenarioName = executeScenario.ScenarioName;
+            RequestCount = executeScenario.ProcessCount * executeScenario.WorkerPerProcess * executeScenario.ExecutePerWorker;
+            Concurrency = executeScenario.WorkerPerProcess;
+            TotalRequests = results.Length;
+            CompleteRequests = results.Where(x => !x.HasError).Count();
+            FailedRequests = results.Where(x => x.HasError).Count();
 
             // Time to complete all requests.
             // * Get sum of IWorkerReciever.Execute time on each workerId, max execution time will be actual execution time.
-            var timeTaken = results.GroupBy(x => x.WorkerId).Select(xs => xs.Sum(x => x.Elapsed.TotalSeconds)).Max();
+            TimeTaken = results.GroupBy(x => x.WorkerId).Select(xs => xs.Sum(x => x.Elapsed.TotalSeconds)).Max();
             // The average time spent per request. The first value is calculated with the formula `concurrency * timetaken * 1000 / done` while the second value is calculated with the formula `timetaken * 1000 / done`
-            var timePerRequest = timeTaken * 1000 / requestCount;
+            TimePerRequest = TimeTaken * 1000 / RequestCount;
 
             // percentile requires sort before calculate
             var sortedResultsElapsedMs = results.Select(x => x.Elapsed.TotalMilliseconds).OrderBy(x => x).ToArray();
             var percecs = new[] { 0.5, 0.66, 0.75, 0.80, 0.90, 0.95, 0.98, 0.99, 1.00 };
-            var percentiles = percecs.Select((x, i) =>
+            Percentiles = percecs.Select((x, i) =>
             {
                 var percent = (int)(x * 100);
-                var percentile = (int)Percentile(sortedResultsElapsedMs, x);
-                return i != percecs.Length - 1 
-                    ? $"{percent,3}%      {percentile}"
-                    : $"{percent,3}%      {percentile} (longest request)";
+                var value = (int)MatchUtils.Percentile(sortedResultsElapsedMs, x);
+                return i != percecs.Length - 1
+                    ? new PercentileData(percent, value, "")
+                    : new PercentileData(percent, value, "(longest request)");
             })
             .ToArray();
-
-            Console.WriteLine($@"Finished {requestCount} requests
-
-Scaling Type:           {options.ScalingProvider.GetType().Name}
-Scenario Name:          {executeScenario.ScenarioName}
-
-Request count:          {requestCount}
-{nameof(executeScenario.ProcessCount)}:           {executeScenario.ProcessCount}
-{nameof(executeScenario.WorkerPerProcess)}:       {executeScenario.WorkerPerProcess}
-{nameof(executeScenario.ExecutePerWorker)}:       {executeScenario.ExecutePerWorker}
-Concurrency level:      {concurrency}
-Complete requests:      {completeRequests}
-Failed requests:        {failedRequests}
-
-Time taken for tests:   {timeTaken:F2} seconds
-Requests per seconds:   {totalRequests / timeTaken:F2} [#/sec] (mean)
-Time per request:       {concurrency * timePerRequest:F2} [ms] (mean)
-Time per request:       {timePerRequest:F2} [ms] (mean, across all concurrent requests)
-
-Percentage of the requests served within a certain time (ms)
-{string.Join("\n", percentiles)}");
         }
 
+        public override string ToString()
+        {
+            return $@"Finished {RequestCount} requests
+
+Scaling Type:           {ScalingType}
+Scenario Name:          {ScenarioName}
+
+Request count:          {RequestCount}
+{nameof(ProcessCount)}:           {ProcessCount}
+{nameof(WorkerPerProcess)}:       {WorkerPerProcess}
+{nameof(ExecutePerWorker)}:       {ExecutePerWorker}
+Concurrency level:      {Concurrency}
+Complete requests:      {CompleteRequests}
+Failed requests:        {FailedRequests}
+
+Time taken for tests:   {TimeTaken:F2} seconds
+Requests per seconds:   {TotalRequests / TimeTaken:F2} [#/sec] (mean)
+Time per request:       {Concurrency * TimePerRequest:F2} [ms] (mean)
+Time per request:       {TimePerRequest:F2} [ms] (mean, across all concurrent requests)
+
+Percentage of the requests served within a certain time (ms)
+{string.Join("\n", Percentiles.Select(x => string.IsNullOrWhiteSpace(x.Note)
+    ? $"{x.Range,3}%      {x.Value}"
+    : $"{x.Range,3}%      {x.Value} {x.Note}"
+))}";
+        }
+    }
+
+    public static class MatchUtils
+    {
         /// <summary>
         /// Calculate Percentile with Interpolation.
         /// </summary>
         /// <param name="sortedSequence"></param>
         /// <param name="percentile"></param>
         /// <returns></returns>
-        private static double Percentile(double[] sortedSequence, double percentile)
+        public static double Percentile(double[] sortedSequence, double percentile)
         {
             var n = sortedSequence.Length;
             var realIndex = Round((n + 1) * percentile) - 1;
