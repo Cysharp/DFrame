@@ -25,10 +25,10 @@ namespace DFrame
                 Console.WriteLine("No execution result found, quit result report.");
                 return;
             }
-            Console.WriteLine("Show Load Testing result report.");
 
             // Output req/sec and other calcutlation report.
-            OutputReportAb(results, options, executeScenario);
+            Console.WriteLine("Show Load Testing result report.");
+            OutputReportAb(results, options, executeScenario).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -36,13 +36,13 @@ namespace DFrame
         /// </summary>
         /// <param name="results"></param>
         /// <param name="options"></param>
-        static void OutputReportAb(ExecuteResult[] results, DFrameOptions options, ExecuteScenario executeScenario)
+        static async Task OutputReportAb(ExecuteResult[] results, DFrameOptions options, ExecuteScenario executeScenario)
         {
             var scalingType = options.ScalingProvider.GetType().Name;
             var abReport = new AbReport(results, executeScenario, scalingType);
 
-            ReportNotifier.OnReportOutput.PublishAsync(abReport).ConfigureAwait(false);
             Console.WriteLine(abReport.ToString());
+            await ReportNotifier.OnReportOutput.PublishAsync(abReport).ConfigureAwait(false);
         }
     }
 
@@ -67,7 +67,7 @@ namespace DFrame
 
             public async ValueTask PublishAsync(AbReport report)
             {
-                await _channel.Writer.WriteAsync(report);
+                await _channel.Writer.WriteAsync(report).ConfigureAwait(false);
                 OnPublished?.Invoke(report);
             }
         }

@@ -7,19 +7,19 @@
             </tr>
             <tr>
                 <td>processCount</td>
-                <td><input @bind="ExecuteArgument.ProcessCount" placeholder="1" type="number"></td>
+                <td><input @bind="ExecuteData.ProcessCount" placeholder="1" type="number"></td>
             </tr>
             <tr>
                 <td>workerPerProcess</td>
-                <td><input @bind="ExecuteArgument.WorkerPerProcess" placeholder="20" type="number"></td>
+                <td><input @bind="ExecuteData.WorkerPerProcess" placeholder="20" type="number"></td>
             </tr>
             <tr>
                 <td>executePerWorker</td>
-                <td><input @bind="ExecuteArgument.ExecutePerWorker" placeholder="500" type="number"></td>
+                <td><input @bind="ExecuteData.ExecutePerWorker" placeholder="500" type="number"></td>
             </tr>
             <tr>
                 <td>workerName</td>
-                <td><input @bind="ExecuteArgument.WorkerName" placeholder="SampleWorker"></td>
+                <td><input @bind="ExecuteData.WorkerName" placeholder="SampleWorker"></td>
             </tr>
         </tbody>
     </table>
@@ -30,16 +30,16 @@
 
 @code {
     [Parameter] public string HostAddress { get; set; }
-    [Parameter] public ExecuteArgument ExecuteArgument { get; set; }
+    [Parameter] public ExecuteData ExecuteData { get; set; }
     [Parameter] public string Status { get; set; }
-    [Parameter] public Func<string, int, int, int, string, Task> OnClickExecute { get; set; }
+    [Parameter] public Func<string, ExecuteData, Task> OnClickExecute { get; set; }
     [Parameter] public Func<Task> OnClickStop { get; set; }
     private bool disabledExecute => DisabledExecute();
     private bool disabledStop => DisabledStop();
 
     private async Task ClickExecute()
     {
-        await OnClickExecute?.Invoke(HostAddress, ExecuteArgument.ProcessCount, ExecuteArgument.WorkerPerProcess, ExecuteArgument.ExecutePerWorker, ExecuteArgument.WorkerName);
+        await OnClickExecute?.Invoke(HostAddress, ExecuteData);
     }
 
     private async Task ClickStop()
@@ -50,10 +50,10 @@
     private bool DisabledExecute()
     {
         return string.IsNullOrWhiteSpace(HostAddress)
-            || ExecuteArgument.ProcessCount <= 0
-            || ExecuteArgument.WorkerPerProcess <= 0
-            || ExecuteArgument.ExecutePerWorker <= 0
-            || string.IsNullOrWhiteSpace(ExecuteArgument.WorkerName)
+            || ExecuteData.ProcessCount <= 0
+            || ExecuteData.WorkerPerProcess <= 0
+            || ExecuteData.ExecutePerWorker <= 0
+            || string.IsNullOrWhiteSpace(ExecuteData.WorkerName)
             || Status == "RUNNING";
     }
 

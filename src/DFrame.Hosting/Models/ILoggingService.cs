@@ -8,7 +8,6 @@ namespace DFrame.Hosting.Models
     {
         IExecuteLogProcessor ExecuteLogProcessor { get; }
 
-        void RegisterContext(IExecuteContext executeContext);
         LogMessage[] GetLogs();
         FailureMessage[] GetExceptionLogs();
         void Clear();
@@ -16,18 +15,11 @@ namespace DFrame.Hosting.Models
 
     public class LoggingService : ILoggingService
     {
-        private IExecuteContext? _executeContext;
-
         public IExecuteLogProcessor ExecuteLogProcessor { get; }
 
         public LoggingService(LogProcessorOptions options)
         {
             ExecuteLogProcessor = new ExecuteLogProcessor(options);
-        }
-
-        public void RegisterContext(IExecuteContext executeContext)
-        {
-            _executeContext = executeContext;
         }
 
         public LogMessage[] GetLogs()

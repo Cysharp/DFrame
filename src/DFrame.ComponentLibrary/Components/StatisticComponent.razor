@@ -57,9 +57,16 @@
             </tbody>
         </table>
     }
+    <button class="btn btn-primary" @onclick="Refresh">Refresh</button>
 </div>
 
 @code {
     [Parameter] public Statistic[] Statistics { get; set; }
     [Parameter] public Statistic Aggregated { get; set; }
+    [Parameter] public Func<Task> OnRefresh { get; set; }
+
+    private async Task Refresh()
+    {
+        await OnRefresh?.Invoke();
+    }
 }

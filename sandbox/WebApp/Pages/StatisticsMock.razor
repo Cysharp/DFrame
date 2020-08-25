@@ -1,0 +1,28 @@
+﻿@*add DFrame page*@
+@page "/statistic_mock"
+
+@inject ISummaryService SummaryService
+@inject IStatisticsService<Statistic> StatisticsService
+
+<SummaryComponent Summary="@summary"></SummaryComponent>
+
+<h1>Statistic</h1>
+
+<StatisticComponent Statistics="@statistics" Aggregated="@aggregated" OnRefresh="@Refresh"></StatisticComponent>
+
+@code {
+    private Statistic[] statistics;
+    private Statistic aggregated;
+    private Summary summary;
+
+    protected override async Task OnInitializedAsync()
+    {
+        (statistics, aggregated) = await StatisticsService.GetStatisticsAsync();
+        summary = SummaryService.Summary;
+    }
+    private async Task Refresh()
+    {
+        (statistics, aggregated) = await StatisticsService.GetStatisticsAsync();
+        StateHasChanged();
+    }
+}

@@ -3,9 +3,43 @@
     used from a library project/package.
 */
 
-.my-component {
-    border: 2px dashed red;
-    padding: 1em;
-    margin: 1em 0;
-    background-image: url('background.png');
+section table {
+    width: 100%;
+}
+
+section th, section td {
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+
+section th {
+    background: #f4f4f4;
+}
+
+.statistics th, .statistics td {
+    width: 20%;
+    text-align: left;
+}
+
+@media only screen and (max-width: 480px) {
+    .statistics {
+        margin: 0 -10px;
+    }
+
+    .statistics tr {
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    .statistics th {
+        display: block;
+        width: 100%;
+    }
+
+    .statistics td {
+        display: list-item;
+        width: 90%;
+        margin-left: 10%;
+        border: none;
+    }
 }

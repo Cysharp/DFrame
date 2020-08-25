@@ -27,10 +27,9 @@ namespace DFrame.Hosting.Models
     /// <summary>
     /// Mock data
     /// </summary>
-    public class StatisticsMockService : IStatisticsService
+    public class StatisticsMockService : IStatisticsService<Statistic>
     {
         private readonly Dictionary<(string method, string name), int> _requests;
-        private IExecuteContext? _executeContext;
 
         public Action<Statistic>? OnUpdateStatistics { get; set; }
 
@@ -39,13 +38,9 @@ namespace DFrame.Hosting.Models
             _requests = new Dictionary<(string type, string name), int>();
         }
 
-        public void RegisterContext(IExecuteContext executeContext)
-        {
-            _executeContext = executeContext;
-        }
-
         public Task<(Statistic[] statistics, Statistic aggregated)> GetStatisticsAsync()
         {
+            _requests.Clear();
             var rnd = new Random();
 
             var temp = new List<string>(MockData.Paths);

@@ -1,45 +1,58 @@
 ﻿using DFrame.Hosting.Data;
 using System;
-using System.Net.Http;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace DFrame.Hosting.Models
 {
-    public interface IStatisticsService
+    public interface IStatisticsService<T>
     {
-        Action<Statistic>? OnUpdateStatistics { get; set; }
+        Action<T>? OnUpdateStatistics { get; set; }
 
-        void RegisterContext(IExecuteContext executeContext);
         /// <summary>
         /// Get statistics
         /// </summary>
         /// <returns></returns>
-        Task<(Statistic[] statistics, Statistic aggregated)> GetStatisticsAsync();
+        Task<(T[] statistics, T aggregated)> GetStatisticsAsync();
     }
 
-    public class StatisticsService : IStatisticsService
+    public class AbStatisticsService : IStatisticsService<AbStatistic>
     {
-        public Action<Statistic>? OnUpdateStatistics { get; set; }
+        public Action<AbStatistic>? OnUpdateStatistics { get; set; }
 
-        private Statistic[]? _statistics;
+        private AbStatistic? _statistics;
 
-        public StatisticsService()
+        public AbStatisticsService()
         {
-            DFrame.ReportNotifier.OnReportOutput.OnPublished = ReportPublished;
+            DFrame.ReportNotifier.OnReportOutput.OnPublished += ReportPublished;
         }
 
-        public Task<(Statistic[] statistics, Statistic aggregated)> GetStatisticsAsync()
+        public Task<(AbStatistic[] statistics, AbStatistic aggregated)> GetStatisticsAsync()
         {
-            throw new NotImplementedException();
-        }
-
-        public void RegisterContext(IExecuteContext executeContext)
-        {
-            throw new NotImplementedException();
+            return Task.FromResult((new AbStatistic[] { }, _statistics!));
         }
 
         private void ReportPublished(AbReport report)
         {
+            _statistics = new AbStatistic
+            {
+                ScenarioName = report.ScenarioName,
+                ScalingType = report.ScalingType,
+                RequestCount = report.RequestCount,
+                ProcessCount = report.ProcessCount,
+                WorkerPerProcess = report.WorkerPerProcess,
+                ExecutePerWorker = report.ExecutePerWorker,
+                ConcurrencyLevel = report.Concurrency,
+                CompleteRequests = report.CompleteRequests,
+                FailedRequests = report.FailedRequests,
+                TimeTaken = report.TimeTaken,
+                RequestsPerSeconds = report.TotalRequests / report.TimeTaken,
+                TimePerRequest = report.Concurrency * report.TimePerRequest,
+                TimePerRequest2 = report.TimePerRequest,
+                Percentiles = report.Percentiles.Select(x => (x.Range, x.Value, x.Note)).ToArray(),
+            };
+
+            OnUpdateStatistics?.Invoke(_statistics);
         }
     }
 }

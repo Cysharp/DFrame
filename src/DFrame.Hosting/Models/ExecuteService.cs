@@ -10,18 +10,17 @@ namespace DFrame.Hosting.Models
 {
     public class ExecuteService
     {
-        private readonly ISummaryService _summaryService;
-        private readonly IStatisticsService _statisticsService;
         private readonly ILoggingService _loggingService;
         private readonly IExecuteLogProcessor _errorNotifier;
 
         private ExecuteContext _executeContext = default;
         public ExecuteContext ExecuteContext => _executeContext;
 
-        public ExecuteService(ISummaryService summaryService, IStatisticsService statisticsService, ILoggingService loggingService)
+        public Action<string>? OnUpdateStatus { get; set; }
+        public Action<IExecuteContext>? OnRegisterContext { get; set; }
+
+        public ExecuteService(ILoggingService loggingService)
         {
-            _summaryService = summaryService;
-            _statisticsService = statisticsService;
             _loggingService = loggingService;
             _errorNotifier = new ExecuteLogProcessor(new LogProcessorOptions
             {
@@ -32,7 +31,7 @@ namespace DFrame.Hosting.Models
         public ExecuteContext CreateContext(string hostAddress, int processCount, int workerPerProcess, int executePerWorker, string workerName)
         {
             var contextId = Guid.NewGuid().ToString();
-            var executeArguments = new ExecuteArgument
+            var executeArguments = new ExecuteData
             {
                 WorkerName = workerName,
                 ProcessCount = processCount,
@@ -44,7 +43,7 @@ namespace DFrame.Hosting.Models
             _executeContext = context;
 
             // register context
-            RegisterContext(context);
+            OnRegisterContext?.Invoke(context);
 
             return context;
         }
@@ -55,7 +54,7 @@ namespace DFrame.Hosting.Models
 
             // update status
             await _executeContext.ExecuteAsync();
-            _summaryService.UpdateStatus(_executeContext.Status);
+            OnUpdateStatus?.Invoke(_executeContext.Status);
 
             // run dframe
             await Host.CreateDefaultBuilder(_executeContext.ExecuteArgument.Arguments)
@@ -79,7 +78,7 @@ namespace DFrame.Hosting.Models
             {
                 await _executeContext.ErrorAsync();
             }
-            _summaryService.UpdateStatus(_executeContext.Status);
+            OnUpdateStatus?.Invoke(_executeContext.Status);
         }
 
         public async Task StopAsync()
@@ -87,17 +86,10 @@ namespace DFrame.Hosting.Models
             // update context
             await _executeContext.StopAsync();
 
-            // todo: teardown dframe?
+            // todo: teardown running dframe?
 
             // update status
-            _summaryService.UpdateStatus(_executeContext.Status);
-        }
-
-        private void RegisterContext(IExecuteContext context)
-        {
-            _summaryService?.RegisterContext(context);
-            _statisticsService?.RegisterContext(context);
-            _loggingService?.RegisterContext(context);
+            OnUpdateStatus?.Invoke(_executeContext.Status);
         }
     }
 }

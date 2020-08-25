@@ -3,19 +3,21 @@
 
 @inject ExecuteService ExecuteService
 @inject ISummaryService SummaryService
-@inject IStatisticsService StatisticsService
+<!--Hack: Generate Instance-->
+@inject IWorkersService WorkerService
+@inject IStatisticsService<AbStatistic> StatisticService
 
 <SummaryComponent Summary="@summary"></SummaryComponent>
 
 <h1>Execute</h1>
 
-<ExecuteInputComponent HostAddress="@hostAddress" ExecuteArgument="@executeArgument" Status="@status" OnClickExecute="@OnClickExecute" OnClickStop="@OnClickStop"></ExecuteInputComponent>
+<ExecuteInputComponent HostAddress="@hostAddress" ExecuteData="@executeArgument" Status="@status" OnClickExecute="@OnClickExecute" OnClickStop="@OnClickStop"></ExecuteInputComponent>
 <ExecuteOutputComponent ExecuteId="@context?.ExecuteId" HostAddress="@context?.HostAddress" Status="@context?.Status" Args="@context?.ExecuteArgument.Arguments"></ExecuteOutputComponent>
 
 @code {
     private IExecuteContext context;
     private string hostAddress;
-    private ExecuteArgument executeArgument;
+    private ExecuteData executeArgument;
 
     private string status => context?.Status;
     private Summary summary;
@@ -31,16 +33,17 @@
     private void InitProperty()
     {
         hostAddress = context?.HostAddress;
-        executeArgument = context?.ExecuteArgument ?? new ExecuteArgument();
+        executeArgument = context?.ExecuteArgument ?? new ExecuteData();
     }
 
-    private async Task OnClickExecute(string hostAddress, int processCount, int workerPerProcess, int executePerWorker, string workerName)
+    private async Task OnClickExecute(string hostAddress, ExecuteData executeData)
     {
-        context = ExecuteService.CreateContext(hostAddress, processCount, workerPerProcess, executePerWorker, workerName);
+        context = ExecuteService.CreateContext(hostAddress, executeData.ProcessCount, executeData.WorkerPerProcess, executeData.ExecutePerWorker, executeData.WorkerName);
         var exec = ExecuteService.ExecuteAsync();
         InitProperty();
         StateHasChanged();
         await exec;
+        StateHasChanged();
     }
     private async Task OnClickStop()
     {

@@ -2,24 +2,25 @@ using System;
 
 namespace DFrame.Hosting.Data
 {
-    public struct AbStatistic
+    public class AbStatistic
     {
-        public string ScalingType { get; }
-        public string ScenarioName { get; }
-        public int RequestCount { get; }
-        public int ProcessCount { get; }
-        public int WorkerPerProcess { get; }
-        public int ExecutePerWorker { get; }
-        public int Concurrency { get; }
-        public int CompleteRequests { get; }
-        public int FailedRequests { get; }
-        public double TimeTaken { get; }
-        public int TotalRequests { get; }
-        public double TimePerRequest { get; }
-        public (int, int, string?)[] Percentiles { get; }
+        public string? ScalingType { get; set; }
+        public string? ScenarioName { get; set; }
+        public int RequestCount { get; set; }
+        public int ProcessCount { get; set; }
+        public int WorkerPerProcess { get; set; }
+        public int ExecutePerWorker { get; set; }
+        public int ConcurrencyLevel { get; set; }
+        public int CompleteRequests { get; set; }
+        public int FailedRequests { get; set; }
+        public double TimeTaken { get; set; }
+        public double RequestsPerSeconds { get; set; }
+        public double TimePerRequest { get; set; }
+        public double TimePerRequest2 { get; set; }
+        public (int percentile, int value, string? note)[]? Percentiles { get; set; }
     }
 
-    public struct Statistic
+    public class Statistic
     {
         public string Method { get; set; }
         public string Name { get; set; }
@@ -33,50 +34,5 @@ namespace DFrame.Hosting.Data
         public double AverageSize { get; set; }
         public double CurrentRps { get; set; }
         public double CurrentFailuresPerSec { get; set; }
-
-        public override bool Equals(object obj)
-        {
-            return obj is Statistic statistic &&
-                   Method == statistic.Method &&
-                   Name == statistic.Name &&
-                   Requests == statistic.Requests &&
-                   Fails == statistic.Fails &&
-                   Median == statistic.Median &&
-                   Percentile90 == statistic.Percentile90 &&
-                   Average == statistic.Average &&
-                   Min == statistic.Min &&
-                   Max == statistic.Max &&
-                   AverageSize == statistic.AverageSize &&
-                   CurrentRps == statistic.CurrentRps &&
-                   CurrentFailuresPerSec == statistic.CurrentFailuresPerSec;
-        }
-
-        public override int GetHashCode()
-        {
-            HashCode hash = new HashCode();
-            hash.Add(Method);
-            hash.Add(Name);
-            hash.Add(Requests);
-            hash.Add(Fails);
-            hash.Add(Median);
-            hash.Add(Percentile90);
-            hash.Add(Average);
-            hash.Add(Min);
-            hash.Add(Max);
-            hash.Add(AverageSize);
-            hash.Add(CurrentRps);
-            hash.Add(CurrentFailuresPerSec);
-            return hash.ToHashCode();
-        }
-
-        public static bool operator ==(Statistic left, Statistic right)
-        {
-            return left.Equals(right);
-        }
-
-        public static bool operator !=(Statistic left, Statistic right)
-        {
-            return !(left == right);
-        }
     }
 }

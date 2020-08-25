@@ -2,22 +2,27 @@
 @page "/statistic"
 
 @inject ISummaryService SummaryService
-@inject IStatisticsService StatisticsService
+@inject IStatisticsService<AbStatistic> StatisticsService
 
 <SummaryComponent Summary="@summary"></SummaryComponent>
 
 <h1>Statistic</h1>
 
-<StatisticComponent Statistics="@statistics" Aggregated="@aggregated"></StatisticComponent>
+<AbStatisticComponent Statistic="@statistic" OnRefresh="@Refresh"></AbStatisticComponent>
 
 @code {
-    private Statistic[] statistics;
-    private Statistic aggregated;
+    private AbStatistic statistic;
     private Summary summary;
 
     protected override async Task OnInitializedAsync()
     {
-        (statistics, aggregated) = await StatisticsService.GetStatisticsAsync();
+        (_, statistic) = await StatisticsService.GetStatisticsAsync();
         summary = SummaryService.Summary;
+    }
+
+    private async Task Refresh()
+    {
+        (_, statistic) = await StatisticsService.GetStatisticsAsync();
+        StateHasChanged();
     }
 }

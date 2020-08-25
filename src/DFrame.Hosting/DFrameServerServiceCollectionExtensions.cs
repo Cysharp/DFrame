@@ -1,4 +1,5 @@
 ﻿using Cysharp.Text;
+using DFrame.Hosting.Data;
 using DFrame.Hosting.Infrastructure;
 using DFrame.Hosting.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,8 +14,8 @@ namespace DFrame.Hosting
             services.AddSingleton<ExecuteService>();
             services.AddSingleton<ISummaryService, SummaryService>();
             services.AddSingleton<ILoggingService, LoggingService>();
-            // todo: replace StatisticsMockService
-            services.AddSingleton<IStatisticsService, StatisticsMockService>();
+            services.AddSingleton<IStatisticsService<AbStatistic>, AbStatisticsService>();
+            services.AddSingleton<IStatisticsService<Statistic>, StatisticsMockService>();
             services.AddSingleton<IWorkersService, WorkersService>();
             services.AddSingleton<LogProcessorOptions>(new LogProcessorOptions()
             {

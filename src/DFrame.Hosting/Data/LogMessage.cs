@@ -9,27 +9,5 @@ namespace DFrame.Hosting.Data
     {
         public DateTimeOffset TimeStamp { get; set; }
         public string Message { get; set; }
-
-        public override bool Equals(object obj)
-        {
-            return obj is LogMessage message &&
-                   TimeStamp.Equals(message.TimeStamp) &&
-                   Message == message.Message;
-        }
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(TimeStamp, Message);
-        }
-
-        public static bool operator ==(LogMessage left, LogMessage right)
-        {
-            return left.Equals(right);
-        }
-
-        public static bool operator !=(LogMessage left, LogMessage right)
-        {
-            return !(left == right);
-        }
     }
 }

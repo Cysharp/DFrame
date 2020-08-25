@@ -1,6 +1,6 @@
 ﻿namespace DFrame.Hosting.Data
 {
-    public class ExecuteArgument
+    public class ExecuteData
     {
         public int ProcessCount { get; set; } = 1;
         public int WorkerPerProcess { get; set; } = 1;

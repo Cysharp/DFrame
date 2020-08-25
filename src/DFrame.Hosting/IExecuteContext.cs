@@ -24,7 +24,7 @@ namespace DFrame.Hosting
         /// <summary>
         /// Execute Arguments
         /// </summary>
-        ExecuteArgument ExecuteArgument { get; }
+        ExecuteData ExecuteArgument { get; }
 
         Task ExecuteAsync();
         Task ErrorAsync();
@@ -36,9 +36,9 @@ namespace DFrame.Hosting
         public string ExecuteId { get; }
         public string Status { get; private set; }
         public string HostAddress { get; }
-        public ExecuteArgument ExecuteArgument { get; }
+        public ExecuteData ExecuteArgument { get; }
 
-        public ExecuteContext(string executeId, string hostAddress, ExecuteArgument arguments)
+        public ExecuteContext(string executeId, string hostAddress, ExecuteData arguments)
         {
             ExecuteId = executeId;
             HostAddress = hostAddress;

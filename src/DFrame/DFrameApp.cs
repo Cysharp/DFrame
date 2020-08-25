@@ -344,7 +344,7 @@ namespace DFrame
 
             public async ValueTask PublishAsync(int count)
             {
-                await _channel.Writer.WriteAsync(count);
+                await _channel.Writer.WriteAsync(count).ConfigureAwait(false);
                 OnPublished?.Invoke(count);
             }
         }
