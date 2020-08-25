@@ -6,15 +6,38 @@ using System.Threading.Tasks;
 
 namespace DFrame.Hosting.Models
 {
+    public static class MockData
+    {
+        public static readonly string[] HttpTypes = new[]
+        {
+            "Get", "Patch", "Post", "Put", "Delete",
+        };
+
+        public static readonly string[] Paths = new[]
+        {
+            "/",
+            "/Hello", "/Item", "/World",
+            "/Hoge", "/Fuga", "/Piyo", "/Foo", "/Bar",
+            "/Logout", "/Login", "/Auth", "/Register",
+            "/Healthz", "/Liveness", "/Readiness", "/Stats",
+            "/Begin", "/Questions", "/Faq", "/Post", "/Tasks", "/Cards", "/Display", "/Report",
+        };
+    }
+
     /// <summary>
     /// Mock data
     /// </summary>
     public class StatisticsMockService : IStatisticsService
     {
-        private Dictionary<(string method, string name), int> _requests;
-        private IExecuteContext _executeContext;
+        private readonly Dictionary<(string method, string name), int> _requests;
+        private IExecuteContext? _executeContext;
 
-        public event Action<Statistic> OnUpdateStatistics;
+        public Action<Statistic>? OnUpdateStatistics { get; set; }
+
+        public StatisticsMockService()
+        {
+            _requests = new Dictionary<(string type, string name), int>();
+        }
 
         public void RegisterContext(IExecuteContext executeContext)
         {
@@ -24,7 +47,6 @@ namespace DFrame.Hosting.Models
         public Task<(Statistic[] statistics, Statistic aggregated)> GetStatisticsAsync()
         {
             var rnd = new Random();
-            _requests = new Dictionary<(string type, string name), int>();
 
             var temp = new List<string>(MockData.Paths);
             var statistics = Enumerable.Range(1, 5)
@@ -32,8 +54,6 @@ namespace DFrame.Hosting.Models
                 .OrderBy(x => x.Name)
                 .ToArray();
             var aggregated = AggregateStatistics(statistics);
-
-            OnUpdateStatistics?.Invoke(aggregated);
 
             return Task.FromResult((statistics, aggregated));
         }

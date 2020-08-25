@@ -22,7 +22,7 @@ namespace DFrame.Hosting.Models
         private readonly Summary _summary;
         public Summary Summary => _summary;
 
-        private IExecuteContext _executeContext;
+        private IExecuteContext? _executeContext;
         private readonly IStatisticsService _statisticsService;
         private readonly IWorkersService _workersService;
 

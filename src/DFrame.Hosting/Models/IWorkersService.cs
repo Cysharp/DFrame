@@ -15,15 +15,15 @@ namespace DFrame.Hosting.Models
         Task IniatilizeAsync();
         Task<WorkerData[]> GetWorkers();
 
-        Action<int> OnWorkerUpdate { get; set; }
+        Action<int>? OnWorkerUpdate { get; set; }
     }
 
     // todo: prepare WorkersService. Get DFrameWorker Info from Dframe
     public class WorkersService : IWorkersService
     {
-        public Action<int> OnWorkerUpdate { get; set; }
+        public Action<int>? OnWorkerUpdate { get; set; }
 
-        private List<WorkerData> _workers = new List<WorkerData>();
+        private readonly List<WorkerData> _workers = new List<WorkerData>();
 
         public WorkersService()
         {

@@ -329,13 +329,14 @@ namespace DFrame
 
         public class WorkerProgress
         {
-            public System.Threading.Channels.Channel<int> WorkerChannel { get; }
-            public Action<int> OnPublished { get; set; } = count => { };
+            private readonly System.Threading.Channels.Channel<int> _channel;
+
+            public Action<int>? OnPublished { get; set; }
 
             public WorkerProgress()
             {
                 // 1 writer : n reader
-                WorkerChannel = System.Threading.Channels.Channel.CreateUnbounded<int>(new System.Threading.Channels.UnboundedChannelOptions
+                _channel = System.Threading.Channels.Channel.CreateUnbounded<int>(new System.Threading.Channels.UnboundedChannelOptions
                 {
                     SingleWriter = true,
                 });
@@ -343,7 +344,7 @@ namespace DFrame
 
             public async ValueTask PublishAsync(int count)
             {
-                await WorkerChannel.Writer.WriteAsync(count);
+                await _channel.Writer.WriteAsync(count);
                 OnPublished?.Invoke(count);
             }
         }

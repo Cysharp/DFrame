@@ -5,26 +5,9 @@ using System.Threading.Tasks;
 
 namespace DFrame.Hosting.Models
 {
-    public static class MockData
-    {
-        public static readonly string[] HttpTypes = new[]
-        {
-            "Get", "Patch", "Post", "Put", "Delete",
-        };
-
-        public static readonly string[] Paths = new[]
-        {
-            "/",
-            "/Hello", "/Item", "/World",
-            "/Hoge", "/Fuga", "/Piyo", "/Foo", "/Bar",
-            "/Logout", "/Login", "/Auth", "/Register",
-            "/Healthz", "/Liveness", "/Readiness", "/Stats",
-            "/Begin", "/Questions", "/Faq", "/Post", "/Tasks", "/Cards", "/Display", "/Report",
-        };
-    }
     public interface IStatisticsService
     {
-        event Action<Statistic> OnUpdateStatistics;
+        Action<Statistic>? OnUpdateStatistics { get; set; }
 
         void RegisterContext(IExecuteContext executeContext);
         /// <summary>
@@ -34,5 +17,29 @@ namespace DFrame.Hosting.Models
         Task<(Statistic[] statistics, Statistic aggregated)> GetStatisticsAsync();
     }
 
-    // todo: prepare StatisticService. Get DFrame Statistic data.
+    public class StatisticsService : IStatisticsService
+    {
+        public Action<Statistic>? OnUpdateStatistics { get; set; }
+
+        private Statistic[]? _statistics;
+
+        public StatisticsService()
+        {
+            DFrame.ReportNotifier.OnReportOutput.OnPublished = ReportPublished;
+        }
+
+        public Task<(Statistic[] statistics, Statistic aggregated)> GetStatisticsAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RegisterContext(IExecuteContext executeContext)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void ReportPublished(AbReport report)
+        {
+        }
+    }
 }

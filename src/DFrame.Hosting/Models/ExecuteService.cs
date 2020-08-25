@@ -68,7 +68,7 @@ namespace DFrame.Hosting.Models
                     // todo: remove console logger?
                     logging.AddZLoggerConsole();
                 })
-                .RunDFrameLoadTestingAsync(_executeContext.ExecuteArgument.Arguments, new DFrameOptions(_executeContext.HostAddress, 12345));
+                .RunDFrameLoadTestingAsync(_executeContext.ExecuteArgument.Arguments!, new DFrameOptions(_executeContext.HostAddress, 12345));
 
             // update status
             if (_errorNotifier.GetExceptions().Length == 0)

@@ -11,7 +11,7 @@ namespace DFrame.Hosting.Models
 {
     public class LoggingMockService : ILoggingService
     {
-        private IExecuteContext _executeContext;
+        private IExecuteContext? _executeContext;
         private readonly ILogger _logger;
 
         public IExecuteLogProcessor ExecuteLogProcessor { get; }

@@ -10,7 +10,7 @@ namespace DFrame.Hosting.Models
     /// </summary>
     public class WorkerMockService : IWorkersService
     {
-        public Action<int> OnWorkerUpdate { get; set; }
+        public Action<int>? OnWorkerUpdate { get; set; }
 
         public Task<WorkerData[]> GetWorkers()
         {

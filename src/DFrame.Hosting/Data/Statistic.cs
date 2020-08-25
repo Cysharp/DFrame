@@ -2,6 +2,23 @@ using System;
 
 namespace DFrame.Hosting.Data
 {
+    public struct AbStatistic
+    {
+        public string ScalingType { get; }
+        public string ScenarioName { get; }
+        public int RequestCount { get; }
+        public int ProcessCount { get; }
+        public int WorkerPerProcess { get; }
+        public int ExecutePerWorker { get; }
+        public int Concurrency { get; }
+        public int CompleteRequests { get; }
+        public int FailedRequests { get; }
+        public double TimeTaken { get; }
+        public int TotalRequests { get; }
+        public double TimePerRequest { get; }
+        public (int, int, string?)[] Percentiles { get; }
+    }
+
     public struct Statistic
     {
         public string Method { get; set; }

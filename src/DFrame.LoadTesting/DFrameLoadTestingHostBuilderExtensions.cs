@@ -41,7 +41,35 @@ namespace DFrame
             var scalingType = options.ScalingProvider.GetType().Name;
             var abReport = new AbReport(results, executeScenario, scalingType);
 
+            ReportNotifier.OnReportOutput.PublishAsync(abReport).ConfigureAwait(false);
             Console.WriteLine(abReport.ToString());
+        }
+    }
+
+    public static class ReportNotifier
+    {
+        public static ReportProgress OnReportOutput = new ReportProgress();
+
+        public class ReportProgress
+        {
+            private readonly System.Threading.Channels.Channel<AbReport> _channel;
+
+            public Action<AbReport>? OnPublished { get; set; }
+
+            public ReportProgress()
+            {
+                // 1 writer : n reader
+                _channel = System.Threading.Channels.Channel.CreateUnbounded<AbReport>(new System.Threading.Channels.UnboundedChannelOptions
+                {
+                    SingleWriter = true,
+                });
+            }
+
+            public async ValueTask PublishAsync(AbReport report)
+            {
+                await _channel.Writer.WriteAsync(report);
+                OnPublished?.Invoke(report);
+            }
         }
     }
 
@@ -65,8 +93,8 @@ namespace DFrame
         {
             public int Range { get; }
             public int Value { get; set; }
-            public string Note { get; set; }
-            public PercentileData(int range, int value, string note)
+            public string? Note { get; set; }
+            public PercentileData(int range, int value, string? note)
             {
                 Range = range;
                 Value = value;
@@ -98,7 +126,7 @@ namespace DFrame
                 var percent = (int)(x * 100);
                 var value = (int)MatchUtils.Percentile(sortedResultsElapsedMs, x);
                 return i != percecs.Length - 1
-                    ? new PercentileData(percent, value, "")
+                    ? new PercentileData(percent, value, null)
                     : new PercentileData(percent, value, "(longest request)");
             })
             .ToArray();
@@ -125,7 +153,7 @@ Time per request:       {Concurrency * TimePerRequest:F2} [ms] (mean)
 Time per request:       {TimePerRequest:F2} [ms] (mean, across all concurrent requests)
 
 Percentage of the requests served within a certain time (ms)
-{string.Join("\n", Percentiles.Select(x => string.IsNullOrWhiteSpace(x.Note)
+{string.Join("\n", Percentiles.Select(x => string.IsNullOrEmpty(x.Note)
     ? $"{x.Range,3}%      {x.Value}"
     : $"{x.Range,3}%      {x.Value} {x.Note}"
 ))}";

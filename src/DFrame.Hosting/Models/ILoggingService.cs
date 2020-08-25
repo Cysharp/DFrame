@@ -16,7 +16,7 @@ namespace DFrame.Hosting.Models
 
     public class LoggingService : ILoggingService
     {
-        private IExecuteContext _executeContext;
+        private IExecuteContext? _executeContext;
 
         public IExecuteLogProcessor ExecuteLogProcessor { get; }
 
