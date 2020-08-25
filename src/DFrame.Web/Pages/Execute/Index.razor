@@ -22,18 +22,18 @@
     private string status => context?.Status;
     private Summary summary;
 
-    private void InitProperty()
-    {
-        hostAddress = context?.HostAddress;
-        executeArgument = context?.ExecuteArgument ?? new ExecuteArgument();
-    }
-
     protected override Task OnInitializedAsync()
     {
         context = ExecuteService.ExecuteContext;
         summary = SummaryService.Summary;
         InitProperty();
         return Task.CompletedTask;
+    }
+
+    private void InitProperty()
+    {
+        hostAddress = context?.HostAddress;
+        executeArgument = context?.ExecuteArgument ?? new ExecuteArgument();
     }
 
     private async Task OnClickExecute(string hostAddress, int processCount, int workerPerProcess, int executePerWorker, string workerName)
@@ -44,7 +44,6 @@
         StateHasChanged();
         await exec;
     }
-
     private async Task OnClickStop()
     {
         await ExecuteService.StopAsync();

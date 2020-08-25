@@ -10,39 +10,7 @@
 
 <h1>Failure</h1>
 
-<div>
-    @if (logs == null)
-    {
-        <p><em>Loading...</em></p>
-    }
-    else
-    {
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>TimeStamp</th>
-                    <th>Method</th>
-                    <th>Path</th>
-                    <th>Message</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var log in logs)
-                {
-                    <tr>
-                        <td>@log.TimeStamp</td>
-                        <td>@log.Method</td>
-                        <td>@log.Path</td>
-                        <td>@log.Message</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-
-        <button class="btn btn-primary" @onclick="Refresh">Refresh</button>
-        <button class="btn btn-warning" @onclick="Clear">Clear</button>
-    }
-</div>
+<FailureComponent Logs="@logs" OnClear="@Clear" OnRefresh="@Refresh"></FailureComponent>
 
 @code {
     private Failure[] logs;
@@ -57,10 +25,11 @@
     private void Refresh()
     {
         logs = LoggingService.GetExceptionLogs();
+        StateHasChanged();
     }
     private void Clear()
     {
         LoggingService.Clear();
-        logs = Array.Empty<Failure>();
+        Refresh();
     }
 }
