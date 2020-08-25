@@ -1,0 +1,30 @@
+﻿<div class="top-row px-4">
+    <div class="col-auto offset-1">
+        <div class="row">ExecuteId</div>
+        <div class="row">@Summary.ExecuteId</div>
+    </div>
+    <div class="col-auto offset-1">
+        <div class="row">HOST</div>
+        <div class="row">@Summary.Host</div>
+    </div>
+    <div class="col-auto offset-sm-1">
+        <div class="row">STATUS</div>
+        <div class="row">@Summary.Status</div>
+    </div>
+    <div class="col-auto offset-md-1">
+        <div class="row">WORKERS</div>
+        <div class="row">@Summary.Workers</div>
+    </div>
+    <div class="col-auto offset-1">
+        <div class="row">RPS</div>
+        <div class="row">@Summary.Rps.ToString("0.0")</div>
+    </div>
+    <div class="col-auto offset-1">
+        <div class="row">FAILURES</div>
+        <div class="row">@Summary.Failures.ToString("0.0")%</div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Summary Summary { get; set; }
+}

@@ -1,0 +1,21 @@
+﻿@page "/worker"
+
+@inject ISummaryService SummaryService
+@inject IWorkersService WorkersService
+
+<SummaryComponent Summary="@summary"></SummaryComponent>
+
+<h1>Worker</h1>
+
+<WorkerComponent Workers="@workers"></WorkerComponent>
+
+@code {
+    private WorkerData[] workers;
+    private Summary summary;
+
+    protected override async Task OnInitializedAsync()
+    {
+        workers = await WorkersService.IniatilizeAsync();
+        summary = SummaryService.Summary;
+    }
+}
