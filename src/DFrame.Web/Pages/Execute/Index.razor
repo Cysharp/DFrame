@@ -11,105 +11,43 @@
 
 <h1>Execute</h1>
 
-<div>
-    <table class="table">
-        <tbody>
-            <tr>
-                <td>HostAddress</td>
-                <td><input @bind="hostAddress" placeholder="localhost"></td>
-            </tr>
-            <tr>
-                <td>processCount</td>
-                <td><input @bind="processCount" placeholder="1" type="number"></td>
-            </tr>
-            <tr>
-                <td>workerPerProcess</td>
-                <td><input @bind="workerPerProcess" placeholder="20" type="number"></td>
-            </tr>
-            <tr>
-                <td>executePerWorker</td>
-                <td><input @bind="executePerWorker" placeholder="500" type="number"></td>
-            </tr>
-            <tr>
-                <td>workerName</td>
-                <td><input @bind="workerName" placeholder="SampleWorker"></td>
-            </tr>
-        </tbody>
-    </table>
-
-    <button class="btn btn-primary" @onclick="OnClickExecute" disabled="@disableExecute">Execute</button>
-    <button class="btn btn-primary" @onclick="OnClicStop" disabled="@disabledStop">Stop</button>
-</div>
-
-<div>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>ExecuteId</th>
-                <th>HostAddress</th>
-                <th>Status</th>
-                <th>Args</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>@context?.ExecuteId</td>
-                <td>@context?.HostAddress</td>
-                <td>@context?.Status</td>
-                <td>@string.Join(" ", context?.ExecuteArgument.Arguments ?? Array.Empty<string>())</td>
-            </tr>
-        </tbody>
-    </table>
-
-</div>
+<ExecuteInputComponent HostAddress="@hostAddress" ExecuteArgument="@executeArgument" Status="@status" OnClickExecute="@OnClickExecute" OnClickStop="@OnClickStop"></ExecuteInputComponent>
+<ExecuteOutputComponent ExecuteId="@context?.ExecuteId" HostAddress="@context?.HostAddress" Status="@context?.Status" Args="@context?.ExecuteArgument.Arguments" ></ExecuteOutputComponent>
 
 @code {
-    private string hostAddress;
-    private int processCount;
-    private int workerPerProcess;
-    private int executePerWorker;
-    private string workerName;
-    private bool disableExecute => DisableExecute();
-    private bool disabledStop => DisableStop();
     private IExecuteContext context;
+    private string hostAddress;
+    private ExecuteArgument executeArgument;
+
+    private string status => context?.Status;
     private Summary summary;
+
+    private void InitProperty()
+    {
+        hostAddress = context?.HostAddress;
+        executeArgument = context?.ExecuteArgument ?? new ExecuteArgument();
+    }
 
     protected override Task OnInitializedAsync()
     {
         context = ExecuteService.ExecuteContext;
-        hostAddress = context?.HostAddress;
-        processCount = context?.ExecuteArgument.ProcessCount ?? 1;
-        workerPerProcess = context?.ExecuteArgument.WorkerPerProcess ?? 20;
-        executePerWorker = context?.ExecuteArgument.ExecutePerWorker ?? 500;
-        workerName = context?.ExecuteArgument.WorkerName;
         summary = SummaryService.Summary;
+        InitProperty();
         return Task.CompletedTask;
     }
 
-    private async Task OnClickExecute()
+    private async Task OnClickExecute(string hostAddress, int processCount, int workerPerProcess, int executePerWorker, string workerName)
     {
         context = ExecuteService.CreateContext(hostAddress, processCount, workerPerProcess, executePerWorker, workerName);
         var exec = ExecuteService.ExecuteAsync();
+        InitProperty();
+        StateHasChanged();
         await exec;
     }
 
-    private async Task OnClicStop()
+    private async Task OnClickStop()
     {
         await ExecuteService.StopAsync();
-    }
-
-    private bool DisableExecute()
-    {
-        return string.IsNullOrWhiteSpace(hostAddress)
-            || processCount <= 0
-            || workerPerProcess <= 0
-            || executePerWorker <= 0
-            || string.IsNullOrWhiteSpace(workerName)
-            || context?.Status == "RUNNING";
-    }
-
-    private bool DisableStop()
-    {
-        return context == null || context?.Status == "STOP";
+        StateHasChanged();
     }
 }

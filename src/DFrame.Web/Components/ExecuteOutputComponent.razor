@@ -1,0 +1,29 @@
+﻿<!-- todo: change to dialog -->
+<div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ExecuteId</th>
+                <th>HostAddress</th>
+                <th>Status</th>
+                <th>Args</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>@ExecuteId</td>
+                <td>@HostAddress</td>
+                <td>@Status</td>
+                <td>@string.Join(" ", Args ?? Array.Empty<string>())</td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+
+@code {
+    [Parameter] public string ExecuteId { get; set; }
+    [Parameter] public string HostAddress { get; set; }
+    [Parameter] public string Status { get; set; }
+    [Parameter] public string[] Args { get; set; }
+}
