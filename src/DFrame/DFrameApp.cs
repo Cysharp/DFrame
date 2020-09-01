@@ -162,4 +162,107 @@ namespace DFrame
             await channel.ShutdownAsync();
         }
     }
+
+    public class CountReporting
+    {
+        readonly int max;
+        int count;
+        public Action<int>? OnIncrement;
+        TaskCompletionSource<object?> waiter;
+
+        public Task Waiter => waiter.Task;
+
+        public CountReporting(int max)
+        {
+            this.max = max;
+            this.OnIncrement = null;
+            this.count = 0;
+            this.waiter = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        }
+
+        public void IncrementCount()
+        {
+            var c = Interlocked.Increment(ref count);
+            OnIncrement?.Invoke(c);
+            if (c == max)
+            {
+                waiter.TrySetResult(default);
+            }
+        }
+
+        public override string ToString()
+        {
+            return count.ToString();
+        }
+    }
+
+    public class Reporter
+    {
+        int nodeCount;
+        List<ExecuteResult> executeResult = new List<ExecuteResult>();
+
+        public IReadOnlyList<ExecuteResult> ExecuteResult => executeResult;
+
+        // global broadcaster of MasterHub.
+        public IWorkerReceiver Broadcaster { get; set; } = default!;
+
+        public CountReporting OnConnected { get; private set; } = default!;
+        public CountReporting OnCreateCoWorker { get; private set; } = default!;
+        public CountReporting OnSetup { get; private set; } = default!;
+        public CountReporting OnExecute { get; private set; } = default!;
+        public CountReporting OnTeardown { get; private set; } = default!;
+
+        // Initialize
+        public void Reset(int nodeCount)
+        {
+            this.nodeCount = nodeCount;
+            this.OnConnected = new CountReporting(nodeCount)
+            {
+                OnIncrement = count => WorkerProgressNotifier.OnConnected.PublishAsync(count).ConfigureAwait(false),
+            };
+            this.OnCreateCoWorker = new CountReporting(nodeCount);
+            this.OnSetup = new CountReporting(nodeCount);
+            this.OnExecute = new CountReporting(nodeCount);
+            this.OnTeardown = new CountReporting(nodeCount)
+            {
+                OnIncrement = count => WorkerProgressNotifier.OnTeardown.PublishAsync(count).ConfigureAwait(false),
+            };
+        }
+
+        public void AddExecuteResult(ExecuteResult[] results)
+        {
+            lock (executeResult)
+            {
+                executeResult.AddRange(results);
+            }
+        }
+    }
+
+    public static class WorkerProgressNotifier
+    {
+        public static WorkerProgress OnConnected = new WorkerProgress();
+        public static WorkerProgress OnTeardown = new WorkerProgress();
+
+        public class WorkerProgress
+        {
+            private readonly System.Threading.Channels.Channel<int> _channel;
+
+            public Action<int>? OnPublished { get; set; }
+
+            public WorkerProgress()
+            {
+                // 1 writer : n reader
+                _channel = System.Threading.Channels.Channel.CreateUnbounded<int>(new System.Threading.Channels.UnboundedChannelOptions
+                {
+                    SingleWriter = true,
+                });
+            }
+
+            public async ValueTask PublishAsync(int count)
+            {
+                await _channel.Writer.WriteAsync(count).ConfigureAwait(false);
+                OnPublished?.Invoke(count);
+            }
+        }
+    }
 }

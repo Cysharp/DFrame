@@ -1,82 +1,16 @@
-using DFrame;
-using DFrame.Collections;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Hosting;
+﻿using DFrame;
+using EchoMagicOnion.Shared;
+using Grpc.Core;
+using MagicOnion.Client;
 using System;
-using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
-using ZLogger;
-using Grpc.Core;
-using EchoMagicOnion.Shared;
-using MagicOnion.Client;
-using System.Linq;
+using System.Threading.Tasks;
 
-namespace ConsoleApp
+namespace WebApp
 {
-    class Program
-    {
-        static async Task Main(string[] args)
-        {
-            // GrpcEnvironment.SetLogger(new Grpc.Core.Logging.ConsoleLogger());
-
-            var host = "localhost";
-            // TODO:test args.
-            if (args.Length == 0)
-            {
-                // master
-                //args = "batch -processCount 5 -workerPerProcess 10 -executePerWorker 10 -workerName SampleHttpWorker".Split(' ');
-
-                args = "rampup -processCount 5 -maxWorkerPerProcess 12 -workerSpawnCount 4 -workerSpawnSecond 5 -workerName SampleHttpWorker".Split(' ');
-
-                //args = "-processCount 5 -workerPerProcess 10 -executePerWorker 10 -workerName SampleHttpWorker".Split(' ');
-                //args = "-processCount 1 -workerPerProcess 64     -executePerWorker 10000 -workerName SampleHttpWorker".Split(' ');
-                //args = "-processCount 1 -workerPerProcess 20 -executePerWorker 10000 -workerName SampleUnaryWorker".Split(' ');
-
-                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleHttpWorker".Split(' ');
-                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 10000 -workerName SampleHttpWorker".Split(' ');
-                //args = "-processCount 10 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleHttpWorker".Split(' ');
-                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleUnaryWorker".Split(' ');
-                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 10000 -workerName SampleUnaryWorker".Split(' ');
-                //args = "-processCount 10 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleUnaryWorker".Split(' ');
-                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleStreamWorker".Split(' ');
-                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 10000 -workerName SampleStreamWorker".Split(' ');
-                //args = "-processCount 10 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleStreamWorker".Split(' ');
-                // listen on
-                // host = "0.0.0.0";
-            }
-            else
-            {
-                // worker
-                // connect to
-                var envHost = Environment.GetEnvironmentVariable("DFRAME_MASTER_HOST");
-                host = args.Length >= 2
-                    ? args[1]
-                    : !string.IsNullOrEmpty(envHost)
-                        ? envHost
-                        : "localhost";
-            }
-
-            await Host.CreateDefaultBuilder(args)
-                .ConfigureLogging(logging =>
-                {
-                    logging.ClearProviders();
-                    logging.SetMinimumLevel(LogLevel.Trace);
-                    logging.AddZLoggerConsole(options =>
-                    {
-                        options.EnableStructuredLogging = false;
-                    });
-                })
-                .RunDFrameLoadTestingAsync(args, new DFrameOptions(host, 12345)
-                //.RunDFrameLoadTestingAsync(args, new DFrameOptions(host + ":12345", host + ":12345", new InProcessScalingProvider())
-                {
-
-                });
-        }
-    }
-
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-
     public class SampleWorker : Worker
     {
         IDistributedQueue<int> queue;
@@ -90,7 +24,7 @@ namespace ConsoleApp
         {
             var randI = (int)new Random().Next(1, 3999);
             //Console.WriteLine($"Enqueue from {Environment.MachineName} {context.WorkerId}: {randI}");
-            
+
             await queue.EnqueueAsync(randI);
         }
 

@@ -1,0 +1,23 @@
+﻿@*add DFrame page*@
+@page "/worker"
+
+@inject ISummaryService SummaryService
+@inject IWorkersService WorkersService
+
+<SummaryComponent Summary="@summary"></SummaryComponent>
+
+<h1>Worker</h1>
+
+<WorkerComponent Workers="@workers"></WorkerComponent>
+
+@code {
+    private WorkerData[] workers;
+    private Summary summary;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await WorkersService.IniatilizeAsync();
+        workers = await WorkersService.GetWorkers();
+        summary = SummaryService.Summary;
+    }
+}

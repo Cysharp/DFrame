@@ -1,0 +1,45 @@
+﻿/*
+    This file is to show how CSS and other static resources (such as images) can be
+    used from a library project/package.
+*/
+
+section table {
+    width: 100%;
+}
+
+section th, section td {
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+
+section th {
+    background: #f4f4f4;
+}
+
+.statistics th, .statistics td {
+    width: 20%;
+    text-align: left;
+}
+
+@media only screen and (max-width: 480px) {
+    .statistics {
+        margin: 0 -10px;
+    }
+
+    .statistics tr {
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    .statistics th {
+        display: block;
+        width: 100%;
+    }
+
+    .statistics td {
+        display: list-item;
+        width: 90%;
+        margin-left: 10%;
+        border: none;
+    }
+}
