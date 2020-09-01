@@ -15,6 +15,8 @@ namespace DFrame
         public int WorkerConnectToPort { get; }
         public IScalingProvider ScalingProvider { get; }
 
+        public TimeSpan Timeout { get; set; }
+        public WorkerDisconnectedBehaviour WorkerDisconnectedBehaviour { get; set; }
         public MessagePackSerializerOptions SerializerOptions { get; set; }
         public Func<string?[], IHostBuilder> HostBuilderFactory { get; set; }
 
@@ -32,11 +34,18 @@ namespace DFrame
             WorkerConnectToHost = workerConnectToHost;
             WorkerConnectToPort = workerConnectToPort;
             ScalingProvider = scalingProvider;
+            Timeout = TimeSpan.FromMinutes(10);
+            WorkerDisconnectedBehaviour = WorkerDisconnectedBehaviour.Stop;
             SerializerOptions = TypelessContractlessStandardResolver.Options;
             HostBuilderFactory = args => Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder(args);
         }
     }
 
+    public enum WorkerDisconnectedBehaviour
+    {
+        Stop,
+        Continue
+    }
 
     public struct ExecuteScenario
     {

@@ -2,6 +2,7 @@
 using Grpc.Core;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -9,9 +10,10 @@ namespace DFrame
 {
     public interface IWorkerReceiver
     {
-        void CreateCoWorker(int createCount, string workerName);
-        void Setup();
+        void CreateCoWorkerAndSetup(int createCount, string workerName);
         void Execute(int executeCount);
+        void ExecuteUntilReceiveStop();
+        void Stop();
         void Teardown();
         void Shutdown();
     }
@@ -25,7 +27,7 @@ namespace DFrame
         readonly DFrameOptions options;
         readonly IServiceProvider serviceProvider;
         readonly TaskCompletionSource<object?> receiveShutdown;
-        (WorkerContext context, Worker worker)[] coWorkers = default!;
+        ImmutableArray<(WorkerContext context, Worker worker)> coWorkers;
 
         internal WorkerReceiver(Channel channel, Guid nodeId, IServiceProvider serviceProvider, DFrameOptions options)
         {
@@ -36,13 +38,14 @@ namespace DFrame
             this.serviceProvider = serviceProvider;
             this.options = options;
             this.receiveShutdown = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+            this.coWorkers = ImmutableArray<(WorkerContext context, Worker worker)>.Empty;
         }
 
         public IMasterHub Client { get; set; } = default!;
 
         public Task WaitShutdown => receiveShutdown.Task;
 
-        public void CreateCoWorker(int createCount, string workerName)
+        public async void CreateCoWorkerAndSetup(int createCount, string workerName)
         {
             ThreadPoolUtility.SetMinThread(createCount);
             if (!workerCollection.TryGetWorker(workerName, out var description))
@@ -50,20 +53,20 @@ namespace DFrame
                 throw new InvalidOperationException($"Worker:{workerName} does not found in assembly.");
             }
 
-            this.coWorkers = new (WorkerContext, Worker)[createCount];
-            for (int i = 0; i < coWorkers.Length; i++)
+            var requireSetupCoWorkers = new List<(WorkerContext context, Worker worker)>(createCount);
+            var newCoWorkers = coWorkers.ToBuilder();
+            for (int i = 0; i < createCount; i++)
             {
                 var coWorker = serviceProvider.GetService(description.WorkerType);
-                coWorkers[i] = (new WorkerContext(channel, options), (Worker)coWorker);
+                var t = (new WorkerContext(channel, options), (Worker)coWorker);
+                newCoWorkers.Add(t);
+                requireSetupCoWorkers.Add(t);
             }
 
-            Client.CreateCoWorkerCompleteAsync().Forget();
-        }
+            await Task.WhenAll(requireSetupCoWorkers.Select(x => x.worker.SetupAsync(x.context)));
 
-        public async void Setup()
-        {
-            await Task.WhenAll(coWorkers.Select(x => x.worker.SetupAsync(x.context)));
-            await Client.SetupCompleteAsync();
+            coWorkers = newCoWorkers.ToImmutable();
+            await Client.CreateCoWorkerCompleteAsync();
         }
 
         public async void Execute(int executeCount)
@@ -90,11 +93,12 @@ namespace DFrame
 
                     var executeResult = new ExecuteResult(x.context.WorkerId, sw.Elapsed, i, (errorMsg != null), errorMsg);
                     list.Add(executeResult);
+
+                    // TODO:toriaezu
+                    _ = Task.Run(() => Client.ReportProgressAsync(executeResult));
                 }
                 return list;
             })));
-
-            // await Client.ExecuteCompleteAsync(result.SelectMany(xs => xs).Take(1).ToArray());
 
             await Client.ExecuteCompleteAsync(result.SelectMany(xs => xs).ToArray());
         }
@@ -108,6 +112,41 @@ namespace DFrame
         public void Shutdown()
         {
             receiveShutdown.TrySetResult(null);
+        }
+
+        // for Ramp-up
+
+        bool receiveStopped;
+
+        public async void ExecuteUntilReceiveStop()
+        {
+            while (!receiveStopped)
+            {
+                await Task.WhenAll(coWorkers.Select(x => Task.Run(async () =>
+                {
+                    string? errorMsg = null;
+                    var sw = ValueStopwatch.StartNew();
+                    try
+                    {
+                        await x.worker.ExecuteAsync(x.context);
+                    }
+                    catch (Exception ex)
+                    {
+                        errorMsg = ex.ToString();
+                    }
+
+                    var executeResult = new ExecuteResult(x.context.WorkerId, sw.Elapsed, 0, (errorMsg != null), errorMsg);
+                    // TODO:toriaezu
+                    _ = Task.Run(() => Client.ReportProgressAsync(executeResult));
+                })));
+            }
+
+            await Client.ExecuteCompleteAsync(new ExecuteResult[0]); // TODO:use others.
+        }
+
+        public void Stop()
+        {
+            receiveStopped = true;
         }
     }
 }

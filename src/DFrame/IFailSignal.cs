@@ -21,7 +21,7 @@ namespace DFrame
 
         public void TrySetException(Exception ex)
         {
-            throw new NotImplementedException();
+            completionSource.TrySetException(ex);
         }
     }
 }

@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Routing;
 using System.Buffers;
 using Microsoft.AspNetCore.Http;
+using System;
 
 namespace EchoServer
 {
@@ -50,7 +51,9 @@ namespace EchoServer
             app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGet("/", async x => await x.Response.BodyWriter.WriteAsync(d));
+                //endpoints.Map("/", async x => { await Task.Delay(TimeSpan.FromSeconds(5)); await x.Response.BodyWriter.WriteAsync(d); });
+                endpoints.Map("/", async x => { await x.Response.BodyWriter.WriteAsync(d); });
+
                 endpoints.MapGet("/hello", async x => await x.Response.BodyWriter.WriteAsync(hello));
                 endpoints.MapGet("/world", async x => await x.Response.BodyWriter.WriteAsync(world));
                 endpoints.MapGet("/item/{id?}", async x =>

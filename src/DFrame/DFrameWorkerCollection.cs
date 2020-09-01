@@ -6,7 +6,7 @@ namespace DFrame
 {
     internal class DFrameWorkerCollection
     {
-        readonly Dictionary<string, DFrameWorkerDescription> dframeTypes;
+        readonly Dictionary<string, DFrameWorkerTypeInfo> dframeTypes;
 
         public static DFrameWorkerCollection FromCurrentAssemblies()
         {
@@ -20,7 +20,7 @@ namespace DFrame
 
         DFrameWorkerCollection(Assembly[] searchAssemblies)
         {
-            dframeTypes = new Dictionary<string, DFrameWorkerDescription>(StringComparer.InvariantCultureIgnoreCase);
+            dframeTypes = new Dictionary<string, DFrameWorkerTypeInfo>(StringComparer.InvariantCultureIgnoreCase);
 
             foreach (var asm in searchAssemblies)
             {
@@ -45,7 +45,7 @@ namespace DFrame
                         var name = attr?.Name ?? worker.Name;
                         var disallowSingleExecute = attr?.DisallowSingleExecute ?? false;
 
-                        var t = new DFrameWorkerDescription(worker, master, name, disallowSingleExecute);
+                        var t = new DFrameWorkerTypeInfo(worker, master, name, disallowSingleExecute);
                         if (!dframeTypes.TryAdd(name, t))
                         {
                             throw new InvalidOperationException($"Worker name is duplicate. name:{name}, type:{t.WorkerType.FullName}");
@@ -68,9 +68,9 @@ namespace DFrame
             return null;
         }
 
-        public IEnumerable<DFrameWorkerDescription> All => dframeTypes.Values;
+        public IEnumerable<DFrameWorkerTypeInfo> All => dframeTypes.Values;
 
-        public bool TryGetWorker(string workerName, out DFrameWorkerDescription worker)
+        public bool TryGetWorker(string workerName, out DFrameWorkerTypeInfo worker)
         {
             return dframeTypes.TryGetValue(workerName, out worker);
         }
@@ -78,14 +78,14 @@ namespace DFrame
 
 
 
-    internal class DFrameWorkerDescription
+    internal class DFrameWorkerTypeInfo
     {
         public Type WorkerType { get; }
         public Type? MasterType { get; }
         public string Name { get; }
         public bool DisallowSingleExecute { get; }
 
-        public DFrameWorkerDescription(Type workerType, Type? masterType, string name, bool disallowSingleExecute)
+        public DFrameWorkerTypeInfo(Type workerType, Type? masterType, string name, bool disallowSingleExecute)
         {
             WorkerType = workerType;
             MasterType = masterType;

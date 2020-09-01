@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DFrame
@@ -19,14 +20,15 @@ namespace DFrame
     }
 
     public abstract class Worker<TMaster> : Worker
+        where TMaster : Master
     {
 
     }
 
     public abstract class Master
     {
-        public abstract Task SetupAsync();
-        public abstract Task TeardownAsync();
+        public abstract Task SetupAsync(CancellationToken cancellationToken);
+        public abstract Task TeardownAsync(CancellationToken cancellationToken);
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
@@ -39,18 +41,6 @@ namespace DFrame
         {
             Name = name;
             DisallowSingleExecute = disallowSingleExecute;
-        }
-    }
-
-    public class GroupAttribute : Attribute
-    {
-        public string GroupName { get; }
-        public int Order { get; }
-
-        public GroupAttribute(string groupName, int order)
-        {
-            GroupName = groupName;
-            Order = order;
         }
     }
 }

@@ -65,11 +65,10 @@ namespace DFrame
 
     internal class DFrameApp : ConsoleAppBase
     {
-        ILogger<DFrameApp> logger;
-        IServiceProvider provider;
-        DFrameOptions options;
-        DFrameWorkerCollection workers;
-        IHost? masterHost;
+        readonly ILogger<DFrameApp> logger;
+        readonly IServiceProvider provider;
+        readonly DFrameOptions options;
+        readonly DFrameWorkerCollection workers;
 
         public DFrameApp(ILogger<DFrameApp> logger, IServiceProvider provider, DFrameOptions options, DFrameWorkerCollection workers)
         {
@@ -79,109 +78,34 @@ namespace DFrame
             this.options = options;
         }
 
-        public async Task Main(
+        [Command("batch")]
+        public Task ExecuteAsBatch(
             string workerName,
-            int processCount = 1,
-            int workerPerProcess = 1,
-            int executePerWorker = 1)
+            int processCount = 1)
         {
-            ThreadPoolUtility.SetMinThread(workerPerProcess);
-            // validate worker is exists.
-            if (!workers.TryGetWorker(workerName, out var _))
-            {
-                throw new InvalidOperationException($"Worker:{workerName} does not found in assembly.");
-            }
-
-            var failSignal = new TaskFailSignal();
-
-            using (masterHost = StartMasterHost())
-            await using (options.ScalingProvider)
-            {
-                var reporter = masterHost.Services.GetRequiredService<Reporter>();
-                reporter.Reset(processCount);
-
-                logger.LogInformation("Starting worker nodes.");
-                await options.ScalingProvider.StartWorkerAsync(options, processCount, provider, failSignal, Context.CancellationToken).WithCancellation(Context.CancellationToken);
-
-                await Task.WhenAny(reporter.OnConnected.Waiter.WithCancellation(Context.CancellationToken), failSignal.Task);
-
-                var broadcaster = reporter.Broadcaster;
-
-                logger.LogTrace("Send CreateWorker command to workers and wait complete message.");
-                broadcaster.CreateCoWorker(workerPerProcess, workerName);
-                await Task.WhenAny(reporter.OnCreateCoWorker.Waiter.WithCancellation(Context.CancellationToken), failSignal.Task);
-
-                logger.LogTrace("Send Setup command to workers and wait complete message.");
-                broadcaster.Setup();
-                await Task.WhenAny(reporter.OnSetup.Waiter.WithCancellation(Context.CancellationToken), failSignal.Task);
-
-                logger.LogTrace("Send Execute command to workers and wait complete message.");
-                broadcaster.Execute(executePerWorker);
-                await Task.WhenAny(reporter.OnExecute.Waiter.WithCancellation(Context.CancellationToken), failSignal.Task);
-
-                logger.LogTrace("Send SetTeardownup command to workers and wait complete message.");
-                broadcaster.Teardown();
-                await Task.WhenAny(reporter.OnTeardown.Waiter.WithCancellation(Context.CancellationToken), failSignal.Task);
-
-                options.OnExecuteResult?.Invoke(reporter.ExecuteResult.ToArray(), options, new ExecuteScenario(workerName, processCount, workerPerProcess, executePerWorker));
-
-                broadcaster.Shutdown();
-
-                await Task.Delay(TimeSpan.FromSeconds(1)); // wait Shutdown complete?
-            }
-
-            logger.LogInformation("Master shutdown.");
+            return ExecuteAsConcurrentRequest(workerName, processCount, 1, 1);
         }
 
-        IHost StartMasterHost()
+        [Command("request")]
+        public Task ExecuteAsConcurrentRequest(
+            string workerName,
+            int processCount,
+            int workerPerProcess,
+            int executePerWorker)
         {
-            var host = options.HostBuilderFactory(Context.Arguments)
-                .UseMagicOnion(targetTypes: new Type[]
-                {
-                    typeof(MasterHub),
-                    typeof(DistributedQueueService),
-                    typeof(DistributedStackService),
-                    typeof(DistributedHashSetService),
-                    typeof(DistributedListService),
-                    typeof(IDistributedDictionaryService),
-                }, options: new MagicOnionOptions
-                {
-                    IsReturnExceptionStackTraceInErrorDetail = true,
-                    SerializerOptions = options.SerializerOptions,
-                }, ports: new ServerPort(options.MasterListenHost, options.MasterListenPort, ServerCredentials.Insecure),
-                    new[] { 
-                        // body message size
-                        new ChannelOption("grpc.max_receive_message_length", int.MaxValue),
-                        // keep alive
-                        new ChannelOption("grpc.keepalive_time_ms", 2000),
-                        new ChannelOption("grpc.keepalive_timeout_ms", 3000),
-                        new ChannelOption("grpc.http2.min_time_between_pings_ms", 5000),
-                    })
-                .ConfigureServices(x =>
-                {
-                    x.AddSingleton<Reporter>();
-                    x.AddSingleton(typeof(KeyedValueProvider<>));
-                })
-                .ConfigureLogging(logging =>
-                {
-                    logging.ClearProviders();
-                    logging.AddZLoggerConsole(options =>
-                    {
-                        // todo: configure structured logging
-                        options.EnableStructuredLogging = false;
-                    });
-                })
-                .Build();
+            return new DFrameConcurrentRequestRunner(logger, provider, options, workers, workerPerProcess, executePerWorker).RunAsync(workerName, processCount, workerPerProcess, executePerWorker, this.Context);
+        }
 
-            logger.LogInformation("Starting DFrame master node.");
-
-            var task = host.RunAsync(Context.CancellationToken);
-            if (task.IsFaulted)
-            {
-                ExceptionDispatchInfo.Throw(task.Exception.InnerException);
-            }
-
-            return host;
+        [Command("rampup")]
+        public Task ExecuteAsRampup(
+            string workerName,
+            int processCount,
+            int maxWorkerPerProcess,
+            int workerSpawnCount,
+            int workerSpawnSecond
+            )
+        {
+            return new DFrameRamupRunner(logger, provider, options, workers, maxWorkerPerProcess, workerSpawnCount, workerSpawnSecond).RunAsync(workerName, processCount, maxWorkerPerProcess, maxWorkerPerProcess, this.Context);
         }
     }
 
@@ -211,17 +135,9 @@ namespace DFrame
                 });
             var nodeId = Guid.NewGuid();
             var receiver = new WorkerReceiver(channel, nodeId, provider, options);
-            var client = StreamingHubClient.Connect<IMasterHub, IWorkerReceiver>(channel, receiver, serializerOptions: options.SerializerOptions);
+            var callOption = new CallOptions(new Metadata { { "node-id", nodeId.ToString() } });
+            var client = StreamingHubClient.Connect<IMasterHub, IWorkerReceiver>(channel, receiver, option: callOption, serializerOptions: options.SerializerOptions);
             receiver.Client = client;
-
-            var disconnect = client.WaitForDisconnect();
-
-            var t = await Task.WhenAny(client.ConnectCompleteAsync(nodeId), disconnect);
-            if (t == disconnect)
-            {
-                await ShutdownAsync(client, channel, nodeId);
-                return;
-            }
 
             logger.LogInformation($"Worker -> Master connect successfully, WorkerNodeId:{nodeId.ToString()}.");
             try
@@ -244,75 +160,6 @@ namespace DFrame
 
             logger.LogTrace($"Worker Channel shutdown.");
             await channel.ShutdownAsync();
-        }
-    }
-
-    public class CountReporting
-    {
-        readonly int max;
-        int count;
-        public Action<int>? OnIncrement;
-        TaskCompletionSource<object?> waiter;
-
-        public Task Waiter => waiter.Task;
-
-        public CountReporting(int max)
-        {
-            this.max = max;
-            this.OnIncrement = null;
-            this.count = 0;
-            this.waiter = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
-        }
-
-        public void IncrementCount()
-        {
-            var c = Interlocked.Increment(ref count);
-            OnIncrement?.Invoke(c);
-            if (c == max)
-            {
-                waiter.TrySetResult(default);
-            }
-        }
-
-        public override string ToString()
-        {
-            return count.ToString();
-        }
-    }
-
-    public class Reporter
-    {
-        int nodeCount;
-        List<ExecuteResult> executeResult = new List<ExecuteResult>();
-
-        public IReadOnlyList<ExecuteResult> ExecuteResult => executeResult;
-
-        // global broadcaster of MasterHub.
-        public IWorkerReceiver Broadcaster { get; set; } = default!;
-
-        public CountReporting OnConnected { get; private set; } = default!;
-        public CountReporting OnCreateCoWorker { get; private set; } = default!;
-        public CountReporting OnSetup { get; private set; } = default!;
-        public CountReporting OnExecute { get; private set; } = default!;
-        public CountReporting OnTeardown { get; private set; } = default!;
-
-        // Initialize
-        public void Reset(int nodeCount)
-        {
-            this.nodeCount = nodeCount;
-            this.OnConnected = new CountReporting(nodeCount);
-            this.OnCreateCoWorker = new CountReporting(nodeCount);
-            this.OnSetup = new CountReporting(nodeCount);
-            this.OnExecute = new CountReporting(nodeCount);
-            this.OnTeardown = new CountReporting(nodeCount);
-        }
-
-        public void AddExecuteResult(ExecuteResult[] results)
-        {
-            lock (executeResult)
-            {
-                executeResult.AddRange(results);
-            }
         }
     }
 }
