@@ -71,13 +71,41 @@ class Program
 
 And execute commandline.
 
+```
+Usage: <Command> <Args>
+
+Commands:
+  batch
+  request
+  rampup
+```
+
+```
+batch Options:
+  -workerName <String>      (Required)
+  -processCount <Int32>     (Default: 1)
+
+request Options:
+  -workerName <String>          (Required)
+  -processCount <Int32>         (Required)
+  -workerPerProcess <Int32>     (Required)
+  -executePerWorker <Int32>     (Required)
+
+rampup Options:
+  -workerName <String>             (Required)
+  -processCount <Int32>            (Required)
+  -maxWorkerPerProcess <Int32>     (Required)
+  -workerSpawnCount <Int32>        (Required)
+  -workerSpawnSecond <Int32>       (Required)
+```
+
 * processCount - scaling process count. in kuberenetes means Pod count. for inprocess, recommend to use 1.
 * workerPerProcess - worker count of process. This is similar to concurrent count.
 * executePerWorker - execute count per worker, if use for batch, recommend to set 1.
 * workerName - execute worker name, default is type name of Worker.
 
 ```
-SampleApp.exe "-processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName "SampleHttpWorker"
+SampleApp.exe "reqeust -processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName "SampleHttpWorker"
 ```
 
 If use `RunDFrameLoadTestingAsync`, shows execution result like apache bench.
