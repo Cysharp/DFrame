@@ -27,9 +27,9 @@ namespace ConsoleApp
                 // master
                 //args = "batch -processCount 5 -workerPerProcess 10 -executePerWorker 10 -workerName SampleHttpWorker".Split(' ');
 
-                args = "rampup -processCount 5 -maxWorkerPerProcess 12 -workerSpawnCount 4 -workerSpawnSecond 5 -workerName SampleHttpWorker".Split(' ');
+                //args = "rampup -processCount 5 -maxWorkerPerProcess 12 -workerSpawnCount 4 -workerSpawnSecond 5 -workerName SampleHttpWorker".Split(' ');
 
-                //args = "-processCount 5 -workerPerProcess 10 -executePerWorker 10 -workerName SampleHttpWorker".Split(' ');
+                args = "request -processCount 5 -workerPerProcess 10 -executePerWorker 10 -workerName SampleHttpWorker".Split(' ');
                 //args = "-processCount 1 -workerPerProcess 64     -executePerWorker 10000 -workerName SampleHttpWorker".Split(' ');
                 //args = "-processCount 1 -workerPerProcess 20 -executePerWorker 10000 -workerName SampleUnaryWorker".Split(' ');
 
@@ -67,8 +67,8 @@ namespace ConsoleApp
                         options.EnableStructuredLogging = false;
                     });
                 })
-                .RunDFrameLoadTestingAsync(args, new DFrameOptions(host, 12345)
-                //.RunDFrameLoadTestingAsync(args, new DFrameOptions(host + ":12345", host + ":12345", new InProcessScalingProvider())
+                // .RunDFrameLoadTestingAsync(args, new DFrameOptions(host, 12345)
+                .RunDFrameLoadTestingAsync(args, new DFrameOptions(host, 12345, host, 12345, new InProcessScalingProvider())
                 {
 
                 });
@@ -90,7 +90,7 @@ namespace ConsoleApp
         {
             var randI = (int)new Random().Next(1, 3999);
             //Console.WriteLine($"Enqueue from {Environment.MachineName} {context.WorkerId}: {randI}");
-            
+
             await queue.EnqueueAsync(randI);
         }
 

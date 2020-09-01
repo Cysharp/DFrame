@@ -163,6 +163,8 @@ namespace DFrame
         }
     }
 
+    // TODO:will remove there.
+
     public class CountReporting
     {
         readonly int max;

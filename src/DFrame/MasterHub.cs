@@ -59,8 +59,8 @@ namespace DFrame
 
         public Task ExecuteCompleteAsync(ExecuteResult[] result)
         {
-            // TODO:
-            // workerConnectionContext.AddExecuteResult(result);
+            // TODO:remove execute result?
+            workerConnectionContext.AddExecuteResult(result);
             workerConnectionContext.OnExecute.Done(nodeId);
             return Task.CompletedTask;
         }
