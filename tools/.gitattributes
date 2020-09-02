@@ -1,0 +1,6 @@
+*.bat text eol=crlf
+*.ini text eol=lf
+*.sh text eol=lf
+*.jmx text eol=lf
+Dockerfile text eol=lf
+.editorconfig text eol=lf

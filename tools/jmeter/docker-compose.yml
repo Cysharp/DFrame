@@ -1,0 +1,35 @@
+version: "3"
+
+services:
+  web:
+    image: guitarrapc/jmeter-gui:5.3
+    ports:
+      - 5900:5900 # vnc
+      - 3390:3389 # rdp
+    volumes:
+      - ./scenario:/root/jmeter/
+    networks:
+      - jmeter
+
+  master:
+    image: justb4/jmeter
+    tty: true
+    #command: -n -t /root/scenario/rumpup.jmx -Jserver.rmi.ssl.disable=true -Jremote_hosts=master
+    command: -n -t /root/scenario/no_rumpup.jmx -Jserver.rmi.ssl.disable=true -Jremote_hosts=master
+    ports:
+      - 60000:60000
+    volumes:
+      - ./scenario/:/root/scenario/
+    networks:
+      - jmeter
+
+  slave:
+    depends_on: [master]
+    image: justb4/jmeter
+    tty: true
+    command: -s -n -j /dev/stdout -Dserver_port=1099 -Jserver.rmi.ssl.disable=true -Djava.rmi.server.hostname=master
+    networks:
+      - jmeter
+
+networks:
+  jmeter:
