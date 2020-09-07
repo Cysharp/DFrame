@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DFrame.Hosting.Models
+namespace DFrame.Hosting.Services
 {
     public static class MockData
     {

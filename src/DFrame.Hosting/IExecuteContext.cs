@@ -1,8 +1,5 @@
 ﻿using DFrame.Hosting.Data;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace DFrame.Hosting
@@ -18,13 +15,9 @@ namespace DFrame.Hosting
         /// </summary>
         string Status { get; }
         /// <summary>
-        /// Host Address to load test
-        /// </summary>
-        string HostAddress { get; }
-        /// <summary>
         /// Execute Arguments
         /// </summary>
-        ExecuteData ExecuteArgument { get; }
+        ExecuteData Argument { get; }
 
         Task ExecuteAsync();
         Task ErrorAsync();
@@ -35,15 +28,14 @@ namespace DFrame.Hosting
     {
         public string ExecuteId { get; }
         public string Status { get; private set; }
-        public string HostAddress { get; }
-        public ExecuteData ExecuteArgument { get; }
+        public ExecuteData Argument { get; }
 
-        public ExecuteContext(string executeId, string hostAddress, ExecuteData arguments)
+        public ExecuteContext(string executeId, ExecuteData arguments)
         {
+            Status = "NOT READY";
             ExecuteId = executeId;
-            HostAddress = hostAddress;
-            ExecuteArgument = arguments;
-            Environment.SetEnvironmentVariable("DFRAME_MASTER_HOST", hostAddress, EnvironmentVariableTarget.Process);
+            Argument = arguments;
+            Environment.SetEnvironmentVariable("DFRAME_MASTER_HOST", arguments.HostAddress, EnvironmentVariableTarget.Process);
         }
 
         public Task ExecuteAsync()

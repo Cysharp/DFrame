@@ -1,0 +1,11 @@
+﻿<p>workerPerProcess</p>
+<input @bind-value="RequestData.WorkerPerProcess" placeholder="20" type="number">
+<br />
+
+<p>executePerWorker</p>
+<input @bind-value="RequestData.ExecutePerWorker" placeholder="500" type="number">
+<br />
+
+@code {
+    [Parameter] public ExecuteData.RequestData RequestData { get; set; }
+}

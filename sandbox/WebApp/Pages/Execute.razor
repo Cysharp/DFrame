@@ -11,12 +11,11 @@
 
 <h1>Execute</h1>
 
-<ExecuteInputComponent HostAddress="@hostAddress" ExecuteData="@executeArgument" Status="@status" OnClickExecute="@OnClickExecute" OnClickStop="@OnClickStop"></ExecuteInputComponent>
-<ExecuteOutputComponent ExecuteId="@context?.ExecuteId" HostAddress="@context?.HostAddress" Status="@context?.Status" Args="@context?.ExecuteArgument.Arguments"></ExecuteOutputComponent>
+<ExecuteInputComponent ExecuteData="@executeArgument" Status="@status" OnClickExecute="@OnClickExecute" OnClickStop="@OnClickStop"></ExecuteInputComponent>
+<ExecuteOutputComponent ExecuteId="@context?.ExecuteId" HostAddress="@context?.Argument.HostAddress" Status="@context?.Status" Args="@context?.Argument.Arguments"></ExecuteOutputComponent>
 
 @code {
     private IExecuteContext context;
-    private string hostAddress;
     private ExecuteData executeArgument;
 
     private string status => context?.Status;
@@ -32,13 +31,12 @@
 
     private void InitProperty()
     {
-        hostAddress = context?.HostAddress;
-        executeArgument = context?.ExecuteArgument ?? new ExecuteData();
+        executeArgument = context?.Argument ?? new ExecuteData();
     }
 
-    private async Task OnClickExecute(string hostAddress, ExecuteData executeData)
+    private async Task OnClickExecute(ExecuteData executeData)
     {
-        context = ExecuteService.CreateContext(hostAddress, executeData.ProcessCount, executeData.WorkerPerProcess, executeData.ExecutePerWorker, executeData.WorkerName);
+        context = ExecuteService.CreateContext(executeData);
         var exec = ExecuteService.ExecuteAsync();
         InitProperty();
         StateHasChanged();

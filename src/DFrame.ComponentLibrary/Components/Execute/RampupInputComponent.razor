@@ -1,0 +1,15 @@
+﻿<p>maxWorkerPerProcess</p>
+<input @bind-value="RampupData.MaxWorkerPerProcess" placeholder="20" type="number">
+<br />
+
+<p>workerSpawnCount</p>
+<input @bind-value="RampupData.WorkerSpawnCount" placeholder="500" type="number">
+<br />
+
+<p>workerSpawnSecond</p>
+<input @bind-value="RampupData.WorkerSpawnSecond" placeholder="500" type="number">
+<br />
+
+@code {
+    [Parameter] public ExecuteData.RampupData RampupData { get; set; }
+}

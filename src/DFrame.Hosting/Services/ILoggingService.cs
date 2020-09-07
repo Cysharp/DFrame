@@ -2,7 +2,7 @@
 using DFrame.Hosting.Infrastructure;
 using System.Linq;
 
-namespace DFrame.Hosting.Models
+namespace DFrame.Hosting.Services
 {
     public interface ILoggingService
     {

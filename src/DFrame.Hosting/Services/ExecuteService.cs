@@ -6,7 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ZLogger;
 
-namespace DFrame.Hosting.Models
+namespace DFrame.Hosting.Services
 {
     public class ExecuteService
     {
@@ -28,18 +28,10 @@ namespace DFrame.Hosting.Models
             });
         }
 
-        public ExecuteContext CreateContext(string hostAddress, int processCount, int workerPerProcess, int executePerWorker, string workerName)
+        public ExecuteContext CreateContext(ExecuteData executeData)
         {
             var contextId = Guid.NewGuid().ToString();
-            var executeArguments = new ExecuteData
-            {
-                WorkerName = workerName,
-                ProcessCount = processCount,
-                WorkerPerProcess = workerPerProcess,
-                ExecutePerWorker = executePerWorker,
-                Arguments = $"--master -processCount {processCount} -workerPerProcess {workerPerProcess} -executePerWorker {executePerWorker} -workerName {workerName}".Split(' '),
-            };
-            var context = new ExecuteContext(contextId, hostAddress, executeArguments);
+            var context = new ExecuteContext(contextId, executeData);
             _executeContext = context;
 
             // register context
@@ -57,7 +49,7 @@ namespace DFrame.Hosting.Models
             OnUpdateStatus?.Invoke(_executeContext.Status);
 
             // run dframe
-            await Host.CreateDefaultBuilder(_executeContext.ExecuteArgument.Arguments)
+            await Host.CreateDefaultBuilder(_executeContext.Argument.Arguments)
                 .ConfigureLogging(logging =>
                 {
                     logging.ClearProviders();
@@ -67,7 +59,7 @@ namespace DFrame.Hosting.Models
                     // todo: remove console logger?
                     logging.AddZLoggerConsole();
                 })
-                .RunDFrameLoadTestingAsync(_executeContext.ExecuteArgument.Arguments!, new DFrameOptions(_executeContext.HostAddress, 12345));
+                .RunDFrameLoadTestingAsync(_executeContext.Argument.Arguments!, new DFrameOptions(_executeContext.Argument.HostAddress, 12345));
 
             // update status
             if (_errorNotifier.GetExceptions().Length == 0)

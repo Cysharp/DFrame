@@ -1,45 +1,52 @@
-﻿<div>
-    <table class="table">
-        <tbody>
-            <tr>
-                <td>HostAddress</td>
-                <td><input @bind="HostAddress" placeholder="localhost"></td>
-            </tr>
-            <tr>
-                <td>processCount</td>
-                <td><input @bind="ExecuteData.ProcessCount" placeholder="1" type="number"></td>
-            </tr>
-            <tr>
-                <td>workerPerProcess</td>
-                <td><input @bind="ExecuteData.WorkerPerProcess" placeholder="20" type="number"></td>
-            </tr>
-            <tr>
-                <td>executePerWorker</td>
-                <td><input @bind="ExecuteData.ExecutePerWorker" placeholder="500" type="number"></td>
-            </tr>
-            <tr>
-                <td>workerName</td>
-                <td><input @bind="ExecuteData.WorkerName" placeholder="SampleWorker"></td>
-            </tr>
-        </tbody>
-    </table>
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using DFrame.ComponentLibrary.Components.Execute
 
-    <button class="btn btn-primary" @onclick="ClickExecute" disabled="@disabledExecute">Execute</button>
-    <button class="btn btn-primary" @onclick="ClickStop" disabled="@disabledStop">Stop</button>
+<div>
+    <EditForm Model="ExecuteData">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <p>HostAddress</p>
+        <input @bind-value="ExecuteData.HostAddress" placeholder="localhost">
+        <br />
+
+        <p>Mode</p>
+        <InputSelectEnum @bind-Value="ExecuteData.Mode" />
+        <br />
+
+        <p>workerName</p>
+        <input @bind-value="ExecuteData.WorkerName" placeholder="SampleWorker">
+        <br />
+
+        <p>processCount</p>
+        <input @bind-value="ExecuteData.ProcessCount" placeholder="1" type="number">
+        <br />
+
+        @if (ExecuteData.Mode == ExecuteMode.Request)
+        {
+            <RequestInputComponent RequestData="@ExecuteData.Request" />
+        }
+        else if (ExecuteData.Mode == ExecuteMode.Rampup)
+        {
+            <RampupInputComponent RampupData="@ExecuteData.Rampup" />
+        }
+
+        <button type="submit" class="btn btn-primary" @onclick="ClickExecute" disabled="@disabledExecute">Execute</button>
+        <button class="btn btn-primary" @onclick="ClickStop" disabled="@disabledStop">Stop</button>
+    </EditForm>
 </div>
 
 @code {
-    [Parameter] public string HostAddress { get; set; }
     [Parameter] public ExecuteData ExecuteData { get; set; }
     [Parameter] public string Status { get; set; }
-    [Parameter] public Func<string, ExecuteData, Task> OnClickExecute { get; set; }
+    [Parameter] public Func<ExecuteData, Task> OnClickExecute { get; set; }
     [Parameter] public Func<Task> OnClickStop { get; set; }
     private bool disabledExecute => DisabledExecute();
     private bool disabledStop => DisabledStop();
 
     private async Task ClickExecute()
     {
-        await OnClickExecute?.Invoke(HostAddress, ExecuteData);
+        await OnClickExecute?.Invoke(ExecuteData);
     }
 
     private async Task ClickStop()
@@ -49,16 +56,11 @@
 
     private bool DisabledExecute()
     {
-        return string.IsNullOrWhiteSpace(HostAddress)
-            || ExecuteData.ProcessCount <= 0
-            || ExecuteData.WorkerPerProcess <= 0
-            || ExecuteData.ExecutePerWorker <= 0
-            || string.IsNullOrWhiteSpace(ExecuteData.WorkerName)
-            || Status == "RUNNING";
+        return !ExecuteData.IsExecutable || Status == "RUNNING";
     }
 
     private bool DisabledStop()
     {
-        return Status == null || Status == "STOP";
+        return Status == null || Status != "RUNNING";
     }
 }

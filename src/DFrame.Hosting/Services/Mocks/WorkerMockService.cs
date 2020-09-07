@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using DFrame.Hosting.Data;
 
-namespace DFrame.Hosting.Models
+namespace DFrame.Hosting.Services
 {
     /// <summary>
     /// Mock data

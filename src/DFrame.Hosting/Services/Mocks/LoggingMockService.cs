@@ -7,7 +7,7 @@ using System.Linq;
 using System.Net.Http;
 using ZLogger;
 
-namespace DFrame.Hosting.Models
+namespace DFrame.Hosting.Services
 {
     public class LoggingMockService : ILoggingService
     {

@@ -1,6 +1,6 @@
 ﻿using DFrame.Hosting.Data;
 
-namespace DFrame.Hosting.Models
+namespace DFrame.Hosting.Services
 {
     public interface ISummaryService
     {
@@ -31,7 +31,8 @@ namespace DFrame.Hosting.Models
 
         public void RegisterContext(IExecuteContext executeContext)
         {
-            _summary.Host = executeContext.HostAddress;
+            _summary.Host = executeContext.Argument.HostAddress;
+            _summary.Mode = executeContext.Argument.Mode;
             _summary.ExecuteId = executeContext.ExecuteId;
         }
 

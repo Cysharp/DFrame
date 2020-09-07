@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DFrame.Hosting.Data;
 
-namespace DFrame.Hosting.Models
+namespace DFrame.Hosting.Services
 {
     public interface IWorkersService
     {
