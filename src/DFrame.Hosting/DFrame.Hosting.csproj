@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DFrame.LoadTesting\DFrame.LoadTesting.csproj" />
+    <ProjectReference Include="..\DFrame.Profiler\DFrame.Profiler.csproj" />
     <ProjectReference Include="..\DFrame\DFrame.csproj" />
   </ItemGroup>
 

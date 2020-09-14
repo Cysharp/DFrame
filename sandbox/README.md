@@ -22,6 +22,28 @@ run sample ConsoleApp.
 dotnet run --project sandbox/ConsoleApp
 ```
 
+## WebApp
+
+WebApp provide WebUI and record Profiler History to database.
+Use EntityFramework to use database.
+
+```shell
+dotnet new tool-manifest
+dotnet tool install dotnet-ef
+```
+
+add migrations.
+
+```shell
+dotnet ef migrations add docker
+```
+
+run migrations.
+
+```shell
+docker-compose -f sandbox/docker-compose.yaml up
+```
+
 ## Docker samples
 
 ### Out of Process Scaling Provider (oop)

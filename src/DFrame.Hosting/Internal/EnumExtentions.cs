@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 
-namespace DFrame.Hosting
+namespace DFrame.Hosting.Internal
 {
     internal static class EnumExtentions
     {

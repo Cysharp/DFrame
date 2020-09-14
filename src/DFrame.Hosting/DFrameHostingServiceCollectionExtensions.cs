@@ -2,12 +2,13 @@
 using DFrame.Hosting.Data;
 using DFrame.Hosting.Infrastructure;
 using DFrame.Hosting.Services;
+using DFrame.Profiler;
 using Microsoft.Extensions.DependencyInjection;
 using ZLogger;
 
 namespace DFrame.Hosting
 {
-    public static class DFrameServerServiceCollectionExtensions
+    public static class DFrameHostingServiceCollectionExtensions
     {
         public static IServiceCollection AddDFrameHosting(this IServiceCollection services)
         {
@@ -19,6 +20,7 @@ namespace DFrame.Hosting
 
         public static IServiceCollection AddDFrameHosting(this IServiceCollection services, ZLoggerOptions zLoggerOptions)
         {
+           
             services.AddSingleton<ExecuteService>();
             services.AddSingleton<ISummaryService, SummaryService>();
             services.AddSingleton<ILoggingService, LoggingService>();

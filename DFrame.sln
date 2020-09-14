@@ -29,6 +29,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DFrame.Hosting", "src\DFram
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApp", "sandbox\WebApp\WebApp.csproj", "{C3431BDA-9904-43AD-9F1B-386E75BD291D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DFrame.Profiler", "src\DFrame.Profiler\DFrame.Profiler.csproj", "{227F5FAF-0135-4774-8BCA-490CE11702F1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +85,10 @@ Global
 		{C3431BDA-9904-43AD-9F1B-386E75BD291D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C3431BDA-9904-43AD-9F1B-386E75BD291D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C3431BDA-9904-43AD-9F1B-386E75BD291D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{227F5FAF-0135-4774-8BCA-490CE11702F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{227F5FAF-0135-4774-8BCA-490CE11702F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{227F5FAF-0135-4774-8BCA-490CE11702F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{227F5FAF-0135-4774-8BCA-490CE11702F1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

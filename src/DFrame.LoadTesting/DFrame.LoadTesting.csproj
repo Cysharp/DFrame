@@ -19,6 +19,11 @@
       <None Include="..\DFrame\Icon.png" Pack="true" PackagePath="/" />
     </ItemGroup>
 
+
+    <ItemGroup>
+      <Folder Include="Data\" />
+    </ItemGroup>
+
     <PropertyGroup>
       <NoWarn>1701;1702;1591</NoWarn>
     </PropertyGroup>

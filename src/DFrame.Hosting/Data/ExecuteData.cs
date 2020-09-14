@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DFrame.Hosting.Internal;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace DFrame.Hosting.Data
