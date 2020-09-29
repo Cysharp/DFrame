@@ -1,13 +1,27 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: batch/v1
+kind: Job
 metadata:
   name: dframe-master
 spec:
   template:
     spec:
       serviceAccountName: dframe-master
+      nodeSelector:
+        eks.amazonaws.com/nodegroup: dframe
       containers:
         - name: dframe-master
+          imagePullPolicy: Always
+          args:
+            [
+              "-processCount",
+              "10",
+              "-workerPerProcess",
+              "10",
+              "-executePerWorker",
+              "1000",
+              "-workerName",
+              "SampleHttpWorker",
+            ]
           env:
             - name: DFRAME_MASTER_CONNECT_TO_HOST
               value: "dframe-master.dframe.svc.cluster.local"

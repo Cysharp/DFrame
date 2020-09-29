@@ -4,8 +4,11 @@ metadata:
   name: dframe-master
 spec:
   serviceAccountName: dframe-master
+  nodeSelector:
+    eks.amazonaws.com/nodegroup: dframe
   containers:
     - name: dframe-master
+      imagePullPolicy: Always
       env:
         - name: DFRAME_MASTER_CONNECT_TO_HOST
           value: "dframe-master.dframe.svc.cluster.local"

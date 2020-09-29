@@ -14,10 +14,12 @@ namespace DFrame.Kubernetes.Serializers
             defaultJsonSerializerOptions = new JsonSerializerOptions()
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                IgnoreNullValues = true,
             };
             enumJsonSerializerOptions = new JsonSerializerOptions()
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                IgnoreNullValues = true,
             };
             enumJsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         }

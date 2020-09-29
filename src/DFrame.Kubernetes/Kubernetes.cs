@@ -51,11 +51,59 @@ namespace DFrame.Kubernetes
         /// OpenAPI Swagger Definition. https://kubernetes.io/ja/docs/concepts/overview/kubernetes-api/
         /// </summary>
         /// <returns></returns>
-        internal async ValueTask<string> GetOpenApiSpecAsync()
+        internal async ValueTask<string> GetOpenApiSpecAsync(CancellationToken ct = default)
         {
             var apiPath = "/openapi/v2";
-            var res = await GetApiAsync(apiPath, null).ConfigureAwait(false);
+            var res = await GetApiAsync(apiPath, null, ct: ct).ConfigureAwait(false);
             return res.Content;
+        }
+
+        /// <summary>
+        /// Check Cluster Endpoint is healthy or not.
+        /// </summary>
+        /// <param name="retryAttempt"></param>
+        /// <param name="interval"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        internal async ValueTask<bool> TryConnectClusterEndpointAsync(int retryAttempt, TimeSpan interval, CancellationToken ct = default)
+        {
+            var isHealthy = false;
+            var current = 0;
+            while (!isHealthy && current < retryAttempt)
+            {
+                using var cts = new CancellationTokenSource(interval);
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, cts.Token);
+                isHealthy = await TryConnectClusterEndpointAsync(linkedCts.Token);
+                current++;
+            }
+            return isHealthy;
+        }
+
+        /// <summary>
+        /// Check Cluster Endpoint is healthy or not
+        /// </summary>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        internal async ValueTask<bool> TryConnectClusterEndpointAsync(CancellationToken ct = default)
+        {
+            try
+            {
+                var apiPath = "/api";
+                var res = await GetApiAsync(apiPath, null, ct: ct).ConfigureAwait(false);
+                return res.HttpResponseMessage.IsSuccessStatusCode;
+            }
+            catch (HttpRequestException)
+            {
+                return false;
+            }
+            catch (TimeoutException)
+            {
+                return false;
+            }
+            catch (TaskCanceledException)
+            {
+                return false;
+            }
         }
 
         #region api
@@ -66,14 +114,14 @@ namespace DFrame.Kubernetes
         /// <param name="query"></param>
         /// <param name="acceptHeader"></param>
         /// <returns></returns>
-        private async ValueTask<HttpResponseWrapper> GetApiAsync(string apiPath, StringBuilder query, string acceptHeader = default)
+        private async ValueTask<HttpResponseWrapper> GetApiAsync(string apiPath, StringBuilder query, string acceptHeader = default, CancellationToken ct = default)
         {
             using var httpClient = _provider.CreateHttpClient();
             SetAcceptHeader(httpClient, acceptHeader);
             var url = new UriBuilder(_provider.KubernetesServiceEndPoint + apiPath);
             SetQuery(url, query);
             using var request = new HttpRequestMessage(HttpMethod.Get, url.ToString());
-            var res = await httpClient.SendAsync(request).ConfigureAwait(false);
+            var res = await httpClient.SendAsync(request, ct).ConfigureAwait(false);
             res.EnsureSuccessStatusCode();
 
             var responseContent = await res.Content.ReadAsStringAsync();

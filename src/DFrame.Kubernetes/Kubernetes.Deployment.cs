@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -181,14 +183,14 @@ namespace DFrame.Kubernetes
         #region http
         public async ValueTask<HttpResponse<V1Deployment>> CreateDeploymentHttpAsync(string ns, string manifest, CancellationToken ct = default)
         {
-            var res = await PostApiAsync($"/apis/apps/v1/namespaces/{ns}/deployments", null, manifest,ct: ct).ConfigureAwait(false);
+            var res = await PostApiAsync($"/apis/apps/v1/namespaces/{ns}/deployments", null, manifest, ct: ct).ConfigureAwait(false);
             var deploy = JsonConvert.Deserialize<V1Deployment>(res.Content);
             return new HttpResponse<V1Deployment>(deploy)
             {
                 Response = res.HttpResponseMessage,
             };
         }
-        public async ValueTask<HttpResponse<V1DeploymentList>> GetDeploymentsHttpAsync(string ns, bool watch = false, string labelSelectorParameter = null, int? timeoutSecondsParameter = null)
+        public async ValueTask<HttpResponse<V1DeploymentList>> GetDeploymentsHttpAsync(string ns, bool watch = false, string labelSelectorParameter = null, int? timeoutSecondsParameter = null, CancellationToken ct = default)
         {
             // build query
             var query = new StringBuilder();
@@ -205,14 +207,14 @@ namespace DFrame.Kubernetes
                 AddQueryParameter(query, "timeoutSeconds", timeoutSecondsParameter.Value.ToString());
             }
 
-            var res = await GetApiAsync($"/apis/apps/v1/namespaces/{ns}/deployments", query).ConfigureAwait(false);
+            var res = await GetApiAsync($"/apis/apps/v1/namespaces/{ns}/deployments", query, ct: ct).ConfigureAwait(false);
             var deployments = JsonConvert.Deserialize<V1DeploymentList>(res.Content);
             return new HttpResponse<V1DeploymentList>(deployments)
             {
                 Response = res.HttpResponseMessage,
             };
         }
-        public async ValueTask<HttpResponse<V1Deployment>> GetDeploymentHttpAsync(string ns, string name, string labelSelectorParameter = null, int? timeoutSecondsParameter = null)
+        public async ValueTask<HttpResponse<V1Deployment>> GetDeploymentHttpAsync(string ns, string name, string labelSelectorParameter = null, int? timeoutSecondsParameter = null, CancellationToken ct = default)
         {
             // build query
             var query = new StringBuilder();
@@ -225,7 +227,7 @@ namespace DFrame.Kubernetes
                 AddQueryParameter(query, "timeoutSeconds", timeoutSecondsParameter.Value.ToString());
             }
 
-            var res = await GetApiAsync($"/apis/apps/v1/namespaces/{ns}/deployments/{name}", query).ConfigureAwait(false);
+            var res = await GetApiAsync($"/apis/apps/v1/namespaces/{ns}/deployments/{name}", query, ct: ct).ConfigureAwait(false);
             var deployment = JsonConvert.Deserialize<V1Deployment>(res.Content);
             return new HttpResponse<V1Deployment>(deployment)
             {
@@ -252,22 +254,55 @@ namespace DFrame.Kubernetes
                 Response = res.HttpResponseMessage,
             };
         }
-        public async ValueTask<HttpResponse<bool>> ExistsDeploymentHttpAsync(string ns, string name, string labelSelectorParameter = null, int? timeoutSecondsParameter = null)
+        public async ValueTask<HttpResponse<bool>> ExistsDeploymentHttpAsync(string ns, string name, string labelSelectorParameter = null, int? timeoutSecondsParameter = null, CancellationToken ct = default)
         {
-            var deployments = await GetDeploymentsHttpAsync(ns, false, labelSelectorParameter, timeoutSecondsParameter).ConfigureAwait(false);
-            if (deployments == null || !deployments.Body.Items.Any())
+            try
+            {
+                var deployments = await GetDeploymentsHttpAsync(ns, false, labelSelectorParameter, timeoutSecondsParameter, ct: ct).ConfigureAwait(false);
+                if (deployments == null || !deployments.Body.Items.Any())
+                {
+                    return new HttpResponse<bool>(false)
+                    {
+                        Response = deployments.Response,
+                    };
+                }
+                else
+                {
+                    var exists = deployments.Body.Items.Select(x => x.Metadata.Name == name).Any();
+                    return new HttpResponse<bool>(exists)
+                    {
+                        Response = deployments.Response,
+                    };
+                }
+            }
+            catch (HttpRequestException ex)
             {
                 return new HttpResponse<bool>(false)
                 {
-                    Response = deployments.Response,
+                    Response = new HttpResponseMessage()
+                    {
+                        Content = new StringContent($"{ex.GetType().FullName} {ex.Message} {ex.StackTrace}"),
+                    },
                 };
             }
-            else
+            catch (TimeoutException tex)
             {
-                var exists = deployments.Body.Items.Select(x => x.Metadata.Name == name).Any();
-                return new HttpResponse<bool>(exists)
+                return new HttpResponse<bool>(false)
                 {
-                    Response = deployments.Response,
+                    Response = new HttpResponseMessage()
+                    {
+                        Content = new StringContent($"{tex.GetType().FullName} {tex.Message} {tex.StackTrace}"),
+                    },
+                };
+            }
+            catch (TaskCanceledException taex)
+            {
+                return new HttpResponse<bool>(false)
+                {
+                    Response = new HttpResponseMessage()
+                    {
+                        Content = new StringContent($"{taex.GetType().FullName} {taex.Message} {taex.StackTrace}"),
+                    },
                 };
             }
         }

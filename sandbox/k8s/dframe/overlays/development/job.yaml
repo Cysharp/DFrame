@@ -6,8 +6,6 @@ spec:
   template:
     spec:
       serviceAccountName: dframe-master
-      nodeSelector:
-        eks.amazonaws.com/nodegroup: dframe
       containers:
         - name: dframe-master
           env:

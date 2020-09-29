@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -176,9 +178,9 @@ namespace DFrame.Kubernetes
             using var res = await DeleteJobHttpAsync(ns, name, options, ct).ConfigureAwait(false);
             return res.Body;
         }
-        public async ValueTask<bool> ExistsJobAsync(string ns, string name)
+        public async ValueTask<bool> ExistsJobAsync(string ns, string name, CancellationToken ct = default)
         {
-            using var jobs = await ExistsJobHttpAsync(ns, name).ConfigureAwait(false);
+            using var jobs = await ExistsJobHttpAsync(ns, name, ct: ct).ConfigureAwait(false);
             return jobs.Body;
         }
 
@@ -192,7 +194,7 @@ namespace DFrame.Kubernetes
                 Response = res.HttpResponseMessage,
             };
         }
-        public async ValueTask<HttpResponse<V1JobList>> GetJobsHttpAsync(string ns, bool watch = false, string labelSelectorParameter = null, int? timeoutSecondsParameter = null)
+        public async ValueTask<HttpResponse<V1JobList>> GetJobsHttpAsync(string ns, bool watch = false, string labelSelectorParameter = null, int? timeoutSecondsParameter = null, CancellationToken ct = default)
         {
             // build query
             var query = new StringBuilder();
@@ -209,14 +211,14 @@ namespace DFrame.Kubernetes
                 AddQueryParameter(query, "timeoutSeconds", timeoutSecondsParameter.Value.ToString());
             }
 
-            var res = await GetApiAsync($"/apis/batch/v1/namespaces/{ns}/jobs", query).ConfigureAwait(false);
+            var res = await GetApiAsync($"/apis/batch/v1/namespaces/{ns}/jobs", query, ct: ct).ConfigureAwait(false);
             var jobs = JsonConvert.Deserialize<V1JobList>(res.Content);
             return new HttpResponse<V1JobList>(jobs)
             {
                 Response = res.HttpResponseMessage,
             };
         }
-        public async ValueTask<HttpResponse<V1Job>> GetJobHttpAsync(string ns, string name, string labelSelectorParameter = null, int? timeoutSecondsParameter = null)
+        public async ValueTask<HttpResponse<V1Job>> GetJobHttpAsync(string ns, string name, string labelSelectorParameter = null, int? timeoutSecondsParameter = null, CancellationToken ct = default)
         {
             // build query
             var query = new StringBuilder();
@@ -229,7 +231,7 @@ namespace DFrame.Kubernetes
                 AddQueryParameter(query, "timeoutSeconds", timeoutSecondsParameter.Value.ToString());
             }
 
-            var res = await GetApiAsync($"/apis/batch/v1/namespaces/{ns}/jobs/{name}", query).ConfigureAwait(false);
+            var res = await GetApiAsync($"/apis/batch/v1/namespaces/{ns}/jobs/{name}", query, ct: ct).ConfigureAwait(false);
             var job = JsonConvert.Deserialize<V1Job>(res.Content);
             return new HttpResponse<V1Job>(job)
             {
@@ -256,22 +258,55 @@ namespace DFrame.Kubernetes
                 Response = res.HttpResponseMessage,
             };
         }
-        public async ValueTask<HttpResponse<bool>> ExistsJobHttpAsync(string ns, string name, string labelSelectorParameter = null, int? timeoutSecondsParameter = null)
+        public async ValueTask<HttpResponse<bool>> ExistsJobHttpAsync(string ns, string name, string labelSelectorParameter = null, int? timeoutSecondsParameter = null, CancellationToken ct = default)
         {
-            var jobs = await GetJobsHttpAsync(ns, false, labelSelectorParameter, timeoutSecondsParameter).ConfigureAwait(false);
-            if (jobs == null || !jobs.Body.Items.Any())
+            try
+            {
+                var jobs = await GetJobsHttpAsync(ns, false, labelSelectorParameter, timeoutSecondsParameter, ct: ct).ConfigureAwait(false);
+                if (jobs == null || !jobs.Body.Items.Any())
+                {
+                    return new HttpResponse<bool>(false)
+                    {
+                        Response = jobs.Response,
+                    };
+                }
+                else
+                {
+                    var exists = jobs.Body.Items.Select(x => x.Metadata.Name == name).Any();
+                    return new HttpResponse<bool>(exists)
+                    {
+                        Response = jobs.Response,
+                    };
+                }
+            }
+            catch (HttpRequestException ex)
             {
                 return new HttpResponse<bool>(false)
                 {
-                    Response = jobs.Response,
+                    Response = new HttpResponseMessage()
+                    {
+                        Content = new StringContent($"{ex.GetType().FullName} {ex.Message} {ex.StackTrace}"),
+                    },
                 };
             }
-            else
+            catch (TimeoutException tex)
             {
-                var exists = jobs.Body.Items.Select(x => x.Metadata.Name == name).Any();
-                return new HttpResponse<bool>(exists)
+                return new HttpResponse<bool>(false)
                 {
-                    Response = jobs.Response,
+                    Response = new HttpResponseMessage()
+                    {
+                        Content = new StringContent($"{tex.GetType().FullName} {tex.Message} {tex.StackTrace}"),
+                    },
+                };
+            }
+            catch (TaskCanceledException taex)
+            {
+                return new HttpResponse<bool>(false)
+                {
+                    Response = new HttpResponseMessage()
+                    {
+                        Content = new StringContent($"{taex.GetType().FullName} {taex.Message} {taex.StackTrace}"),
+                    },
                 };
             }
         }

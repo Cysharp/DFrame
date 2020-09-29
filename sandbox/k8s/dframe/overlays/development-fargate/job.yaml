@@ -1,5 +1,5 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: batch/v1
+kind: Job
 metadata:
   name: dframe-master
 spec:
@@ -10,8 +10,10 @@ spec:
         - name: dframe-master
           env:
             - name: DFRAME_MASTER_CONNECT_TO_HOST
-              value: "dframe-master.dframe.svc.cluster.local"
+              value: "dframe-master.dframe-fargate.svc.cluster.local"
             - name: DFRAME_WORKER_IMAGE_NAME
               value: 431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s
             - name: DFRAME_WORKER_IMAGE_TAG
               value: "0.1.0"
+            - name: DFRAME_WORKER_POD_CREATE_TIMEOUT
+              value: "300"

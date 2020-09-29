@@ -6,6 +6,7 @@ WORKDIR /app
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
 WORKDIR /src
 COPY ["sandbox/ConsoleAppK8s/ConsoleAppK8s.csproj", "sandbox/ConsoleAppK8s/"]
+COPY ["sandbox/EchoMagicOnion.Shared/EchoMagicOnion.Shared.csproj", "sandbox/EchoMagicOnion.Shared/"]
 COPY ["src/DFrame.Kubernetes/DFrame.Kubernetes.csproj", "src/DFrame.Kubernetes/"]
 COPY ["src/DFrame/DFrame.csproj", "src/DFrame/"]
 RUN dotnet restore "sandbox/ConsoleAppK8s/ConsoleAppK8s.csproj"

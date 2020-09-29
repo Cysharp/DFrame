@@ -44,11 +44,9 @@ run migrations.
 docker-compose -f sandbox/docker-compose.yaml up
 ```
 
-## Docker samples
+## docker
 
-### Out of Process Scaling Provider (oop)
-
-try docker run.
+Try inprocess or Out of Process (oop).
 
 ```shell
 docker run -it cysharp/dframe_sample_oop
@@ -62,12 +60,14 @@ docker tag dframe_sample_oop:0.1.0 cysharp/dframe_sample_oop
 docker push cysharp/dframe_sample_oop
 ```
 
-### Kubernetes Scaling Provider (k8s)
+## Kubernetes Scaling Provider (k8s)
 
 You can deploy DFrame to your Kubernetes cluster and run load test.
 This sample contains Kustomize based kubernetes deployment.
 
-If your cluster is rbac-less, like docker-desktop, following will work.
+### rbac-less kubernetes
+
+following is rbac-less cluster.
 
 ```shell
 kubectl apply -f sandbox/k8s/dframe/overlays/local/namespace.yaml
@@ -84,7 +84,9 @@ kubectl kustomize sandbox/k8s/dframe/overlays/local | kubectl apply -f -
 stern dframe*
 ```
 
-If your cluster enabled rbac following will include ServiceAccount and Role.
+### RBAC Kubernetes
+
+enable ServiceAccount and Roles to run on RBAC cluster.
 
 ```shell
 kubectl kustomize sandbox/k8s/dframe/overlays/development | kubectl apply -f -
@@ -94,21 +96,54 @@ stern dframe*
 kubectl kustomize sandbox/k8s/dframe/overlays/development | kubectl delete -f -
 ```
 
+### EKS NodeGroup
+
+This example run on ESK with NodeGroup named `dframe`.
+
+```shell
+kubectl kustomize sandbox/k8s/dframe/overlays/development-nodegroup | kubectl apply -f -
+kubens dframe
+stern dframe*
+
+kubectl kustomize sandbox/k8s/dframe/overlays/development-nodegroup | kubectl delete -f -
+```
+
+### EKS Fargate
+
+This example run on EKS with Fargate, fargate profile is enable to `dframe-fargate` namespace label.
+Make sure Fargate pod is slow to start, it takes 30sec to 150sec until Ready state. 
+You may wait about 3min until Fargates start your DFrame Worker.
+
+
+```shell
+kubectl kustomize sandbox/k8s/dframe/overlays/development-fargate | kubectl apply -f -
+kubens dframe-fargate
+stern dframe*
+
+kubectl kustomize sandbox/k8s/dframe/overlays/development-fargate | kubectl delete -f -
+```
+
+```shell
+kubectl run -it --rm --restart=Never -n dframe-fargate --image=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe-fargate.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "batch" "-processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10" "-workerName" "SampleWorker"
+```
+
+### Redeploy
+
 If you already deployed service and rbac resources, service account and others, you can try fast load testing itelation by just change args and run  DFrame master as pod.
 Below sample will run 1000000 requests of SampleHttpWorker, includes 10 process 10 workers and 10000 execute.
 
 ```shell
-kubectl run -it --rm --restart=Never -n dframe --image=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "-processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10000" "-workerName" "SampleHttpWorker"
+kubectl run -it --rm --restart=Never -n dframe --image=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "batch -processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10000" "-workerName" "SampleHttpWorker"
 ```
 
 You can try LoadTest to MagicOnion with SampleUnaryWorker and SampleStreamWorker.
 
 ```shell
-kubectl run -it --rm --restart=Never -n dframe --image=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "-processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10000" "-workerName" "SampleUnaryWorker"
+kubectl run -it --rm --restart=Never -n dframe --image=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "batch -processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10000" "-workerName" "SampleUnaryWorker"
 ```
 
 ```shell
-kubectl run -it --rm --restart=Never -n dframe --image=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "-processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10000" "-workerName" "SampleStreamWorker"
+kubectl run -it --rm --restart=Never -n dframe --image=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "batch -processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10000" "-workerName" "SampleStreamWorker"
 ```
 
 ## etc....

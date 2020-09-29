@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using DFrame.Kubernetes.Exceptions;
 using DFrame.Kubernetes.Models;
+using DFrame.Kubernetes.Serializers;
 
 namespace DFrame.Kubernetes
 {
@@ -14,6 +16,7 @@ namespace DFrame.Kubernetes
         Job,
     }
 
+    // note: change to annotations is match kubernetes like
     /// <summary>
     /// Configuable worker environment
     /// </summary>
@@ -48,6 +51,14 @@ namespace DFrame.Kubernetes
         /// </summary>
         public int WorkerPodCreationTimeout { get; set; } = int.Parse(Environment.GetEnvironmentVariable("DFRAME_WORKER_POD_CREATE_TIMEOUT") ?? "120");
         /// <summary>
+        /// Cluster endpoint health check retry count
+        /// </summary>
+        public int ClusterEndpointHealthRetry { get; set; } = int.Parse(Environment.GetEnvironmentVariable("DFRAME_CLUSTER_ENDPOINT_HEALTH_RETRY") ?? "60");
+        /// <summary>
+        /// Cluster endpoint health check interval second
+        /// </summary>
+        public int ClusterEndpointHealthInterval { get; set; } = int.Parse(Environment.GetEnvironmentVariable("DFRAME_CLUSTER_ENDPOINT_HEALTH_INTERVAL_SEC") ?? "10");
+        /// <summary>
         /// Preserve Worker kubernetes resource after execution. default false.
         /// </summary>
         /// <remarks>
@@ -66,6 +77,7 @@ namespace DFrame.Kubernetes
         private readonly Kubernetes _operations;
         private readonly KubernetesEnvironment _env;
         private readonly string _ns;
+        IFailSignal _failSignal = default!;
 
         public KubernetesScalingProvider()
         {
@@ -85,43 +97,65 @@ namespace DFrame.Kubernetes
 
         public async Task StartWorkerAsync(DFrameOptions options, int processCount, IServiceProvider provider, IFailSignal failSignal, CancellationToken cancellationToken)
         {
-            Console.WriteLine($"scale out workers. {_ns}/{_env.Name} {_env.ScalingType}");
+            _failSignal = failSignal;
 
-            // create worker resource
-            switch (_env.ScalingType)
+            Console.WriteLine($"scale out workers {_env.ScalingType}. {_ns}/{_env.Name} ({processCount} pods)");
+
+            // confirm kubernetes master can connect with cluster api.
+            Console.WriteLine($"checking cluster Endpoint health.");
+            var healthy = await _operations.TryConnectClusterEndpointAsync(_env.ClusterEndpointHealthRetry, TimeSpan.FromSeconds(_env.ClusterEndpointHealthInterval), cancellationToken);
+
+            if (!healthy)
             {
-                case ScalingType.Deployment:
-                    await ScaleoutDeploymentAsync(processCount, options.WorkerConnectToHost, options.WorkerConnectToPort, cancellationToken);
-                    break;
-                case ScalingType.Job:
-                    await ScaleoutJobAsync(processCount, options.WorkerConnectToHost, options.WorkerConnectToPort, cancellationToken);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(ScalingType));
+                Console.WriteLine($"cluster endpoint is unhealthy, quiting scale out.");
+                _failSignal.TrySetException(new KubernetesException("Could not connect to Kubernetes Cluster Endpoint. Make sure pod can communicate with cluster api."));
+            }
+            else
+            {
+                // create worker resource
+                switch (_env.ScalingType)
+                {
+                    case ScalingType.Deployment:
+                        await ScaleoutDeploymentAsync(processCount, options.WorkerConnectToHost, options.WorkerConnectToPort, cancellationToken);
+                        break;
+                    case ScalingType.Job:
+                        await ScaleoutJobAsync(processCount, options.WorkerConnectToHost, options.WorkerConnectToPort, cancellationToken);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(ScalingType));
+                }
             }
         }
 
         public async ValueTask DisposeAsync()
         {
-            Console.WriteLine($"scale in workers. {_ns}/{_env.Name} {_env.ScalingType}");
-
-            // delete worker resource.
-            switch (_env.ScalingType)
+            Console.WriteLine($"scale in workers {_env.ScalingType}. {_ns}/{_env.Name}");
+            if (!_env.PreserveWorker)
             {
-                case ScalingType.Deployment:
-                    if (!_env.PreserveWorker && await _operations.ExistsDeploymentAsync(_ns, _env.Name))
-                    {
-                        await _operations.DeleteDeploymentAsync(_ns, _env.Name, 10);
-                    };
-                    break;
-                case ScalingType.Job:
-                    if (!_env.PreserveWorker && await _operations.ExistsJobAsync(_ns, _env.Name))
-                    {
-                        await _operations.DeleteJobAsync(_ns, _env.Name, 10);
-                    };
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(ScalingType));
+                // delete worker resource.
+                switch (_env.ScalingType)
+                {
+                    case ScalingType.Deployment:
+                        var deployExists = await _operations.ExistsDeploymentAsync(_ns, _env.Name);
+                        if (deployExists)
+                        {
+                            await _operations.DeleteDeploymentAsync(_ns, _env.Name, 10);
+                        }
+                        break;
+                    case ScalingType.Job:
+                        var jobExists = await _operations.ExistsJobAsync(_ns, _env.Name);
+                        if (jobExists)
+                        {
+                            await _operations.DeleteJobAsync(_ns, _env.Name, 10);
+                        }
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(ScalingType));
+                }
+            }
+            else
+            {
+                Console.WriteLine($"detected preserve worker, scale in action skipped.");
             }
         }
 
@@ -137,6 +171,7 @@ namespace DFrame.Kubernetes
         private async ValueTask ScaleoutJobAsync(int nodeCount, string connectToHost, int connectToPort, CancellationToken cancellationToken)
         {
             var def = _operations.CreateJobDefinition(_env.Name, _env.Image, _env.ImageTag, connectToHost, connectToPort, _env.ImagePullPolicy, _env.ImagePullSecret, nodeCount);
+
             try
             {
                 // watch worker pod creation.
@@ -145,6 +180,7 @@ namespace DFrame.Kubernetes
                 using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(_env.WorkerPodCreationTimeout)))
                 using (var watch = pods.Watch<V1Pod, V1PodList>((type, item, cts) =>
                 {
+                    Console.WriteLine($"pod event caught. {type} {item?.Metadata?.Name}");
                     if (type == WatchEventType.Added)
                     {
                         added++;
@@ -163,10 +199,11 @@ namespace DFrame.Kubernetes
                     var watchTask = watch.Execute();
 
                     // create worker
+                    Console.WriteLine($"Worker creation begin.");
                     var createWorkerTask = await _operations.CreateJobAsync(_ns, def, cancellationToken);
 
                     // wait watch complete
-                    Console.WriteLine($"waiting worker scale out for {_env.WorkerPodCreationTimeout}sec");
+                    Console.WriteLine($"Worker created, waiting worker scale out for {_env.WorkerPodCreationTimeout}sec");
                     await watchTask;
                 }
 
@@ -211,6 +248,7 @@ namespace DFrame.Kubernetes
                 {
                     if (type == WatchEventType.Added)
                     {
+                        Console.WriteLine($"{type} {item?.Metadata?.Name} ({added}/{nodeCount})");
                         added++;
                         if (added >= nodeCount)
                         {
@@ -227,10 +265,11 @@ namespace DFrame.Kubernetes
                     var watchTask = watch.Execute();
 
                     // create worker
+                    Console.WriteLine($"Worker creation begin.");
                     var createWorkerTask = _operations.CreateDeploymentAsync(_ns, def, cancellationToken);
 
                     // wait watch complete
-                    Console.WriteLine($"waiting worker scale out for {_env.WorkerPodCreationTimeout}sec");
+                    Console.WriteLine($"Worker created, waiting worker scale out for {_env.WorkerPodCreationTimeout}sec");
                     await watchTask;
                 }
 
