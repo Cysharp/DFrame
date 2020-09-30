@@ -137,7 +137,8 @@ namespace DFrame
             var receiver = new WorkerReceiver(channel, nodeId, provider, options);
             var callOption = new CallOptions(new Metadata { { "node-id", nodeId.ToString() } });
             // explict channel connect to resolve slow grpc connection on fatgate.
-            await channel.ConnectAsync(DateTime.UtcNow.AddMinutes(10));
+            await channel.ConnectAsync(DateTime.UtcNow.Add(options.Timeout));
+
             var client = StreamingHubClient.Connect<IMasterHub, IWorkerReceiver>(channel, receiver, option: callOption, serializerOptions: options.SerializerOptions);
             receiver.Client = client;
 
