@@ -11,6 +11,6 @@ resources:
 
 patches:
   # - deployment.yaml
-  - job.yaml
-  # - job_args.yaml
+  # - job.yaml
+  - job_args.yaml
   # - pod.yaml

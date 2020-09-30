@@ -17,3 +17,6 @@ spec:
               value: "0.1.0"
             - name: DFRAME_WORKER_POD_CREATE_TIMEOUT
               value: "300"
+        # - name: tcpdump
+        #   image: corfr/tcpdump
+        #   args: ["-i", "eth0", "-A", "-w", "/var/productpage.pcap"]

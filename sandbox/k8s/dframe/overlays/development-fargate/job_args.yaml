@@ -13,14 +13,15 @@ spec:
         - name: dframe-master
           args:
             [
+              "request",
               "-processCount",
-              "10",
+              "1",
               "-workerPerProcess",
               "10",
               "-executePerWorker",
-              "1000",
+              "10",
               "-workerName",
-              "SampleHttpWorker",
+              "SampleWorker",
             ]
           env:
             - name: DFRAME_MASTER_CONNECT_TO_HOST
@@ -31,3 +32,6 @@ spec:
               value: "0.1.0"
             - name: DFRAME_WORKER_POD_CREATE_TIMEOUT
               value: "300"
+        # - name: tcpdump
+        #   image: corfr/tcpdump
+        #   args: ["-i", "eth0", "-A", "-w", "/var/productpage.pcap"]

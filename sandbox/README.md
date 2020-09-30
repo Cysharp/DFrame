@@ -124,7 +124,7 @@ kubectl kustomize sandbox/k8s/dframe/overlays/development-fargate | kubectl dele
 ```
 
 ```shell
-kubectl run -it --rm --restart=Never -n dframe-fargate --image=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe-fargate.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "batch" "-processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10" "-workerName" "SampleWorker"
+kubectl run -it --rm --restart=Never -n dframe-fargate --image=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe-fargate.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "request" "-processCount" "1" "-workerPerProcess" "10" "-executePerWorker" "10" "-workerName" "SampleWorker"
 ```
 
 ### Redeploy

@@ -13,14 +13,15 @@ spec:
           imagePullPolicy: Always
           args:
             [
+              "request",
               "-processCount",
-              "10",
+              "1",
               "-workerPerProcess",
               "10",
               "-executePerWorker",
-              "1000",
+              "10",
               "-workerName",
-              "SampleHttpWorker",
+              "SampleWorker",
             ]
           env:
             - name: DFRAME_MASTER_CONNECT_TO_HOST
@@ -29,3 +30,8 @@ spec:
               value: 431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s
             - name: DFRAME_WORKER_IMAGE_TAG
               value: "0.1.0"
+            - name: DFRAME_WORKER_PRESERVE
+              value: "1"
+        # - name: tcpdump
+        #   image: corfr/tcpdump
+        #   args: ["-i", "eth0", "-A", "-w", "/var/productpage.pcap"]
