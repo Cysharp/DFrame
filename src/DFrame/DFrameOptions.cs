@@ -11,6 +11,7 @@ namespace DFrame
     {
         public string MasterListenHost { get; }
         public int MasterListenPort { get; }
+        // TODO:Address
         public string WorkerConnectToHost { get; }
         public int WorkerConnectToPort { get; }
         public IScalingProvider ScalingProvider { get; }

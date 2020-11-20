@@ -1,5 +1,6 @@
 ﻿using DFrame.Internal;
 using Grpc.Core;
+using Grpc.Net.Client;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -21,7 +22,7 @@ namespace DFrame
     internal class WorkerReceiver : IWorkerReceiver
     {
         // readonly ILogger<WorkerReceiver> logger;
-        readonly Channel channel;
+        readonly GrpcChannel channel;
         readonly Guid nodeId;
         readonly DFrameWorkerCollection workerCollection;
         readonly DFrameOptions options;
@@ -29,7 +30,7 @@ namespace DFrame
         readonly TaskCompletionSource<object?> receiveShutdown;
         ImmutableArray<(WorkerContext context, Worker worker)> coWorkers;
 
-        internal WorkerReceiver(Channel channel, Guid nodeId, IServiceProvider serviceProvider, DFrameOptions options)
+        internal WorkerReceiver(GrpcChannel channel, Guid nodeId, IServiceProvider serviceProvider, DFrameOptions options)
         {
             // this.logger = logger;
             this.channel = channel;

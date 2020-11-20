@@ -1,13 +1,16 @@
 ﻿using DFrame.Collections;
 using DFrame.Internal;
 using Grpc.Core;
-using MagicOnion.Hosting;
 using MagicOnion.Server;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
+using System.Net;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -115,27 +118,17 @@ namespace DFrame
         IHost StartMasterHost(string?[] arguments, CancellationToken cancellationToken)
         {
             var host = options.HostBuilderFactory(arguments)
-                .UseMagicOnion(targetTypes: new Type[]
+                .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    typeof(MasterHub),
-                    typeof(DistributedQueueService),
-                    typeof(DistributedStackService),
-                    typeof(DistributedHashSetService),
-                    typeof(DistributedListService),
-                    typeof(IDistributedDictionaryService),
-                }, options: new MagicOnionOptions
-                {
-                    IsReturnExceptionStackTraceInErrorDetail = true,
-                    SerializerOptions = options.SerializerOptions,
-                }, ports: new ServerPort(options.MasterListenHost, options.MasterListenPort, ServerCredentials.Insecure),
-                    new[] { 
-                        // body message size
-                        new ChannelOption("grpc.max_receive_message_length", int.MaxValue),
-                        // keep alive
-                        new ChannelOption("grpc.keepalive_time_ms", 2000),
-                        new ChannelOption("grpc.keepalive_timeout_ms", 3000),
-                        new ChannelOption("grpc.http2.min_time_between_pings_ms", 5000),
-                    })
+                    webBuilder.ConfigureKestrel(kestrel =>
+                    {
+                        kestrel.Listen(IPAddress.Parse(options.MasterListenHost), options.MasterListenPort, listenOptions =>
+                        {
+                            listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;
+                        });
+                    });
+                    webBuilder.UseStartup(x => new RunnerStartup(options));
+                })
                 .ConfigureServices(x =>
                 {
                     x.AddSingleton<WorkerConnectionGroupContext>();
@@ -157,10 +150,54 @@ namespace DFrame
             var task = host.RunAsync(cancellationToken);
             if (task.IsFaulted)
             {
-                ExceptionDispatchInfo.Throw(task.Exception.InnerException);
+                if (task.Exception?.InnerException != null)
+                {
+                    ExceptionDispatchInfo.Throw(task.Exception.InnerException);
+                }
             }
 
             return host;
+        }
+
+        public class RunnerStartup
+        {
+            DFrameOptions options;
+
+            public RunnerStartup(DFrameOptions options)
+            {
+                this.options = options;
+            }
+
+            public void ConfigureServices(IServiceCollection services)
+            {
+                services.AddGrpc();
+                services.AddMagicOnion(searchTypes: new Type[]
+                {
+                    typeof(MasterHub),
+                    typeof(DistributedQueueService),
+                    typeof(DistributedStackService),
+                    typeof(DistributedHashSetService),
+                    typeof(DistributedListService),
+                    typeof(IDistributedDictionaryService),
+                }, opt =>
+                {
+                    opt.IsReturnExceptionStackTraceInErrorDetail = true;
+                    opt.SerializerOptions = options.SerializerOptions;
+                });
+            }
+
+            public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+            {
+                app.UseRouting();
+                app.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapMagicOnionService();
+                    endpoints.MapGet("/", async context =>
+                    {
+                        await context.Response.WriteAsync("Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
+                    });
+                });
+            }
         }
     }
 

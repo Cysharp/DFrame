@@ -2,8 +2,8 @@
 using DFrame.Collections;
 using DFrame.Internal;
 using Grpc.Core;
+using Grpc.Net.Client;
 using MagicOnion.Client;
-using MagicOnion.Hosting;
 using MagicOnion.Server;
 using MessagePack;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -126,20 +127,36 @@ namespace DFrame
         {
             logger.LogInformation("Starting DFrame worker node");
 
-            var channel = new Channel(options.WorkerConnectToHost, options.WorkerConnectToPort, ChannelCredentials.Insecure,
-                new[] {
-                    // keep alive
-                    new ChannelOption("grpc.keepalive_time_ms", 2000),
-                    new ChannelOption("grpc.keepalive_timeout_ms", 3000),
-                    new ChannelOption("grpc.http2.min_time_between_pings_ms", 5000),
-                });
+            var channel = GrpcChannel.ForAddress(options.WorkerConnectToHost, new GrpcChannelOptions
+            {
+                // new ChannelOption("grpc.keepalive_time_ms", 2000),
+                // new ChannelOption("grpc.keepalive_timeout_ms", 3000),
+                // new ChannelOption("grpc.http2.min_time_between_pings_ms", 5000),
+                HttpClient = new HttpClient(new SocketsHttpHandler
+                {
+                    ConnectTimeout = options.Timeout
+                }),
+
+                // .NET 5?
+                /*
+                HttpHandler = new SocketsHttpHandler
+                {
+                    PooledConnectionIdleTimeout = Timeout.InfiniteTimeSpan,
+                    // KeepAlivePingDelay = TimeSpan.FromSeconds(60),
+                    //KeepAlivePingTimeout = TimeSpan.FromSeconds(30),
+                    //EnableMultipleHttp2Connections = true
+                }
+                */
+            });
+
+            // Connect explicitly???
+            var callInvoker = channel.CreateCallInvoker();
+
             var nodeId = Guid.NewGuid();
             var receiver = new WorkerReceiver(channel, nodeId, provider, options);
             var callOption = new CallOptions(new Metadata { { "node-id", nodeId.ToString() } });
-            // explict channel connect to resolve slow grpc connection on fatgate.
-            await channel.ConnectAsync(DateTime.UtcNow.Add(options.Timeout));
 
-            var client = StreamingHubClient.Connect<IMasterHub, IWorkerReceiver>(channel, receiver, option: callOption, serializerOptions: options.SerializerOptions);
+            var client = StreamingHubClient.Connect<IMasterHub, IWorkerReceiver>(callInvoker, receiver, option: callOption, serializerOptions: options.SerializerOptions);
             receiver.Client = client;
 
             logger.LogInformation($"Worker -> Master connect successfully, WorkerNodeId:{nodeId.ToString()}.");
@@ -154,7 +171,7 @@ namespace DFrame
             }
         }
 
-        async Task ShutdownAsync(IMasterHub client, Channel channel, Guid nodeId)
+        async Task ShutdownAsync(IMasterHub client, GrpcChannel channel, Guid nodeId)
         {
             logger.LogInformation($"Worker shutdown, WorkerNodeId:{nodeId.ToString()}.");
 
