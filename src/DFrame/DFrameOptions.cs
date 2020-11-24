@@ -30,6 +30,8 @@ namespace DFrame
 
         public DFrameOptions(string masterListenHost, int masterListenPort, string workerConnectToHost, int workerConnectToPort, IScalingProvider scalingProvider)
         {
+            if (masterListenHost == "localhost") masterListenHost = "127.0.0.1";
+            if (workerConnectToHost == "localhost") workerConnectToHost = "127.0.0.1";
             MasterListenHost = masterListenHost;
             MasterListenPort = masterListenPort;
             WorkerConnectToHost = workerConnectToHost;

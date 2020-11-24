@@ -127,39 +127,40 @@ namespace DFrame
         {
             logger.LogInformation("Starting DFrame worker node");
 
-            var channel = GrpcChannel.ForAddress(options.WorkerConnectToHost, new GrpcChannelOptions
+            var channel = GrpcChannel.ForAddress("http://" + options.WorkerConnectToHost + ":" + options.WorkerConnectToPort, new GrpcChannelOptions
             {
-                // new ChannelOption("grpc.keepalive_time_ms", 2000),
-                // new ChannelOption("grpc.keepalive_timeout_ms", 3000),
-                // new ChannelOption("grpc.http2.min_time_between_pings_ms", 5000),
-                HttpClient = new HttpClient(new SocketsHttpHandler
-                {
-                    ConnectTimeout = options.Timeout
-                }),
+                //HttpClient = new HttpClient(new SocketsHttpHandler
+                //{
+                //    ConnectTimeout = options.Timeout
+                //}),
 
-                // .NET 5?
-                /*
                 HttpHandler = new SocketsHttpHandler
                 {
                     PooledConnectionIdleTimeout = Timeout.InfiniteTimeSpan,
-                    // KeepAlivePingDelay = TimeSpan.FromSeconds(60),
-                    //KeepAlivePingTimeout = TimeSpan.FromSeconds(30),
-                    //EnableMultipleHttp2Connections = true
-                }
-                */
+                    KeepAlivePingDelay = TimeSpan.FromSeconds(60),
+                    KeepAlivePingTimeout = TimeSpan.FromSeconds(30),
+                    EnableMultipleHttp2Connections = true,
+                    ConnectTimeout=  TimeSpan.FromSeconds(1), // TODO:options.Timeout,
+                },
+                
+                LoggerFactory = this.provider.GetService<ILoggerFactory>()
             });
 
-            // Connect explicitly???
+            
+
             var callInvoker = channel.CreateCallInvoker();
 
             var nodeId = Guid.NewGuid();
             var receiver = new WorkerReceiver(channel, nodeId, provider, options);
             var callOption = new CallOptions(new Metadata { { "node-id", nodeId.ToString() } });
-
+           
             var client = StreamingHubClient.Connect<IMasterHub, IWorkerReceiver>(callInvoker, receiver, option: callOption, serializerOptions: options.SerializerOptions);
+            // Connect explicitly???
             receiver.Client = client;
 
-            logger.LogInformation($"Worker -> Master connect successfully, WorkerNodeId:{nodeId.ToString()}.");
+            await client.ConnectAsync();
+
+            logger.LogInformation($"Worker -> Master connect completed successfully, WorkerNodeId:{nodeId.ToString()}.");
             try
             {
                 // wait for shutdown command from master.
