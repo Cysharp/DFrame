@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Net.Http;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using DFrame.Kubernetes.Exceptions;
 using DFrame.Kubernetes.Models;
-using DFrame.Kubernetes.Serializers;
 
 namespace DFrame.Kubernetes
 {
@@ -99,15 +97,16 @@ namespace DFrame.Kubernetes
         {
             _failSignal = failSignal;
 
-            Console.WriteLine($"scale out workers {_env.ScalingType}. {_ns}/{_env.Name} ({processCount} pods)");
+            Console.WriteLine($"Scale out workers {_env.ScalingType}. {_ns}/{_env.Name} ({processCount} pods)");
 
+            // todo: Can be replace with SRV record on svc.
             // confirm kubernetes master can connect with cluster api.
-            Console.WriteLine($"checking cluster Endpoint health.");
+            Console.WriteLine($"Checking cluster Endpoint health.");
             var healthy = await _operations.TryConnectClusterEndpointAsync(_env.ClusterEndpointHealthRetry, TimeSpan.FromSeconds(_env.ClusterEndpointHealthInterval), cancellationToken);
 
             if (!healthy)
             {
-                Console.WriteLine($"cluster endpoint is unhealthy, quiting scale out.");
+                Console.WriteLine($"Cluster endpoint is unhealthy, quiting scale out.");
                 _failSignal.TrySetException(new KubernetesException("Could not connect to Kubernetes Cluster Endpoint. Make sure pod can communicate with cluster api."));
             }
             else
@@ -129,7 +128,7 @@ namespace DFrame.Kubernetes
 
         public async ValueTask DisposeAsync()
         {
-            Console.WriteLine($"scale in workers {_env.ScalingType}. {_ns}/{_env.Name}");
+            Console.WriteLine($"Scale in workers {_env.ScalingType}. {_ns}/{_env.Name}");
             if (!_env.PreserveWorker)
             {
                 // delete worker resource.
@@ -155,7 +154,7 @@ namespace DFrame.Kubernetes
             }
             else
             {
-                Console.WriteLine($"detected preserve worker, scale in action skipped.");
+                Console.WriteLine($"Detected preserve worker, scale in action skipped.");
             }
         }
 
@@ -191,8 +190,8 @@ namespace DFrame.Kubernetes
                         }
                     }
                 },
-                ex => throw new KubernetesException($"kubernetes could not confirm launching desired count of worker pods.", ex),
-                () => Console.WriteLine($"kubernetes pod watch completed. expected {nodeCount}, result {added}"),
+                ex => throw new KubernetesException($"Kubernetes could not confirm launching desired count of worker pods.", ex),
+                () => Console.WriteLine($"Kubernetes pod watch completed. expected {nodeCount}, result {added}"),
                 cts))
                 {
                     // begin watch
@@ -210,18 +209,18 @@ namespace DFrame.Kubernetes
                 // confirm result
                 var workerJob = await _operations.GetJobAsync(_ns, _env.Name);
                 if (workerJob.Status.Failed != null && workerJob.Status.Failed.Value > 0)
-                    throw new KubernetesException($"failed to scale out worker on kubernetes, job status was failed.");
+                    throw new KubernetesException($"Failed to scale out worker on kubernetes, job status was failed.");
                 var workerPods = await _operations.GetPodsAsync(_ns, "app=dframe-worker");
                 var terminatedWorkers = workerPods.Items.Where(x => x.Status?.ContainerStatuses?.FirstOrDefault()?.LastState?.Terminated != null).ToArray();
                 if (terminatedWorkers.Any())
-                    throw new KubernetesException($"failed to scale out worker on kubernetes, {terminatedWorkers.Length} pods status detected terminated.");
+                    throw new KubernetesException($"Failed to scale out worker on kubernetes, {terminatedWorkers.Length} pods status detected terminated.");
 
-                Console.WriteLine($"successfully scale out worker job {_ns}/{_env.Name}.");
+                Console.WriteLine($"Successfully scale out worker job {_ns}/{_env.Name}.");
             }
             catch (HttpRequestException ex)
             {
-                Console.WriteLine($"failed to create worker on kubernetes. {_ns}/{_env.Name}. {ex}");
-                Console.WriteLine($"dump requested manifest.\n{def}");
+                Console.WriteLine($"Failed to create worker on kubernetes. {_ns}/{_env.Name}. {ex}");
+                Console.WriteLine($"Dump requested manifest.\n{def}");
                 throw;
             }
         }
@@ -257,8 +256,8 @@ namespace DFrame.Kubernetes
                         }
                     }
                 },
-                ex => throw new KubernetesException($"kubernetes could not confirm launching desired count of worker pods.", ex),
-                () => Console.WriteLine($"kubernetes pod watch completed. expected {nodeCount}, result {added}"),
+                ex => throw new KubernetesException($"Kubernetes could not confirm launching desired count of worker pods.", ex),
+                () => Console.WriteLine($"Kubernetes pod watch completed. expected {nodeCount}, result {added}"),
                 cts))
                 {
                     // begin watch
@@ -276,13 +275,13 @@ namespace DFrame.Kubernetes
                 // confirm result
                 var workerDeploy = await _operations.GetDeploymentAsync(_ns, _env.Name);
                 if (workerDeploy.Status.UnavailableReplicas != null && workerDeploy.Status.UnavailableReplicas > 0)
-                    throw new KubernetesException($"failed to scale out worker on kubernetes, deploy status was failed.");
+                    throw new KubernetesException($"Failed to scale out worker on kubernetes, deploy status was failed.");
                 var workerPods = await _operations.GetPodsAsync(_ns, "app=dframe-worker");
                 var terminatedWorkers = workerPods.Items.Where(x => x.Status?.ContainerStatuses?.FirstOrDefault()?.LastState?.Terminated != null).ToArray();
                 if (terminatedWorkers.Any())
-                    throw new KubernetesException($"failed to scale out worker on kubernetes, {terminatedWorkers.Length} pods status detected terminated.");
+                    throw new KubernetesException($"Failed to scale out worker on kubernetes, {terminatedWorkers.Length} pods status detected terminated.");
 
-                Console.WriteLine($"successfully scale out worker deploy {_ns}/{_env.Name}.");
+                Console.WriteLine($"Successfully scale out worker deploy {_ns}/{_env.Name}.");
             }
             catch (HttpRequestException ex)
             {
