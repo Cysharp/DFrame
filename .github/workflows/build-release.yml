@@ -27,11 +27,9 @@ jobs:
       - uses: actions/setup-dotnet@v1
         with:
           dotnet-version: ${{ env.DOTNET_SDK_VERISON_3 }}
-      # build and test
+      # pack nuget
       - run: dotnet build -c Release -p:Version=${{ env.GIT_TAG }}
       # - run: dotnet test -c Release --no-build
-
-      # pack packages
       - run: dotnet pack ./src/DFrame/DFrame.csproj -c Release --no-build -p:Version=${{ env.GIT_TAG }} -o ./publish
       - run: dotnet pack ./src/DFrame.LoadTesting/DFrame.LoadTesting.csproj -c Release --no-build -p:Version=${{ env.GIT_TAG }} -o ./publish
       - run: dotnet pack ./src/DFrame.OutOfProcess/DFrame.OutOfProcess.csproj -c Release --no-build -p:Version=${{ env.GIT_TAG }} -o ./publish
