@@ -2,6 +2,7 @@
 using MessagePack.Formatters;
 using MessagePack.Resolvers;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 
@@ -20,6 +21,8 @@ namespace DFrame
         public WorkerDisconnectedBehaviour WorkerDisconnectedBehaviour { get; set; }
         public MessagePackSerializerOptions SerializerOptions { get; set; }
         public Func<string?[], IHostBuilder> HostBuilderFactory { get; set; }
+
+        public Action<ILoggingBuilder> ConfigureInnerHostLogging { get; set; }
 
         public Action<ExecuteResult[], DFrameOptions, ExecuteScenario>? OnExecuteResult { get; set; }
 

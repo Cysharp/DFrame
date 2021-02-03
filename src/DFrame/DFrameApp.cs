@@ -42,6 +42,13 @@ namespace DFrame
                     {
                         x.AddTransient(item.WorkerType);
                     }
+                })
+                .ConfigureLogging(x =>
+                {
+                    if (options.ConfigureInnerHostLogging != null)
+                    {
+                        options.ConfigureInnerHostLogging(x);
+                    }
                 });
 
             if (args.Length != 0 && args.Contains("--worker-flag"))

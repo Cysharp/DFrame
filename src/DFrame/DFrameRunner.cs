@@ -136,12 +136,19 @@ namespace DFrame
                 })
                 .ConfigureLogging(logging =>
                 {
-                    logging.ClearProviders();
-                    logging.AddZLoggerConsole(options =>
+                    if (options.ConfigureInnerHostLogging != null)
                     {
-                        // todo: configure structured logging
-                        options.EnableStructuredLogging = false;
-                    });
+                        options.ConfigureInnerHostLogging(logging);
+                    }
+                    else
+                    {
+                        logging.ClearProviders();
+                        logging.AddZLoggerConsole(options =>
+                        {
+                            // todo: configure structured logging
+                            options.EnableStructuredLogging = false;
+                        });
+                    }
                 })
                 .Build();
 
