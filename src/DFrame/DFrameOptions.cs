@@ -24,7 +24,7 @@ namespace DFrame
 
         public Action<ILoggingBuilder> ConfigureInnerHostLogging { get; set; }
 
-        public Action<ExecuteResult[], DFrameOptions, ExecuteScenario>? OnExecuteResult { get; set; }
+        public Action<ExecuteResult[], DFrameOptions, ExecuteScenario>? OnExecuteResult { get; set; } // TODO: If failed, automatically show logs?
 
         public DFrameOptions(string masterListenHost, int masterListenPort)
             : this(masterListenHost, masterListenPort, masterListenHost, masterListenPort, new InProcessScalingProvider())

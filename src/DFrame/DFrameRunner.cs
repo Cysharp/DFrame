@@ -185,7 +185,7 @@ namespace DFrame
                     typeof(DistributedStackService),
                     typeof(DistributedHashSetService),
                     typeof(DistributedListService),
-                    typeof(IDistributedDictionaryService),
+                    typeof(DistributedDictionaryService),
                 }, opt =>
                 {
                     opt.IsReturnExceptionStackTraceInErrorDetail = true;

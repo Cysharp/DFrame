@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit.Abstractions;
@@ -35,6 +36,14 @@ namespace DFrame.Tests
                         logging.ClearProviders();
                         logging.SetMinimumLevel(LogLevel.Trace);
                         logging.AddProvider(new TestOutputLoggerProvider(helper));
+                    },
+                    OnExecuteResult = (results, opt, scenario)=>
+                    {
+                        var error = results.FirstOrDefault(x => x.HasError);
+                        if (error != null)
+                        {
+                            throw new Exception("Worker Execution has errors. " + error.ErrorMessage);
+                        }
                     }
                 });
             await task;

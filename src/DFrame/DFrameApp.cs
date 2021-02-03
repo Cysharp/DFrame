@@ -32,6 +32,8 @@ namespace DFrame
                 return;
             }
 
+            var errorHolder = new ExceptionHoldLoggerProvider();
+
             hostBuilder = hostBuilder
                 .ConfigureServices(x =>
                 {
@@ -49,6 +51,8 @@ namespace DFrame
                     {
                         options.ConfigureInnerHostLogging(x);
                     }
+
+                    x.AddProvider(errorHolder);
                 });
 
             if (args.Length != 0 && args.Contains("--worker-flag"))
@@ -59,6 +63,11 @@ namespace DFrame
             {
                 await hostBuilder.RunConsoleAppFrameworkAsync<DFrameApp>(args);
             }
+
+            if (errorHolder.Exception != null)
+            {
+                ExceptionDispatchInfo.Throw(errorHolder.Exception);
+            }
         }
 
         static void ShowDFrameAppList(DFrameWorkerCollection types)
@@ -67,6 +76,52 @@ namespace DFrame
             foreach (var item in types.All)
             {
                 Console.WriteLine(item.Name);
+            }
+        }
+
+        class ExceptionHoldLoggerProvider : ILoggerProvider
+        {
+            public Exception? Exception { get; set; }
+
+            public ILogger CreateLogger(string categoryName)
+            {
+                return new Logger(this);
+            }
+
+            public void Dispose()
+            {
+            }
+
+            class Logger : ILogger, IDisposable
+            {
+                ExceptionHoldLoggerProvider parent;
+
+                public Logger(ExceptionHoldLoggerProvider parent)
+                {
+                    this.parent = parent;
+                }
+
+                public IDisposable BeginScope<TState>(TState state)
+                {
+                    return this;
+                }
+
+                public void Dispose()
+                {
+                }
+
+                public bool IsEnabled(LogLevel logLevel)
+                {
+                    return true;
+                }
+
+                public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+                {
+                    if (exception != null)
+                    {
+                        parent.Exception = exception;
+                    }
+                }
             }
         }
     }
@@ -147,20 +202,20 @@ namespace DFrame
                     KeepAlivePingDelay = TimeSpan.FromSeconds(60),
                     KeepAlivePingTimeout = TimeSpan.FromSeconds(30),
                     EnableMultipleHttp2Connections = true,
-                    ConnectTimeout=  TimeSpan.FromSeconds(1), // TODO:options.Timeout,
+                    ConnectTimeout = TimeSpan.FromSeconds(1), // TODO:options.Timeout,
                 },
-                
+
                 LoggerFactory = this.provider.GetService<ILoggerFactory>()
             });
 
-            
+
 
             var callInvoker = channel.CreateCallInvoker();
 
             var nodeId = Guid.NewGuid();
             var receiver = new WorkerReceiver(channel, nodeId, provider, options);
             var callOption = new CallOptions(new Metadata { { "node-id", nodeId.ToString() } });
-           
+
             var client = StreamingHubClient.Connect<IMasterHub, IWorkerReceiver>(callInvoker, receiver, option: callOption, serializerOptions: options.SerializerOptions);
             // Connect explicitly???
             receiver.Client = client;
