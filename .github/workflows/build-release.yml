@@ -35,6 +35,10 @@ jobs:
       - run: dotnet pack ./src/DFrame.LoadTesting/DFrame.LoadTesting.csproj -c Release --no-build -p:Version=${{ env.GIT_TAG }} -o ./publish
       - run: dotnet pack ./src/DFrame.OutOfProcess/DFrame.OutOfProcess.csproj -c Release --no-build -p:Version=${{ env.GIT_TAG }} -o ./publish
       - run: dotnet pack ./src/DFrame.Kubernetes/DFrame.Kubernetes.csproj -c Release --no-build -p:Version=${{ env.GIT_TAG }} -o ./publish
+      - uses: actions/upload-artifact@v2
+        with:
+          name: nuget
+          path: ./publish
 
   create-release:
     if: github.event.inputs.dry_run == 'false'
