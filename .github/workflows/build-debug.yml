@@ -3,13 +3,12 @@ name: Build-Debug
 on:
   push:
     branches:
-      - "**"
+      - "master"
     tags:
       - "!*" # not a tag push
   pull_request:
-    types:
-      - opened
-      - synchronize
+    branches:
+      - master
 
 jobs:
   build-dotnet:
