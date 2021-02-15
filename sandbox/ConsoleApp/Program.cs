@@ -11,6 +11,7 @@ using Grpc.Core;
 using EchoMagicOnion.Shared;
 using MagicOnion.Client;
 using System.Linq;
+using Grpc.Net.Client;
 
 namespace ConsoleApp
 {
@@ -25,8 +26,8 @@ namespace ConsoleApp
             if (args.Length == 0)
             {
                 // master
-                args = new[] { "help", "rampup" };
-                //args = "batch -processCount 5 -workerPerProcess 10 -executePerWorker 10 -workerName SampleHttpWorker".Split(' ');
+                //args = new[] { "help", "rampup" };
+                args = "batch -processCount 1 -workerPerProcess 10 -executePerWorker 10 -workerName SampleWorker".Split(' ');
 
                 //args = "rampup -processCount 5 -maxWorkerPerProcess 12 -workerSpawnCount 4 -workerSpawnSecond 5 -workerName SampleHttpWorker".Split(' ');
 
@@ -68,7 +69,7 @@ namespace ConsoleApp
                         options.EnableStructuredLogging = false;
                     });
                 })
-                // .RunDFrameLoadTestingAsync(args, new DFrameOptions(host, 12345)
+                //.RunDFrameAsync(args, new DFrameOptions(host, 12345)
                 .RunDFrameLoadTestingAsync(args, new DFrameOptions(host, 12345, host, 12345, new InProcessScalingProvider())
                 {
 
@@ -152,14 +153,14 @@ namespace ConsoleApp
 
     public class SampleUnaryWorker : Worker
     {
-        private Channel _channel;
+        private GrpcChannel _channel;
         private IEchoService _client;
 
         private readonly string _host = "localhost";
 
         public override async Task SetupAsync(WorkerContext context)
         {
-            _channel = new Channel(_host, 12346, ChannelCredentials.Insecure);
+            _channel = GrpcChannel.ForAddress(_host + ":12346");
             _client = MagicOnionClient.Create<IEchoService>(_channel);
         }
         public override async Task ExecuteAsync(WorkerContext context)
@@ -175,14 +176,14 @@ namespace ConsoleApp
 
     public class SampleStreamWorker : Worker
     {
-        private Channel _channel;
+        private GrpcChannel _channel;
         private IEchoHub _client;
 
         private readonly string _host = "localhost";
 
         public override async Task SetupAsync(WorkerContext context)
         {
-            _channel = new Channel(_host, 12346, ChannelCredentials.Insecure);
+            _channel = GrpcChannel.ForAddress(_host + ":12346");
             var receiver = new EchoReceiver(_channel);
             _client = StreamingHubClient.Connect<IEchoHub, IEchoHubReceiver>(_channel, receiver);
             receiver.Client = _client;

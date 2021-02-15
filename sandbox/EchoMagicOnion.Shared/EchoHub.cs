@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Grpc.Core;
+using Grpc.Net.Client;
 using MagicOnion;
 using MessagePack;
 
@@ -19,9 +20,9 @@ namespace EchoMagicOnion.Shared
     }
     public class EchoReceiver : IEchoHubReceiver
     {
-        readonly Channel channel;
+        readonly GrpcChannel channel;
 
-        public EchoReceiver(Channel channel)
+        public EchoReceiver(GrpcChannel channel)
         {
             this.channel = channel;
         }

@@ -2,6 +2,7 @@
 using MessagePack.Formatters;
 using MessagePack.Resolvers;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 
@@ -11,6 +12,7 @@ namespace DFrame
     {
         public string MasterListenHost { get; }
         public int MasterListenPort { get; }
+        // TODO:Address
         public string WorkerConnectToHost { get; }
         public int WorkerConnectToPort { get; }
         public IScalingProvider ScalingProvider { get; }
@@ -20,7 +22,9 @@ namespace DFrame
         public MessagePackSerializerOptions SerializerOptions { get; set; }
         public Func<string?[], IHostBuilder> HostBuilderFactory { get; set; }
 
-        public Action<ExecuteResult[], DFrameOptions, ExecuteScenario>? OnExecuteResult { get; set; }
+        public Action<ILoggingBuilder>? ConfigureInnerHostLogging { get; set; }
+
+        public Action<ExecuteResult[], DFrameOptions, ExecuteScenario>? OnExecuteResult { get; set; } // TODO: If failed, automatically show logs?
 
         public DFrameOptions(string masterListenHost, int masterListenPort)
             : this(masterListenHost, masterListenPort, masterListenHost, masterListenPort, new InProcessScalingProvider())
@@ -29,6 +33,8 @@ namespace DFrame
 
         public DFrameOptions(string masterListenHost, int masterListenPort, string workerConnectToHost, int workerConnectToPort, IScalingProvider scalingProvider)
         {
+            if (masterListenHost == "localhost") masterListenHost = "127.0.0.1";
+            if (workerConnectToHost == "localhost") workerConnectToHost = "127.0.0.1";
             MasterListenHost = masterListenHost;
             MasterListenPort = masterListenPort;
             WorkerConnectToHost = workerConnectToHost;

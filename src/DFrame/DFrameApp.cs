@@ -2,8 +2,8 @@
 using DFrame.Collections;
 using DFrame.Internal;
 using Grpc.Core;
+using Grpc.Net.Client;
 using MagicOnion.Client;
-using MagicOnion.Hosting;
 using MagicOnion.Server;
 using MessagePack;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,6 +32,8 @@ namespace DFrame
                 return;
             }
 
+            var errorHolder = new ExceptionHoldLoggerProvider();
+
             hostBuilder = hostBuilder
                 .ConfigureServices(x =>
                 {
@@ -41,6 +44,15 @@ namespace DFrame
                     {
                         x.AddTransient(item.WorkerType);
                     }
+                })
+                .ConfigureLogging(x =>
+                {
+                    if (options.ConfigureInnerHostLogging != null)
+                    {
+                        options.ConfigureInnerHostLogging(x);
+                    }
+
+                    x.AddProvider(errorHolder);
                 });
 
             if (args.Length != 0 && args.Contains("--worker-flag"))
@@ -51,6 +63,11 @@ namespace DFrame
             {
                 await hostBuilder.RunConsoleAppFrameworkAsync<DFrameApp>(args);
             }
+
+            if (errorHolder.Exception != null)
+            {
+                ExceptionDispatchInfo.Throw(errorHolder.Exception);
+            }
         }
 
         static void ShowDFrameAppList(DFrameWorkerCollection types)
@@ -59,6 +76,52 @@ namespace DFrame
             foreach (var item in types.All)
             {
                 Console.WriteLine(item.Name);
+            }
+        }
+
+        class ExceptionHoldLoggerProvider : ILoggerProvider
+        {
+            public Exception? Exception { get; set; }
+
+            public ILogger CreateLogger(string categoryName)
+            {
+                return new Logger(this);
+            }
+
+            public void Dispose()
+            {
+            }
+
+            class Logger : ILogger, IDisposable
+            {
+                ExceptionHoldLoggerProvider parent;
+
+                public Logger(ExceptionHoldLoggerProvider parent)
+                {
+                    this.parent = parent;
+                }
+
+                public IDisposable BeginScope<TState>(TState state)
+                {
+                    return this;
+                }
+
+                public void Dispose()
+                {
+                }
+
+                public bool IsEnabled(LogLevel logLevel)
+                {
+                    return true;
+                }
+
+                public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+                {
+                    if (exception != null)
+                    {
+                        parent.Exception = exception;
+                    }
+                }
             }
         }
     }
@@ -126,23 +189,40 @@ namespace DFrame
         {
             logger.LogInformation("Starting DFrame worker node");
 
-            var channel = new Channel(options.WorkerConnectToHost, options.WorkerConnectToPort, ChannelCredentials.Insecure,
-                new[] {
-                    // keep alive
-                    new ChannelOption("grpc.keepalive_time_ms", 2000),
-                    new ChannelOption("grpc.keepalive_timeout_ms", 3000),
-                    new ChannelOption("grpc.http2.min_time_between_pings_ms", 5000),
-                });
+            var channel = GrpcChannel.ForAddress("http://" + options.WorkerConnectToHost + ":" + options.WorkerConnectToPort, new GrpcChannelOptions
+            {
+                //HttpClient = new HttpClient(new SocketsHttpHandler
+                //{
+                //    ConnectTimeout = options.Timeout
+                //}),
+
+                HttpHandler = new SocketsHttpHandler
+                {
+                    PooledConnectionIdleTimeout = Timeout.InfiniteTimeSpan,
+                    KeepAlivePingDelay = TimeSpan.FromSeconds(60),
+                    KeepAlivePingTimeout = TimeSpan.FromSeconds(30),
+                    EnableMultipleHttp2Connections = true,
+                    ConnectTimeout = TimeSpan.FromSeconds(1), // TODO:options.Timeout,
+                },
+
+                LoggerFactory = this.provider.GetService<ILoggerFactory>()
+            });
+
+
+
+            var callInvoker = channel.CreateCallInvoker();
+
             var nodeId = Guid.NewGuid();
             var receiver = new WorkerReceiver(channel, nodeId, provider, options);
             var callOption = new CallOptions(new Metadata { { "node-id", nodeId.ToString() } });
-            // explict channel connect to resolve slow grpc connection on fatgate.
-            await channel.ConnectAsync(DateTime.UtcNow.Add(options.Timeout));
 
-            var client = StreamingHubClient.Connect<IMasterHub, IWorkerReceiver>(channel, receiver, option: callOption, serializerOptions: options.SerializerOptions);
+            var client = StreamingHubClient.Connect<IMasterHub, IWorkerReceiver>(callInvoker, receiver, option: callOption, serializerOptions: options.SerializerOptions);
+            // Connect explicitly???
             receiver.Client = client;
 
-            logger.LogInformation($"Worker -> Master connect successfully, WorkerNodeId:{nodeId.ToString()}.");
+            await client.ConnectAsync();
+
+            logger.LogInformation($"Worker -> Master connect completed successfully, WorkerNodeId:{nodeId.ToString()}.");
             try
             {
                 // wait for shutdown command from master.
@@ -154,7 +234,7 @@ namespace DFrame
             }
         }
 
-        async Task ShutdownAsync(IMasterHub client, Channel channel, Guid nodeId)
+        async Task ShutdownAsync(IMasterHub client, GrpcChannel channel, Guid nodeId)
         {
             logger.LogInformation($"Worker shutdown, WorkerNodeId:{nodeId.ToString()}.");
 

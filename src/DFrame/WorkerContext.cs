@@ -1,5 +1,6 @@
 ﻿using DFrame.Collections;
 using Grpc.Core;
+using Grpc.Net.Client;
 using MagicOnion;
 using MagicOnion.Client;
 using MessagePack;
@@ -9,12 +10,12 @@ namespace DFrame
 {
     public class WorkerContext
     {
-        readonly Channel masterChannel;
+        readonly GrpcChannel masterChannel;
         readonly MessagePackSerializerOptions serializerOptions;
 
         public string WorkerId { get; }
 
-        public WorkerContext(Channel masterChannel, DFrameOptions options)
+        public WorkerContext(GrpcChannel masterChannel, DFrameOptions options)
         {
             this.masterChannel = masterChannel;
             this.WorkerId = Guid.NewGuid().ToString();
@@ -50,7 +51,7 @@ namespace DFrame
             where T : IService<T>
         {
             return MagicOnionClient.Create<T>(
-                    new DefaultCallInvoker(masterChannel),
+                    masterChannel.CreateCallInvoker(),
                     serializerOptions)
                 .WithHeaders(new Metadata() { { key, value } });
         }

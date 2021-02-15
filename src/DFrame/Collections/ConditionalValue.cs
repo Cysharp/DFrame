@@ -3,9 +3,9 @@
     public struct ConditionalValue<TValue>
     {
         public bool HasValue { get; }
-        public TValue Value { get; }
+        public TValue? Value { get; }
 
-        public ConditionalValue(bool hasValue, TValue value)
+        public ConditionalValue(bool hasValue, TValue? value)
         {
             this.HasValue = hasValue;
             this.Value = value;

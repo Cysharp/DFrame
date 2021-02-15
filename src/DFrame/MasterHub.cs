@@ -11,6 +11,7 @@ namespace DFrame
 {
     public interface IMasterHub : IStreamingHub<IMasterHub, IWorkerReceiver>
     {
+        Task ConnectAsync();
         Task CreateCoWorkerCompleteAsync();
         Task ReportProgressAsync(ExecuteResult result);
         Task ExecuteCompleteAsync(ExecuteResult[] result);
@@ -43,6 +44,11 @@ namespace DFrame
         {
             workerConnectionContext.RemoveConnection(nodeId);
             return default;
+        }
+
+        public Task ConnectAsync()
+        {
+            return Task.CompletedTask;
         }
 
         public Task CreateCoWorkerCompleteAsync()
