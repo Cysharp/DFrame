@@ -14,7 +14,7 @@ on:
 env:
   GIT_TAG: ${{ github.event.inputs.tag }}
   DRY_RUN: ${{ github.event.inputs.dry_run }}
-  DOTNET_SDK_VERISON_5: 3.1.x
+  DOTNET_SDK_VERISON_3: 3.1.x
   DOTNET_SDK_VERISON_5: 5.0.100
 
 jobs:
