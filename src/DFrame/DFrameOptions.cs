@@ -22,7 +22,7 @@ namespace DFrame
         public MessagePackSerializerOptions SerializerOptions { get; set; }
         public Func<string?[], IHostBuilder> HostBuilderFactory { get; set; }
 
-        public Action<ILoggingBuilder> ConfigureInnerHostLogging { get; set; }
+        public Action<ILoggingBuilder>? ConfigureInnerHostLogging { get; set; }
 
         public Action<ExecuteResult[], DFrameOptions, ExecuteScenario>? OnExecuteResult { get; set; } // TODO: If failed, automatically show logs?
 
