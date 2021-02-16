@@ -12,5 +12,9 @@
   <ItemGroup>
     <ProjectReference Include="..\DFrame\DFrame.csproj" />
   </ItemGroup>
+  
+    <ItemGroup>
+        <None Include="../DFrame/Icon.png" Pack="true" PackagePath="/" />
+    </ItemGroup>
 
 </Project>
