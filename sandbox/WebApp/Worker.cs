@@ -1,6 +1,7 @@
 ﻿using DFrame;
 using EchoMagicOnion.Shared;
 using Grpc.Core;
+using Grpc.Net.Client;
 using MagicOnion.Client;
 using System;
 using System.Collections.Generic;
@@ -85,14 +86,14 @@ namespace WebApp
 
     public class SampleUnaryWorker : Worker
     {
-        private Channel _channel;
+        private GrpcChannel _channel;
         private IEchoService _client;
 
         private readonly string _host = "localhost";
 
         public override async Task SetupAsync(WorkerContext context)
         {
-            _channel = new Channel(_host, 12346, ChannelCredentials.Insecure);
+            _channel = GrpcChannel.ForAddress(_host + ":12346");
             _client = MagicOnionClient.Create<IEchoService>(_channel);
         }
         public override async Task ExecuteAsync(WorkerContext context)
@@ -108,16 +109,16 @@ namespace WebApp
 
     public class SampleStreamWorker : Worker
     {
-        private Channel _channel;
+        private GrpcChannel _channel;
         private IEchoHub _client;
 
         private readonly string _host = "localhost";
 
         public override async Task SetupAsync(WorkerContext context)
         {
-            _channel = new Channel(_host, 12346, ChannelCredentials.Insecure);
+            _channel = GrpcChannel.ForAddress(_host + ":12346");
             var receiver = new EchoReceiver(_channel);
-            _client = StreamingHubClient.Connect<IEchoHub, IEchoHubReceiver>(_channel, receiver);
+            _client = await StreamingHubClient.ConnectAsync<IEchoHub, IEchoHubReceiver>(_channel, receiver);
             receiver.Client = _client;
         }
         public override async Task ExecuteAsync(WorkerContext context)

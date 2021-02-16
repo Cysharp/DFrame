@@ -185,7 +185,7 @@ namespace ConsoleApp
         {
             _channel = GrpcChannel.ForAddress(_host + ":12346");
             var receiver = new EchoReceiver(_channel);
-            _client = StreamingHubClient.Connect<IEchoHub, IEchoHubReceiver>(_channel, receiver);
+            _client = await StreamingHubClient.ConnectAsync<IEchoHub, IEchoHubReceiver>(_channel, receiver);
             receiver.Client = _client;
         }
         public override async Task ExecuteAsync(WorkerContext context)

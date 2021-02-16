@@ -1,5 +1,6 @@
 ﻿using Grpc.Core;
 using MagicOnion.Client;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -34,8 +35,8 @@ namespace DFrame
             // create shim of ConsoleApp
             try
             {
-                var logger = provider.GetService(typeof(ILogger<DFrameWorkerApp>));
-                var logger2 = provider.GetService(typeof(ILogger<ConsoleAppFramework.ConsoleAppEngine>));
+                var logger = provider.GetRequiredService(typeof(ILogger<DFrameWorkerApp>));
+                var logger2 = provider.GetRequiredService(typeof(ILogger<ConsoleAppFramework.ConsoleAppEngine>));
                 var app = new DFrameWorkerApp((ILogger<DFrameWorkerApp>)logger, provider, options);
                 app.Context = new ConsoleAppFramework.ConsoleAppContext(new string[0], DateTime.UtcNow, cancellationToken, (ILogger<ConsoleAppFramework.ConsoleAppEngine>)logger2, null!, provider);
 
