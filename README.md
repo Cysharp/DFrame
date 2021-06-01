@@ -4,7 +4,7 @@ Kubernetes based Micro **D**istributed Batch **Frame**work and Load Testing Libr
 
 This library allows you to write distributed batch or load test scenarios in C#. In addition to HTTP/1, you can test HTTP/2, gRPC, MagicOnion, Photon, or original network transport by writing in C#.
 
-**Work In Progress** Preview `0.0.4`, currently you can try standalone batch framework and load testing like ApacheBanch.
+**Work In Progress** Preview `0.0.4`.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -185,6 +185,11 @@ public class SampleWorker : Worker
 Kubernetes
 ---
 WIP, DFrame scales 1-10000 workers via Kuberenetes. Distributed batches can be written collaboratively through inter-worker communication through Distributed Collections. It also enables large scale load testing.
+
+You can choose for Kuberentes or AWS ECS(includes Fargate)
+
+> Install-Package DFrame.Kuberentes
+> Install-Package DFrame.Ecs
 
 License
 ---
