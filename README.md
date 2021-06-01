@@ -188,7 +188,7 @@ WIP, DFrame scales 1-10000 workers via Kuberenetes. Distributed batches can be w
 
 You can choose for Kuberentes or AWS ECS(includes Fargate)
 
-> Install-Package DFrame.Kuberentes  
+> Install-Package DFrame.Kubernetes  
 > Install-Package DFrame.Ecs
 
 License
