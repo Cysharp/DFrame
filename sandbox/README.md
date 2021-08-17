@@ -1,4 +1,4 @@
-## Getting Started
+# Getting Started
 
 Use ConsoleApp to try DFrame with InProcessScalingProvider and LoadTest to HTTP(S) Server.
 
@@ -22,7 +22,7 @@ run sample ConsoleApp.
 dotnet run --project sandbox/ConsoleApp
 ```
 
-## WebApp
+# WebApp
 
 WebApp provide WebUI and record Profiler History to database.
 Use EntityFramework to use database.
@@ -44,7 +44,7 @@ run migrations.
 docker-compose -f sandbox/docker-compose.yaml up
 ```
 
-## docker
+# docker
 
 Try inprocess or Out of Process (oop).
 
@@ -60,158 +60,176 @@ docker tag dframe_sample_oop:0.1.0 cysharp/dframe_sample_oop
 docker push cysharp/dframe_sample_oop
 ```
 
-## Kubernetes Scaling Provider (k8s)
+# Kubernetes
 
-You can deploy DFrame to your Kubernetes cluster and run load test.
+You can deploy DFrame to your Kubernetes cluster and run load test via Kubernetes Scaling Provider (DFrame.Kubernetes).
 This sample contains Kustomize based kubernetes deployment.
 
-### rbac-less kubernetes
+**Prerequisites**
 
-following is rbac-less cluster.
+Following commands are used on this sample.
+
+* [kubens](https://github.com/ahmetb/kubectx)
+* [stern](https://github.com/wercker/stern)
+
+## First step samples
+
+These samples confirm DFrame Master and Workers are successfully communicating.
+Before trying benchmark to external Server, run one of this sample.
+
+### Sample1. Deploy to RBAC-less Kubernetes
+
+To run on RBAC-less cluster, run following commands from repository root. RBAC-less sample can be used for Kubernetes running on Docker for Windows/macOS.
 
 ```shell
-kubectl apply -f sandbox/k8s/dframe/overlays/local/namespace.yaml
+# ECR Info
+ACCOUNT_ID=431046970529 # your aws account id
+REGION=ap-northeast-1 # your aws region
+
+# Prepare namespace and switch to
+kubectl apply -f sandbox/k8s/dframe/overlays/rbacless/namespace.yaml
 kubens dframe
 # Generate ImagePullSecret if you host image on your private registry like ECR.
 kubectl delete secret aws-registry
 kubectl create secret docker-registry aws-registry \
-              --docker-server=https://<ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com \
+              --docker-server=https://${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com \
               --docker-username=AWS \
               --docker-password=$(aws ecr get-login-password) \
               --docker-email=no@email.local
+# Deploy
 kubectl delete job dframe-master
-kubectl kustomize sandbox/k8s/dframe/overlays/local | kubectl apply -f -
+kubectl kustomize sandbox/k8s/dframe/overlays/rbacless | kubectl apply -f -
+# Check logs
 stern dframe*
 ```
 
-### RBAC Kubernetes
-
-enable ServiceAccount and Roles to run on RBAC cluster.
+After execution, clean up resources by following command.
 
 ```shell
-kubectl kustomize sandbox/k8s/dframe/overlays/development | kubectl apply -f -
-kubens dframe
-stern dframe*
+# clean up
+kubectl kustomize sandbox/k8s/dframe/overlays/rbacless | kubectl delete -f -
+```
 
+### Sample2. Deploy to RBAC Kubernetes
+
+To run on RBAC cluster, use following commands. This enable ServiceAccount and Roles.
+
+```shell
+# Deploy
+kubectl kustomize sandbox/k8s/dframe/overlays/development | kubectl apply -f -
+# Check logs
+stern dframe* -n dframe
+```
+
+After execution, clean up resources by following command.
+
+```shell
 kubectl kustomize sandbox/k8s/dframe/overlays/development | kubectl delete -f -
 ```
 
-### EKS NodeGroup
+### Sample3. Deploy to EKS NodeGroup
 
-This example run on ESK with NodeGroup named `dframe`.
-
-```shell
-kubectl kustomize sandbox/k8s/dframe/overlays/development-nodegroup | kubectl apply -f -
-kubens dframe
-stern dframe*
-
-kubectl kustomize sandbox/k8s/dframe/overlays/development-nodegroup | kubectl delete -f -
-```
-
-### EKS Fargate
-
-This example run on EKS with Fargate, fargate profile is enable to `dframe-fargate` namespace label.
-Make sure Fargate pod is slow to start, it takes 30sec to 150sec until Ready state. 
-You may wait about 3min until Fargates start your DFrame Worker.
-
+To run on EKS NodeGroup named `dframe`, use following commands.
 
 ```shell
-kubectl kustomize sandbox/k8s/dframe/overlays/development-fargate | kubectl apply -f -
-kubens dframe-fargate
-stern dframe*
-
-kubectl kustomize sandbox/k8s/dframe/overlays/development-fargate | kubectl delete -f -
+# Deploy
+kubectl kustomize sandbox/k8s/dframe/overlays/eks-nodegroup | kubectl apply -f -
+# Check logs
+stern dframe* -n dframe
 ```
+
+After execution, clean up resources by following command.
 
 ```shell
-kubectl run -it --rm --restart=Never -n dframe-fargate --image=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe-fargate.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "request" "-processCount" "1" "-workerPerProcess" "10" "-executePerWorker" "10" "-workerName" "SampleWorker"
+kubectl kustomize sandbox/k8s/dframe/overlays/eks-nodegroup | kubectl delete -f -
 ```
 
-### Redeploy
+### Sample4. Deploy to EKS Fargate
 
-If you already deployed service and rbac resources, service account and others, you can try fast load testing itelation by just change args and run  DFrame master as pod.
-Below sample will run 1000000 requests of SampleHttpWorker, includes 10 process 10 workers and 10000 execute.
+To run on EKS Fargate, use following commands. Fargate profile is enable to `dframe-fargate` namespace.
+
+> NOTE: Make sure Fargate pod is slow to start, it takes 30sec to 150sec until pod become Ready state. You may need wait until Fargates start your DFrame Worker pods.
 
 ```shell
-kubectl run -it --rm --restart=Never -n dframe --image=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "batch -processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10000" "-workerName" "SampleHttpWorker"
+kubectl kustomize sandbox/k8s/dframe/overlays/eks-fargate | kubectl apply -f -
+stern dframe* -n dframe-fargate
 ```
 
-You can try LoadTest to MagicOnion with SampleUnaryWorker and SampleStreamWorker.
+After execution, clean up resources by following command.
 
 ```shell
-kubectl run -it --rm --restart=Never -n dframe --image=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "batch -processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10000" "-workerName" "SampleUnaryWorker"
+kubectl kustomize sandbox/k8s/dframe/overlays/eks-fargate | kubectl delete -f -
 ```
+
+> TIPS: If you need confirm fargate profile is collect, here's commandline sample to run dframe-master.
 
 ```shell
-kubectl run -it --rm --restart=Never -n dframe --image=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=431046970529.dkr.ecr.ap-northeast-1.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "batch -processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10000" "-workerName" "SampleStreamWorker"
+ACCOUNT_ID=431046970529 # your aws account id
+REGION=ap-northeast-1 # your aws region
+
+kubectl run -it --rm --restart=Never -n dframe-fargate --image=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe-fargate.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "request" "-processCount" "1" "-workerPerProcess" "10" "-executePerWorker" "10" "-workerName" "SampleWorker"
 ```
 
-## etc....
+## (Advanced) Step1. Launch loadtest target server
 
-### ab test on k8s
+Now you are ready to benchmark external server.
+Let's launch target server and benchmark to it.
 
-```shell
-# 10並列 / 10000 リクエスト
-kubectl run -i --rm --restart=Never -n dframe --image=mocoso/apachebench apachebench -- bash -c "ab -n 10000 -c 10 http://77948c50-apiserver-apiserv-98d9-538745285.ap-northeast-1.elb.amazonaws.com/healthz"
-```
+### Choice 1. Launch Http Echo Server
 
-### loadtest target server http
+Let's launch API-Server to serve dframe worker HttpClient benchmark.
 
-build
+This server accept sandbox DFrame `ConsoleApp.SampleHttpWorker` scenario requests.
 
-```shell
-docker build -t cysharp/dframe-echoserver:0.0.1 -f sandbox/EchoServer/Dockerfile .
-docker tag cysharp/dframe-echoserver:0.0.1 cysharp/dframe-echoserver:latest
-docker push cysharp/dframe-echoserver:0.0.1
-docker push cysharp/dframe-echoserver:latest
-```
-
-let's launch apiserver to try httpclient access bench through dframe worker.
-
-local
+**Run on local**
 
 ```shell
 kubectl kustomize sandbox/k8s/apiserver/overlays/local | kubectl apply -f -
-kubens apiserver
-curl http://localhost:5000
 ```
 
-aws
+Below sample will run ab test.
+
+```shell
+# confirm server is running and connectable
+curl "http://localhost:8080"
+
+# 10000 requests, 10 concurrency.
+kubectl run -i --rm --restart=Never -n dframe --image=mocoso/apachebench apachebench -- bash -c "ab -n 10000 -c 10 http://apiserver:8080"
+```
+
+**Run on aws**
 
 ```shell
 kubectl kustomize sandbox/k8s/apiserver/overlays/aws | kubectl apply -f -
-kubens apiserver
-curl "http://$(kubectl get ingress -o jsonpath='{.items[].status.loadBalancer.ingress[].hostname}')"
 ```
 
-remove kubernetes resource.
+Below sample will run ab test.
 
 ```shell
-kubectl kustomize sandbox/k8s/apiserver/overlays/aws | kubectl delete -f -
+LB_ENDPOINT="http://$(kubectl get ingress apiserver -o jsonpath='{.items[].status.loadBalancer.ingress[].hostname}')/healthz"
+
+# confirm server is running and connectable
+curl "${LB_ENDPOINT}"
+
+# 10000 requests, 10 concurrency.
+kubectl run -i --rm --restart=Never -n dframe --image=mocoso/apachebench apachebench -- bash -c "ab -n 10000 -c 10 ${LB_ENDPOINT}"
 ```
 
-### loadtest target server grpc
+### Choice2. Use MagicOnion Echo Server
 
-build
+let's launch MagicOnion to serve dframe worker gRPC benchmark.
 
-```shell
-docker build -t cysharp/dframe-magiconion:0.0.1 -f sandbox/EchoMagicOnion/Dockerfile .
-docker tag cysharp/dframe-magiconion:0.0.1 cysharp/dframe-magiconion:latest
-docker push cysharp/dframe-magiconion:0.0.1
-docker push cysharp/dframe-magiconion:latest
-```
+This server accept sandbox DFrame `ConsoleApp.SampleUnaryWorker` scenario and `ConsoleApp.SampleStreamWorker` scenario requests.
 
-let's launch magiconion to try magiconion access bench through dframe worker.
-
-local
+**Run on local**
 
 ```shell
 kubectl kustomize sandbox/k8s/apiserver/overlays/local | kubectl apply -f -
-kubens apiserver
+# confirm server is running and connectable
 echo localhost:12346
 ```
 
-aws
+**Run on aws**
 
 ```shell
 kubectl kustomize sandbox/k8s/magiconionserver/overlays/aws | kubectl apply -f -
@@ -219,8 +237,47 @@ kubens apiserver
 echo "$(kubectl get service magiconion -o jsonpath='{.status.loadBalancer.ingress[].hostname}'):12346"
 ```
 
-remove kubernetes resource.
+## (Advanced) Step2. Launch DFrame Master and loadtest target
+
+Faster load testing itelation is available by "change args" and "run DFrame master as pod".
+
+Before trying run dframe, deploy service and and others.
 
 ```shell
-kubectl kustomize sandbox/k8s/magiconionserver/overlays/aws | kubectl delete -f -
+kubectl kustomize sandbox/k8s/dframe/overlays/fast-telation | kubectl apply -f -
+```
+
+You are ready to run ondemand pod.
+
+### Run SampleHttpWorker Scenario
+
+Below sample will run 1000000 requests of SampleHttpWorker, with 10 process, 10 workers and 10000 execution.
+
+```shell
+ACCOUNT_ID=431046970529 # your aws account id
+REGION=ap-northeast-1 # your aws region
+
+kubectl run -it --rm --restart=Never -n dframe --image=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "batch -processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10000" "-workerName" "SampleHttpWorker"
+```
+
+### Run SampleUnaryWorker Scenario
+
+Below sample will run 1000000 requests of SampleUnaryWorker, with 10 process, 10 workers and 10000 execution.
+
+```shell
+ACCOUNT_ID=431046970529 # your aws account id
+REGION=ap-northeast-1 # your aws region
+
+kubectl run -it --rm --restart=Never -n dframe --image=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "batch -processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10000" "-workerName" "SampleUnaryWorker"
+```
+
+### Run SampleStreamWorker Scenario
+
+Below sample will run 1000000 requests of SampleStreamWorker, with 10 process, 10 workers and 10000 execution.
+
+```shell
+ACCOUNT_ID=431046970529 # your aws account id
+REGION=ap-northeast-1 # your aws region
+
+kubectl run -it --rm --restart=Never -n dframe --image=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "batch -processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10000" "-workerName" "SampleStreamWorker"
 ```

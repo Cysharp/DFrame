@@ -29,7 +29,24 @@ namespace ConsoleAppK8s
             if (args.Length == 0)
             {
                 // master
+                //args = new[] { "help", "rampup" };
                 args = "batch -processCount 1 -workerPerProcess 10 -executePerWorker 10 -workerName SampleWorker".Split(' ');
+
+                //args = "rampup -processCount 5 -maxWorkerPerProcess 12 -workerSpawnCount 4 -workerSpawnSecond 5 -workerName SampleHttpWorker".Split(' ');
+
+                // args = "request -processCount 5 -workerPerProcess 10 -executePerWorker 10 -workerName SampleHttpWorker".Split(' ');
+                //args = "-processCount 1 -workerPerProcess 64     -executePerWorker 10000 -workerName SampleHttpWorker".Split(' ');
+                //args = "-processCount 1 -workerPerProcess 20 -executePerWorker 10000 -workerName SampleUnaryWorker".Split(' ');
+
+                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleHttpWorker".Split(' ');
+                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 10000 -workerName SampleHttpWorker".Split(' ');
+                //args = "-processCount 10 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleHttpWorker".Split(' ');
+                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleUnaryWorker".Split(' ');
+                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 10000 -workerName SampleUnaryWorker".Split(' ');
+                //args = "-processCount 10 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleUnaryWorker".Split(' ');
+                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleStreamWorker".Split(' ');
+                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 10000 -workerName SampleStreamWorker".Split(' ');
+                //args = "-processCount 10 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleStreamWorker".Split(' ');
             }
             else if (args.Contains("--worker-flag"))
             {
@@ -96,6 +113,7 @@ namespace ConsoleAppK8s
     {
         private static HttpClient httpClient;
 
+        // todo: change to your endpoint
         private readonly string _url = "http://77948c50-apiserver-apiserv-98d9-538745285.ap-northeast-1.elb.amazonaws.com/";
         private CancellationTokenSource cts;
 
@@ -131,6 +149,7 @@ namespace ConsoleAppK8s
         private GrpcChannel _channel;
         private IEchoService _client;
 
+        // todo: change to your endpoint
         private readonly string _host = "a03a0da6478624a279e63219a6b8b4cc-f661441800542a5b.elb.ap-northeast-1.amazonaws.com";
 
         public override async Task SetupAsync(WorkerContext context)
@@ -154,6 +173,7 @@ namespace ConsoleAppK8s
         private GrpcChannel _channel;
         private IEchoHub _client;
 
+        // todo: change to your endpoint
         private readonly string _host = "a03a0da6478624a279e63219a6b8b4cc-f661441800542a5b.elb.ap-northeast-1.amazonaws.com";
 
         public override async Task SetupAsync(WorkerContext context)
