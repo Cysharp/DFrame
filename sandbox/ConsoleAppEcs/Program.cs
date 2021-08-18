@@ -28,7 +28,7 @@ namespace ConsoleAppEcs
             {
                 // master
                 //args = new[] { "help", "rampup" };
-                args = "batch -processCount 1 -workerPerProcess 10 -executePerWorker 10 -workerName SampleWorker".Split(' ');
+                args = "batch -processCount 1 -workerName SampleWorker".Split(' ');
 
                 //args = "rampup -processCount 5 -maxWorkerPerProcess 12 -workerSpawnCount 4 -workerSpawnSecond 5 -workerName SampleHttpWorker".Split(' ');
 
@@ -118,17 +118,19 @@ namespace ConsoleAppEcs
         {
             var handler = new HttpClientHandler
             {
-                MaxConnectionsPerServer = 100,
+                //MaxConnectionsPerServer = 100,
             };
             httpClient = new HttpClient(handler);
+            
             httpClient.DefaultRequestHeaders.Add("ContentType", "application/json");
-            Console.WriteLine($"MaxConnectionsPerServer: {handler.MaxConnectionsPerServer}");
         }
 
         public override async Task SetupAsync(WorkerContext context)
         {
             url = Environment.GetEnvironmentVariable("BENCH_SERVER_HOST");
             cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
+
+            Console.WriteLine($"connect to: {url}");
         }
 
         public override async Task ExecuteAsync(WorkerContext context)
@@ -152,6 +154,8 @@ namespace ConsoleAppEcs
             var url = Environment.GetEnvironmentVariable("BENCH_SERVER_HOST");
             _channel = GrpcChannel.ForAddress(url + ":12346");
             _client = MagicOnionClient.Create<IEchoService>(_channel);
+
+            Console.WriteLine($"connect to: {url}");
         }
         public override async Task ExecuteAsync(WorkerContext context)
         {
@@ -173,9 +177,14 @@ namespace ConsoleAppEcs
         {
             var url = Environment.GetEnvironmentVariable("BENCH_SERVER_HOST");
             _channel = GrpcChannel.ForAddress(url + ":12346");
+
+            Console.WriteLine($"connect to: {url}");
+
             var receiver = new EchoReceiver(_channel);
             _client = await StreamingHubClient.ConnectAsync<IEchoHub, IEchoHubReceiver>(_channel, receiver);
             receiver.Client = _client;
+
+            Console.WriteLine($"stream hub connected.");
         }
         public override async Task ExecuteAsync(WorkerContext context)
         {

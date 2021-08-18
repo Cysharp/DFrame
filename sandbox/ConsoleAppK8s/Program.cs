@@ -121,11 +121,10 @@ namespace ConsoleAppK8s
         {
             var handler = new HttpClientHandler
             {
-                MaxConnectionsPerServer = 100,
+                //MaxConnectionsPerServer = 100,
             };
             httpClient = new HttpClient(handler);
             httpClient.DefaultRequestHeaders.Add("ContentType", "application/json");
-            Console.WriteLine($"MaxConnectionsPerServer: {handler.MaxConnectionsPerServer}");
         }
 
         public override async Task SetupAsync(WorkerContext context)

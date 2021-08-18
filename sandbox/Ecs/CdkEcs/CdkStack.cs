@@ -1,6 +1,5 @@
 using Amazon.CDK;
 using Amazon.CDK.AWS.EC2;
-using Amazon.CDK.AWS.Ecr.Assets;
 using Amazon.CDK.AWS.ECS;
 using Amazon.CDK.AWS.IAM;
 using Amazon.CDK.AWS.Logs;
@@ -8,7 +7,6 @@ using Amazon.CDK.AWS.SecretsManager;
 using Amazon.CDK.AWS.ServiceDiscovery;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace Cdk
@@ -17,7 +15,13 @@ namespace Cdk
     {
         internal CdkStack(Construct scope, string id, IStackProps props = null) : base(scope, id, props)
         {
+            // cdk deploy -c "dframeArg=request -processCount 10 -workerPerProcess 1 -executePerWorker 1 -workerName SampleHttpWorker"
+            string[] dframeArgs = null;
+            if (this.Node.TryGetContext("dframeArg") is string dframArg) 
+                dframeArgs = dframArg.Split(" ");
+
             var stackProps = ReportStackProps.GetOrDefault(props);
+            var echoLogGroup = "EchoWorkerLogGroup";
             var dframeWorkerLogGroup = "DFrameWorkerLogGroup";
             var dframeMasterLogGroup = "DFrameMasterLogGroup";
 
@@ -40,35 +44,78 @@ namespace Cdk
 
             // service discovery
             var serviceDiscoveryDomain = "local";
-            var serverMapName = "server";
             var dframeMapName = "dframe-master";
+            var echoMapName = "echo";
             var ns = new PrivateDnsNamespace(this, "Namespace", new PrivateDnsNamespaceProps
             {
                 Vpc = vpc,
                 Name = serviceDiscoveryDomain,
             });
-            var serviceDiscoveryServer = ns.CreateService("server", new DnsServiceProps
-            {
-                Name = serverMapName,
-                DnsRecordType = DnsRecordType.A,
-                RoutingPolicy = RoutingPolicy.MULTIVALUE,
-            });
-
-            // todo: 接続先への接続方法考える
-            var benchTargetDnsName = $"http://{serverMapName}.{serviceDiscoveryDomain}";
 
             // iam
             var iamEcsTaskExecuteRole = GetIamEcsTaskExecuteRole(new[] { dframeWorkerLogGroup, dframeMasterLogGroup });
-            var iamDFrameTaskDefRole = GetIamEcsDframeTaskDefRole();
-            var iamWorkerTaskDefRole = GetIamEcsWorkerTaskDefRole();
+            var iamDFrameTaskDefRole = GetIamEcsDframeMasterTaskDefRole();
+            var iamWorkerTaskDefRole = GetIamEcsDframeWorkerTaskDefRole();
 
             // secrets
             var ddToken = stackProps.UseFargateDatadogAgentProfiler
                 ? Amazon.CDK.AWS.SecretsManager.Secret.FromSecretNameV2(this, "dd-token", "dframe-datadog-token")
                 : null;
 
-            // ECS
+            #region ECS
             var cluster = new Cluster(this, "EcsCluster", new ClusterProps { ClusterName = $"{StackName}-Cluster", Vpc = vpc, });
+
+            // echo server
+            var echoContainerName = "worker";
+            var echoTaskDef = new FargateTaskDefinition(this, "EchoTaskDef", new FargateTaskDefinitionProps
+            {
+                ExecutionRole = iamEcsTaskExecuteRole,
+                TaskRole = iamWorkerTaskDefRole,
+                Cpu = stackProps.WorkerFargate.CpuSize,
+                MemoryLimitMiB = stackProps.WorkerFargate.MemorySize,
+            });
+            echoTaskDef.AddContainer(echoContainerName, new ContainerDefinitionOptions
+            {
+                Image = ContainerImage.FromRegistry("cysharp/dframe-echoserver:0.0.1"),
+                Command = new[] { "--worker-flag" },
+                Logging = LogDriver.AwsLogs(new AwsLogDriverProps
+                {
+                    LogGroup = new LogGroup(this, "EchoLogGroup", new LogGroupProps
+                    {
+                        LogGroupName = echoLogGroup,
+                        RemovalPolicy = RemovalPolicy.DESTROY,
+                        Retention = RetentionDays.TWO_WEEKS,
+                    }),
+                    StreamPrefix = echoLogGroup,
+                }),
+                PortMappings = new []
+                {
+                    new PortMapping
+                    {
+                        ContainerPort = 80,
+                        HostPort = 80,
+                    }
+                }
+            });
+            var echoService = new FargateService(this, "EchoServer", new FargateServiceProps
+            {
+                ServiceName = "EchoServer",
+                DesiredCount = 1,
+                Cluster = cluster,
+                TaskDefinition = echoTaskDef,
+                VpcSubnets = singleSubnets,
+                SecurityGroups = new[] { sg },
+                PlatformVersion = FargatePlatformVersion.VERSION1_4,
+                MinHealthyPercent = 0,
+                AssignPublicIp = true,
+                CloudMapOptions = new CloudMapOptions
+                {
+                    CloudMapNamespace = ns,
+                    Name = echoMapName,
+                    DnsRecordType = DnsRecordType.A,
+                    DnsTtl = Duration.Seconds(300),
+                },
+            });
 
             // dframe-worker
             var dframeWorkerContainerName = "worker";
@@ -87,7 +134,7 @@ namespace Cdk
                 {
                     { "DFRAME_MASTER_CONNECT_TO_HOST", $"{dframeMapName}.{serviceDiscoveryDomain}"},
                     { "DFRAME_MASTER_CONNECT_TO_PORT", "12345"},
-                    { "BENCH_SERVER_HOST", benchTargetDnsName },
+                    { "BENCH_SERVER_HOST", $"http://{echoMapName}.{serviceDiscoveryDomain}" },
                 },
                 Logging = LogDriver.AwsLogs(new AwsLogDriverProps
                 {
@@ -125,6 +172,7 @@ namespace Cdk
             dframeMasterTaskDef.AddContainer("dframe", new ContainerDefinitionOptions
             {
                 Image = ContainerImage.FromRegistry("cysharp/dframe-consoleappecs:0.0.4"),
+                Command = dframeArgs,
                 Environment = new Dictionary<string, string>
                 {
                     { "DFRAME_CLUSTER_NAME", cluster.ClusterName },
@@ -166,13 +214,18 @@ namespace Cdk
                 },
             });
 
+            // dframMasterService must create after echoService
+            dframeMasterService.Node.AddDependency(echoService);
+
+            #endregion
+
             // output
             new CfnOutput(this, "EcsClusterName", new CfnOutputProps { Value = cluster.ClusterName });
         }
 
         private Role GetIamEcsTaskExecuteRole(string[] logGroups)
         {
-            var policy = new Policy(this, "WorkerTaskDefExecutionPolicy", new PolicyProps
+            var policy = new Policy(this, "DframeEcsTaskExecutionPolicy", new PolicyProps
             {
                 Statements = new[]
                 {
@@ -187,17 +240,18 @@ namespace Cdk
                     }),
                 }
             });
-            var role = new Role(this, "WorkerTaskDefExecutionRole", new RoleProps
+            var role = new Role(this, "DframeEcsTaskExecutionRole", new RoleProps
             {
                 AssumedBy = new ServicePrincipal("ecs-tasks.amazonaws.com"),
             });
             role.AttachInlinePolicy(policy);
-            role.AddManagedPolicy(ManagedPolicy.FromManagedPolicyArn(this, "WorkerECSTaskExecutionRolePolicy", "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"));
+            role.AddManagedPolicy(ManagedPolicy.FromManagedPolicyArn(this, "DframeAmazonECSTaskExecutionRolePolicy", "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"));
             return role;
         }
-        private Role GetIamEcsDframeTaskDefRole()
+        private Role GetIamEcsDframeMasterTaskDefRole()
         {
-            var policy = new Policy(this, "DframeTaskDefTaskPolicy", new PolicyProps
+            // master need to control ecs service and taskdef
+            var policy = new Policy(this, "DframeMasterTaskDefTaskPolicy", new PolicyProps
             {
                 Statements = new[]
                 {
@@ -229,19 +283,20 @@ namespace Cdk
                     }),
                 }
             });
-            var role = new Role(this, "DframeTaskDefTaskRole", new RoleProps
+            var role = new Role(this, "DframeMasterTaskDefTaskRole", new RoleProps
             {
                 AssumedBy = new ServicePrincipal("ecs-tasks.amazonaws.com"),
             });
             role.AttachInlinePolicy(policy);
             return role;
         }
-        private Role GetIamEcsWorkerTaskDefRole()
+        private Role GetIamEcsDframeWorkerTaskDefRole()
         {
-            var policy = new Policy(this, "WorkerTaskDefTaskPolicy", new PolicyProps
+            // worker and other doesn't need any permission.
+            var policy = new Policy(this, "DframeWorkerTaskDefTaskPolicy", new PolicyProps
             {
             });
-            var role = new Role(this, "WorkerTaskDefTaskRole", new RoleProps
+            var role = new Role(this, "DframeWorkerTaskDefTaskRole", new RoleProps
             {
                 AssumedBy = new ServicePrincipal("ecs-tasks.amazonaws.com"),
             });
