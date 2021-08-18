@@ -248,6 +248,7 @@ This sample contains AWS CDK based ECS deployment.
 Following commands are used on this sample.
 
 * [aws-cdk](https://github.com/aws/aws-cdk)
+* [utern](https://github.com/knqyf263/utern)
 
 Install cdk cli.
 
@@ -273,6 +274,10 @@ After deployment complete, check ECS logs DFrameWorker communicating with DFrame
 
 > DFrameWorker Logs: https://ap-northeast-1.console.aws.amazon.com/ecs/home?region=ap-northeast-1#/clusters/DFrameCdkStack-Cluster/services/DFrameWorkerService/logs
 
+```shell
+utern --since 1h /ecs/DFrame.*
+```
+
 ## Load test target server
 
 ### SampleHttpWorker Scenario
@@ -283,9 +288,13 @@ Below command will launch 10 worker fargate with `SampleHttpWorker` scenario.
 cdk deploy -c "dframeArg=request -processCount 10 -workerPerProcess 1 -executePerWorker 1 -workerName SampleHttpWorker"
 ```
 
-After deployment complete, check ECS logs EchoServer communicating with DFrameMaster.
+Check ECS logs EchoServer communicating with DFrameMaster.
 
 > EchoServer Logs: https://ap-northeast-1.console.aws.amazon.com/ecs/home?region=ap-northeast-1#/clusters/DFrameCdkStack-Cluster/services/EchoServer/logs
+
+```shell
+utern --since 1h /ecs/DFrame.*
+```
 
 ### SampleUnaryWorker Scenario
 
@@ -295,7 +304,13 @@ Below command will launch 10 worker fargate with `SampleUnaryWorker` scenario.
 cdk deploy -c "dframeArg=request -processCount 10 -workerPerProcess 1 -executePerWorker 1 -workerName SampleUnaryWorker"
 ```
 
+Check ECS logs EchoServer communicating with DFrameMaster.
+
 > MagicOnionServer Logs: https://ap-northeast-1.console.aws.amazon.com/ecs/home?region=ap-northeast-1#/clusters/DFrameCdkStack-Cluster/services/MagicOnionServer/logs
+
+```shell
+utern --since 1h /ecs/DFrame.*
+```
 
 ### SampleStreamWorker Scenario
 
@@ -305,7 +320,13 @@ Below command will launch 10 worker fargate with `SampleStreamWorker` scenario.
 cdk deploy -c "dframeArg=request -processCount 10 -workerPerProcess 1 -executePerWorker 1 -workerName SampleStreamWorker"
 ```
 
+Check ECS logs EchoServer communicating with DFrameMaster.
+
 > MagicOnionServer Logs: https://ap-northeast-1.console.aws.amazon.com/ecs/home?region=ap-northeast-1#/clusters/DFrameCdkStack-Cluster/services/MagicOnionServer/logs
+
+```shell
+utern --since 1h /ecs/DFrame.*
+```
 
 ## TIPS
 

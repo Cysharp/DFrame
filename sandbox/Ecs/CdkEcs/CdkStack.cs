@@ -21,10 +21,10 @@ namespace Cdk
                 dframeArgs = dframArg.Split(" ");
 
             var stackProps = ReportStackProps.GetOrDefault(props);
-            var echoLogGroup = "EchoServerLogGroup";
-            var magiconionLogGroup = "MagicOnionServerLogGroup";
-            var dframeWorkerLogGroup = "DFrameWorkerLogGroup";
-            var dframeMasterLogGroup = "DFrameMasterLogGroup";
+            var echoLogGroup = "/ecs/DFrameEchoServerLogGroup";
+            var magiconionLogGroup = "/ecs/DFrameMagicOnionServerLogGroup";
+            var dframeWorkerLogGroup = "/ecs/DFrameWorkerLogGroup";
+            var dframeMasterLogGroup = "/ecs/DFrameMasterLogGroup";
 
             // network
             var vpc = new Vpc(this, "Vpc", new VpcProps
