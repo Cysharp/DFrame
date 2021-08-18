@@ -281,3 +281,88 @@ REGION=ap-northeast-1 # your aws region
 
 kubectl run -it --rm --restart=Never -n dframe --image=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "batch -processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10000" "-workerName" "SampleStreamWorker"
 ```
+
+# ECS
+
+You can deploy DFrame to your ECS cluster and run load test via ECS Scaling Provider (DFrame.Ecs).
+This sample contains AWS CDK based ECS deployment.
+
+## Step to deploy
+
+install cdk cli.
+
+```shell
+npm install -g aws-cdk
+npm update -g aws-cdk
+```
+
+build and deploy
+
+```shell
+cd sandbox/Ecs
+# deploy via CDK
+cdk synth
+cdk bootstrap # only on initial execution
+cdk deploy
+```
+
+## Deploy TIPS
+
+* Use Datadog to monitor benchmark ec2 and fargate metrics.
+
+CDK template use AWS SecretsManager to keep datadog token.
+First, create datadog token secret with secret-id `magiconion-benchmark-datadog-token` via aws cli.
+
+```shell
+SECRET_ID=magiconion-benchmark-datadog-token
+DD_TOKEN=abcdefg12345
+aws secretsmanager create-secret --name "$SECRET_ID"
+aws secretsmanager put-secret-value --secret-id "$SECRET_ID" --secret-string "${DD_TOKEN}"
+```
+
+Confirm token is successfully set to secrets manager.
+
+```shell
+aws secretsmanager describe-secret --secret-id "$SECRET_ID"
+aws secretsmanager get-secret-value --secret-id "$SECRET_ID"
+```
+
+To install Datadog agent to ec2 or fargate, set `true` in `ReportStackProps` Property.
+EC2 MagicOnion also support install CloudWatch Agent, this agent will collect Mem used and TCP status.
+
+```csharp
+new ReportStackProps
+{
+    UseEc2DatadogAgentProfiler = true, // install datadog agent to MagicOnion Ec2.
+    UseFargateDatadogAgentProfiler = true, // instance datadog fargate agent to bench master/worker.
+    UseEc2CloudWatchAgentProfiler = false, // true to install cloudwatch agent to magiconion ec2
+}
+```
+
+## Destroy TIPS
+
+* cdk destoy failed because instance remain on service discovery.
+
+use script to remove all instances from service discovery.
+
+```csharp
+async Task Main()
+{
+    var serviceName = "server";
+    var client = new Amazon.ServiceDiscovery.AmazonServiceDiscoveryClient();
+    var services = await client.ListServicesAsync(new ListServicesRequest());
+    var service = services.Services.First(x => x.Name == serviceName);
+    var instances = await client.ListInstancesAsync(new ListInstancesRequest
+    {
+        ServiceId = service.Id,
+    });
+    foreach (var instance in instances.Instances)
+    {
+        await client.DeregisterInstanceAsync(new DeregisterInstanceRequest
+        {
+            InstanceId = instance.Id,
+            ServiceId = service.Id,
+        });
+    }
+}
+```
