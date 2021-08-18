@@ -21,14 +21,6 @@ namespace Cdk
             var dframeWorkerLogGroup = "DFrameWorkerLogGroup";
             var dframeMasterLogGroup = "DFrameMasterLogGroup";
 
-            // docker deploy
-            var dockerImage = new DockerImageAsset(this, "dframeWorkerImage", new DockerImageAssetProps
-            {
-                Directory = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "../../")),
-                File = "sandbox/ConsoleAppEcs/Dockerfile",
-            });
-            var dframeImage = ContainerImage.FromDockerImageAsset(dockerImage);
-
             // network
             var vpc = new Vpc(this, "Vpc", new VpcProps
             {
@@ -76,7 +68,7 @@ namespace Cdk
                 : null;
 
             // ECS
-            var cluster = new Cluster(this, "WorkerCluster", new ClusterProps { Vpc = vpc, });
+            var cluster = new Cluster(this, "EcsCluster", new ClusterProps { ClusterName = $"{StackName}-Cluster", Vpc = vpc, });
 
             // dframe-worker
             var dframeWorkerContainerName = "worker";
@@ -89,7 +81,7 @@ namespace Cdk
             });
             dframeWorkerTaskDef.AddContainer(dframeWorkerContainerName, new ContainerDefinitionOptions
             {
-                Image = dframeImage,
+                Image = ContainerImage.FromRegistry("cysharp/dframe-consoleappecs:0.0.4"),
                 Command = new[] { "--worker-flag" },
                 Environment = new Dictionary<string, string>
                 {
@@ -132,7 +124,7 @@ namespace Cdk
             });
             dframeMasterTaskDef.AddContainer("dframe", new ContainerDefinitionOptions
             {
-                Image = dframeImage,
+                Image = ContainerImage.FromRegistry("cysharp/dframe-consoleappecs:0.0.4"),
                 Environment = new Dictionary<string, string>
                 {
                     { "DFRAME_CLUSTER_NAME", cluster.ClusterName },
@@ -140,7 +132,7 @@ namespace Cdk
                     { "DFRAME_WORKER_CONTAINER_NAME", dframeWorkerContainerName },
                     { "DFRAME_WORKER_SERVICE_NAME", dframeWorkerService.ServiceName },
                     { "DFRAME_WORKER_TASK_NAME", Fn.Select(1, Fn.Split("/", dframeWorkerTaskDef.TaskDefinitionArn)) },
-                    { "DFRAME_WORKER_IMAGE", dockerImage.ImageUri },
+                    { "DFRAME_WORKER_IMAGE", "cysharp/dframe-consoleappecs:0.0.4" },
                 },
                 Logging = LogDriver.AwsLogs(new AwsLogDriverProps
                 {
@@ -176,7 +168,6 @@ namespace Cdk
 
             // output
             new CfnOutput(this, "EcsClusterName", new CfnOutputProps { Value = cluster.ClusterName });
-            new CfnOutput(this, "DFrameWorkerEcsTaskdefImage", new CfnOutputProps { Value = dockerImage.ImageUri });
         }
 
         private Role GetIamEcsTaskExecuteRole(string[] logGroups)
