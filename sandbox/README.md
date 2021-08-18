@@ -275,16 +275,28 @@ After deployment complete, check ECS logs DFrameWorker communicating with DFrame
 
 ## Load test target server
 
+### SampleHttpWorker Scenario
+
 Below command will launch 10 worker fargate with `SampleHttpWorker` scenario.
 
 ```shell
 cdk deploy -c "dframeArg=request -processCount 10 -workerPerProcess 1 -executePerWorker 1 -workerName SampleHttpWorker"
 ```
 
+### SampleUnaryWorker Scenario
+
 Below command will launch 10 worker fargate with `SampleUnaryWorker` scenario.
 
 ```shell
 cdk deploy -c "dframeArg=request -processCount 10 -workerPerProcess 1 -executePerWorker 1 -workerName SampleUnaryWorker"
+```
+
+### SampleStreamWorker Scenario
+
+Below command will launch 10 worker fargate with `SampleStreamWorker` scenario.
+
+```shell
+cdk deploy -c "dframeArg=request -processCount 10 -workerPerProcess 1 -executePerWorker 1 -workerName SampleStreamWorker"
 ```
 
 ## TIPS
