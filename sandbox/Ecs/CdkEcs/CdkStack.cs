@@ -77,7 +77,7 @@ namespace Cdk
             });
             echoTaskDef.AddContainer("server", new ContainerDefinitionOptions
             {
-                Image = ContainerImage.FromRegistry("cysharp/dframe-echoserver:0.0.1"),
+                Image = ContainerImage.FromRegistry("cysharp/dframe-echoserver:0.0.4"),
                 Logging = LogDriver.AwsLogs(new AwsLogDriverProps
                 {
                     LogGroup = new LogGroup(this, "EchoLogGroup", new LogGroupProps
@@ -128,7 +128,7 @@ namespace Cdk
             });
             magiconionTaskDef.AddContainer("server", new ContainerDefinitionOptions
             {
-                Image = ContainerImage.FromRegistry("cysharp/dframe-magiconion:0.0.1"),
+                Image = ContainerImage.FromRegistry("cysharp/dframe-magiconion:0.0.4"),
                 Logging = LogDriver.AwsLogs(new AwsLogDriverProps
                 {
                     LogGroup = new LogGroup(this, "MagicOnionLogGroup", new LogGroupProps

@@ -1,10 +1,10 @@
 #See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
-FROM mcr.microsoft.com/dotnet/core/runtime:3.1-buster-slim AS base
+FROM mcr.microsoft.com/dotnet/aspnet:5.0 AS base
 WORKDIR /app
 EXPOSE 12346
 
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
+FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /src
 COPY ["sandbox/EchoMagicOnion/EchoMagicOnion.csproj", "sandbox/EchoMagicOnion/"]
 COPY ["sandbox/EchoMagicOnion.Shared/EchoMagicOnion.Shared.csproj", "sandbox/EchoMagicOnion.Shared/"]

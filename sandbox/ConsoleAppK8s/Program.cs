@@ -30,7 +30,9 @@ namespace ConsoleAppK8s
             {
                 // master
                 //args = new[] { "help", "rampup" };
-                args = "batch -processCount 1 -workerPerProcess 10 -executePerWorker 10 -workerName SampleWorker".Split(' ');
+                args = "batch -processCount 1 -workerName SampleWorker".Split(' ');
+                //args = "request -processCount 5 -workerPerProcess 10 -executePerWorker 10 -workerName SampleUnaryWorker".Split(' ');
+                //args = "request -processCount 5 -workerPerProcess 10 -executePerWorker 10 -workerName SampleStreamWorker".Split(' ');
 
                 //args = "rampup -processCount 5 -maxWorkerPerProcess 12 -workerSpawnCount 4 -workerSpawnSecond 5 -workerName SampleHttpWorker".Split(' ');
 

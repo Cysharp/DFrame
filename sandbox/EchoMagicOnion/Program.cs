@@ -7,7 +7,6 @@ using MagicOnion.Server.Hubs;
 using MessagePack;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -31,19 +30,9 @@ namespace EchoMagicOnion
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder
-                        .UseKestrel(options =>
-                        {
-                            // WORKAROUND: Accept HTTP/2 only to allow insecure HTTP/2 connections during development.
-                            options.ConfigureEndpointDefaults(endpointOptions =>
-                            {
-                                endpointOptions.Protocols = HttpProtocols.Http2;
-                            });
-                        })
-                        .UseStartup<Startup>();
+                    webBuilder.UseStartup<Startup>();
                 })
-                .Build()
-                .RunAsync();
+                .RunConsoleAsync();
         }
     }
 
@@ -89,8 +78,12 @@ namespace EchoMagicOnion
 
     public class EchoService : ServiceBase<IEchoService>, IEchoService
     {
+        private readonly ILogger<EchoService> _logger;
+
+        public EchoService(ILogger<EchoService> logger) => _logger = logger;
         public UnaryResult<Nil> Echo(string message)
         {
+            _logger.LogInformation($"Unary Recieved: {message}");
             return UnaryResult(Nil.Default);
         }
     }
@@ -98,14 +91,20 @@ namespace EchoMagicOnion
     public class EchoHub : StreamingHubBase<IEchoHub, IEchoHubReceiver>, IEchoHub
     {
         private IEchoHubReceiver _broadcaster;
+        private readonly ILogger<EchoService> _logger;
+
+        public EchoHub(ILogger<EchoService> logger) => _logger = logger;
+
         protected override async ValueTask OnConnecting()
         {
+            _logger.LogInformation($"ClientConnected: {Context.ContextId}");
             var group = await Group.AddAsync("global-masterhub-group");
             _broadcaster = group.CreateBroadcaster<IEchoHubReceiver>();
         }
 
         public Task<MessageResponse> EchoAsync(string message)
         {
+            _logger.LogInformation($"Streaming Recieved: {message}");
             var response = new MessageResponse { Message = message };
 
             return Task.FromResult(response);
@@ -113,6 +112,7 @@ namespace EchoMagicOnion
 
         public Task<MessageResponse> EchoBroadcastAsync(string message)
         {
+            _logger.LogInformation($"Streaming Broadcast Recieved: {message}");
             var response = new MessageResponse { Message = message };
 
             // broadcast to all client

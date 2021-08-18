@@ -27,7 +27,9 @@ namespace ConsoleApp
             {
                 // master
                 //args = new[] { "help", "rampup" };
-                args = "batch -processCount 1 -workerPerProcess 10 -executePerWorker 10 -workerName SampleWorker".Split(' ');
+                args = "batch -processCount 1 -workerName SampleWorker".Split(' ');
+                //args = "request -processCount 5 -workerPerProcess 10 -executePerWorker 10 -workerName SampleUnaryWorker".Split(' ');
+                //args = "request -processCount 5 -workerPerProcess 10 -executePerWorker 10 -workerName SampleStreamWorker".Split(' ');
 
                 //args = "rampup -processCount 5 -maxWorkerPerProcess 12 -workerSpawnCount 4 -workerSpawnSecond 5 -workerName SampleHttpWorker".Split(' ');
 
@@ -155,11 +157,14 @@ namespace ConsoleApp
         private GrpcChannel _channel;
         private IEchoService _client;
 
-        private readonly string _host = "localhost";
+        private readonly string _host = "http://localhost";
 
         public override async Task SetupAsync(WorkerContext context)
         {
-            _channel = GrpcChannel.ForAddress(_host + ":12346");
+            _channel = GrpcChannel.ForAddress(_host + ":12346", new GrpcChannelOptions
+            {
+                Credentials = ChannelCredentials.Insecure,
+            });
             _client = MagicOnionClient.Create<IEchoService>(_channel);
         }
         public override async Task ExecuteAsync(WorkerContext context)
@@ -178,7 +183,7 @@ namespace ConsoleApp
         private GrpcChannel _channel;
         private IEchoHub _client;
 
-        private readonly string _host = "localhost";
+        private readonly string _host = "http://localhost";
 
         public override async Task SetupAsync(WorkerContext context)
         {
