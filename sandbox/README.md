@@ -288,7 +288,7 @@ Below command will launch 10 worker fargate with `SampleHttpWorker` scenario.
 cdk deploy -c "dframeArg=request -processCount 10 -workerPerProcess 1 -executePerWorker 1 -workerName SampleHttpWorker"
 ```
 
-Check ECS logs EchoServer communicating with DFrameMaster.
+Check ECS logs EchoServer communicating with DFrameWorker.
 
 > EchoServer Logs: https://ap-northeast-1.console.aws.amazon.com/ecs/home?region=ap-northeast-1#/clusters/DFrameCdkStack-Cluster/services/EchoServer/logs
 
@@ -304,7 +304,7 @@ Below command will launch 10 worker fargate with `SampleUnaryWorker` scenario.
 cdk deploy -c "dframeArg=request -processCount 10 -workerPerProcess 1 -executePerWorker 1 -workerName SampleUnaryWorker"
 ```
 
-Check ECS logs EchoServer communicating with DFrameMaster.
+Check ECS logs MagicOnionServer communicating with DFrameWorker.
 
 > MagicOnionServer Logs: https://ap-northeast-1.console.aws.amazon.com/ecs/home?region=ap-northeast-1#/clusters/DFrameCdkStack-Cluster/services/MagicOnionServer/logs
 
@@ -320,7 +320,7 @@ Below command will launch 10 worker fargate with `SampleStreamWorker` scenario.
 cdk deploy -c "dframeArg=request -processCount 10 -workerPerProcess 1 -executePerWorker 1 -workerName SampleStreamWorker"
 ```
 
-Check ECS logs EchoServer communicating with DFrameMaster.
+Check ECS logs MagicOnionServer communicating with DFrameWorker.
 
 > MagicOnionServer Logs: https://ap-northeast-1.console.aws.amazon.com/ecs/home?region=ap-northeast-1#/clusters/DFrameCdkStack-Cluster/services/MagicOnionServer/logs
 
