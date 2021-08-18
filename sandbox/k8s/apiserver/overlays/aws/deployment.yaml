@@ -4,7 +4,3 @@ metadata:
   name: apiserver
 spec:
   replicas: 3
-  template:
-    spec:
-      nodeSelector:
-        eks.amazonaws.com/nodegroup: dframe-target

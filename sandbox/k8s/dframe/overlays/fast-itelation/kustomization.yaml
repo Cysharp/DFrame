@@ -1,0 +1,8 @@
+namespace: dframe
+
+resources:
+  - namespace.yaml
+  - role.yaml
+  - rolebinding.yaml
+  - service.yaml
+  - serviceaccount.yaml

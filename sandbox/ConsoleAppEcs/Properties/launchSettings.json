@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "ConsoleAppEcs": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}

@@ -1,8 +1,6 @@
 ﻿using DFrame;
-using DFrame.Collections;
-using DFrame.Kubernetes;
+using DFrame.Ecs;
 using EchoMagicOnion.Shared;
-using Grpc.Core;
 using Grpc.Net.Client;
 using MagicOnion.Client;
 using Microsoft.Extensions.Hosting;
@@ -14,7 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ZLogger;
 
-namespace ConsoleAppK8s
+namespace ConsoleAppEcs
 {
     class Program
     {
@@ -68,7 +66,7 @@ namespace ConsoleAppK8s
                         options.EnableStructuredLogging = false;
                     });
                 })
-                .RunDFrameLoadTestingAsync(args, new DFrameOptions(host, port, workerConnectToHost, port, new KubernetesScalingProvider())
+                .RunDFrameLoadTestingAsync(args, new DFrameOptions(host, port, workerConnectToHost, port, new EcsScalingProvider())
                 {
                 });
         }
@@ -115,8 +113,7 @@ namespace ConsoleAppK8s
     {
         private static HttpClient httpClient;
 
-        // todo: change to your endpoint
-        private readonly string _url = "<BENCH_HTTP_SERVER_HOST>";
+        private string url;
         private CancellationTokenSource cts;
 
         static SampleHttpWorker()
@@ -126,19 +123,21 @@ namespace ConsoleAppK8s
                 //MaxConnectionsPerServer = 100,
             };
             httpClient = new HttpClient(handler);
+            
             httpClient.DefaultRequestHeaders.Add("ContentType", "application/json");
         }
 
         public override async Task SetupAsync(WorkerContext context)
         {
+            url = Environment.GetEnvironmentVariable("BENCH_HTTP_SERVER_HOST");
             cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
 
-            Console.WriteLine($"connect to: {_url} ({nameof(SampleHttpWorker)})");
+            Console.WriteLine($"connect to: {url} ({nameof(SampleHttpWorker)})");
         }
 
         public override async Task ExecuteAsync(WorkerContext context)
         {
-            await httpClient.GetAsync(_url, cts.Token);
+            await httpClient.GetAsync(url, cts.Token);
             //await httpClient.GetAsync(_url);
         }
 
@@ -152,15 +151,13 @@ namespace ConsoleAppK8s
         private GrpcChannel _channel;
         private IEchoService _client;
 
-        // todo: change to your endpoint
-        private readonly string _url = "<BENCH_GRPC_SERVER_HOST>";
-
         public override async Task SetupAsync(WorkerContext context)
         {
-            _channel = GrpcChannel.ForAddress(_url);
+            var url = Environment.GetEnvironmentVariable("BENCH_GRPC_SERVER_HOST");
+            _channel = GrpcChannel.ForAddress(url);
             _client = MagicOnionClient.Create<IEchoService>(_channel);
 
-            Console.WriteLine($"connect to: {_url} ({nameof(SampleUnaryWorker)})");
+            Console.WriteLine($"connect to: {url} ({nameof(SampleUnaryWorker)})");
         }
         public override async Task ExecuteAsync(WorkerContext context)
         {
@@ -178,14 +175,12 @@ namespace ConsoleAppK8s
         private GrpcChannel _channel;
         private IEchoHub _client;
 
-        // todo: change to your endpoint
-        private readonly string _url = "<BENCH_GRPC_SERVER_HOST>";
-
         public override async Task SetupAsync(WorkerContext context)
         {
-            _channel = GrpcChannel.ForAddress(_url);
+            var url = Environment.GetEnvironmentVariable("BENCH_GRPC_SERVER_HOST");
+            _channel = GrpcChannel.ForAddress(url);
 
-            Console.WriteLine($"connect to: {_url} ({nameof(SampleStreamWorker)})");
+            Console.WriteLine($"connect to: {url} ({nameof(SampleStreamWorker)})");
 
             var receiver = new EchoReceiver(_channel);
             _client = await StreamingHubClient.ConnectAsync<IEchoHub, IEchoHubReceiver>(_channel, receiver);

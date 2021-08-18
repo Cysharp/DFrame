@@ -5,19 +5,19 @@ WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /src
-COPY ["sandbox/ConsoleAppK8s/ConsoleAppK8s.csproj", "sandbox/ConsoleAppK8s/"]
+COPY ["sandbox/ConsoleAppEcs/ConsoleAppEcs.csproj", "sandbox/ConsoleAppEcs/"]
 COPY ["sandbox/EchoMagicOnion.Shared/EchoMagicOnion.Shared.csproj", "sandbox/EchoMagicOnion.Shared/"]
-COPY ["src/DFrame.Kubernetes/DFrame.Kubernetes.csproj", "src/DFrame.Kubernetes/"]
+COPY ["src/DFrame.Ecs/DFrame.Ecs.csproj", "src/DFrame.Ecs/"]
 COPY ["src/DFrame/DFrame.csproj", "src/DFrame/"]
-RUN dotnet restore "sandbox/ConsoleAppK8s/ConsoleAppK8s.csproj"
+RUN dotnet restore "sandbox/ConsoleAppEcs/ConsoleAppEcs.csproj"
 COPY . .
-WORKDIR "/src/sandbox/ConsoleAppK8s"
-RUN dotnet build "ConsoleAppK8s.csproj" -c Release -o /app/build
+WORKDIR "/src/sandbox/ConsoleAppEcs"
+RUN dotnet build "ConsoleAppEcs.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "ConsoleAppK8s.csproj" -c Release -o /app/publish
+RUN dotnet publish "ConsoleAppEcs.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "ConsoleAppK8s.dll"]
+ENTRYPOINT ["dotnet", "ConsoleAppEcs.dll"]
