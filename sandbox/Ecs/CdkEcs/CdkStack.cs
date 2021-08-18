@@ -21,7 +21,8 @@ namespace Cdk
                 dframeArgs = dframArg.Split(" ");
 
             var stackProps = ReportStackProps.GetOrDefault(props);
-            var echoLogGroup = "EchoWorkerLogGroup";
+            var echoLogGroup = "EchoServerLogGroup";
+            var magiconionLogGroup = "MagicOnionServerLogGroup";
             var dframeWorkerLogGroup = "DFrameWorkerLogGroup";
             var dframeMasterLogGroup = "DFrameMasterLogGroup";
 
@@ -46,6 +47,7 @@ namespace Cdk
             var serviceDiscoveryDomain = "local";
             var dframeMapName = "dframe-master";
             var echoMapName = "echo";
+            var magiconionMapName = "magiconion";
             var ns = new PrivateDnsNamespace(this, "Namespace", new PrivateDnsNamespaceProps
             {
                 Vpc = vpc,
@@ -66,7 +68,6 @@ namespace Cdk
             var cluster = new Cluster(this, "EcsCluster", new ClusterProps { ClusterName = $"{StackName}-Cluster", Vpc = vpc, });
 
             // echo server
-            var echoContainerName = "worker";
             var echoTaskDef = new FargateTaskDefinition(this, "EchoTaskDef", new FargateTaskDefinitionProps
             {
                 ExecutionRole = iamEcsTaskExecuteRole,
@@ -74,10 +75,9 @@ namespace Cdk
                 Cpu = stackProps.WorkerFargate.CpuSize,
                 MemoryLimitMiB = stackProps.WorkerFargate.MemorySize,
             });
-            echoTaskDef.AddContainer(echoContainerName, new ContainerDefinitionOptions
+            echoTaskDef.AddContainer("server", new ContainerDefinitionOptions
             {
                 Image = ContainerImage.FromRegistry("cysharp/dframe-echoserver:0.0.1"),
-                Command = new[] { "--worker-flag" },
                 Logging = LogDriver.AwsLogs(new AwsLogDriverProps
                 {
                     LogGroup = new LogGroup(this, "EchoLogGroup", new LogGroupProps
@@ -97,6 +97,7 @@ namespace Cdk
                     }
                 }
             });
+            echoTaskDef.AddDatadogContainer($"dframe-datadog", ddToken, () => stackProps.UseFargateDatadogAgentProfiler);
             var echoService = new FargateService(this, "EchoServer", new FargateServiceProps
             {
                 ServiceName = "EchoServer",
@@ -112,6 +113,57 @@ namespace Cdk
                 {
                     CloudMapNamespace = ns,
                     Name = echoMapName,
+                    DnsRecordType = DnsRecordType.A,
+                    DnsTtl = Duration.Seconds(300),
+                },
+            });
+
+            // magiconion server
+            var magiconionTaskDef = new FargateTaskDefinition(this, "MagicOnionTaskDef", new FargateTaskDefinitionProps
+            {
+                ExecutionRole = iamEcsTaskExecuteRole,
+                TaskRole = iamWorkerTaskDefRole,
+                Cpu = stackProps.WorkerFargate.CpuSize,
+                MemoryLimitMiB = stackProps.WorkerFargate.MemorySize,
+            });
+            magiconionTaskDef.AddContainer("server", new ContainerDefinitionOptions
+            {
+                Image = ContainerImage.FromRegistry("cysharp/dframe-magiconion:0.0.1"),
+                Logging = LogDriver.AwsLogs(new AwsLogDriverProps
+                {
+                    LogGroup = new LogGroup(this, "MagicOnionLogGroup", new LogGroupProps
+                    {
+                        LogGroupName = magiconionLogGroup,
+                        RemovalPolicy = RemovalPolicy.DESTROY,
+                        Retention = RetentionDays.TWO_WEEKS,
+                    }),
+                    StreamPrefix = magiconionLogGroup,
+                }),
+                PortMappings = new[]
+                {
+                    new PortMapping
+                    {
+                        ContainerPort = 12346,
+                        HostPort = 12346,
+                    }
+                }
+            });
+            magiconionTaskDef.AddDatadogContainer($"dframe-datadog", ddToken, () => stackProps.UseFargateDatadogAgentProfiler);
+            var magiconionService = new FargateService(this, "MagicOnionServer", new FargateServiceProps
+            {
+                ServiceName = "MagicOnionServer",
+                DesiredCount = 1,
+                Cluster = cluster,
+                TaskDefinition = magiconionTaskDef,
+                VpcSubnets = singleSubnets,
+                SecurityGroups = new[] { sg },
+                PlatformVersion = FargatePlatformVersion.VERSION1_4,
+                MinHealthyPercent = 0,
+                AssignPublicIp = true,
+                CloudMapOptions = new CloudMapOptions
+                {
+                    CloudMapNamespace = ns,
+                    Name = magiconionMapName,
                     DnsRecordType = DnsRecordType.A,
                     DnsTtl = Duration.Seconds(300),
                 },
@@ -134,7 +186,8 @@ namespace Cdk
                 {
                     { "DFRAME_MASTER_CONNECT_TO_HOST", $"{dframeMapName}.{serviceDiscoveryDomain}"},
                     { "DFRAME_MASTER_CONNECT_TO_PORT", "12345"},
-                    { "BENCH_SERVER_HOST", $"http://{echoMapName}.{serviceDiscoveryDomain}" },
+                    { "BENCH_HTTP_SERVER_HOST", $"http://{echoMapName}.{serviceDiscoveryDomain}" },
+                    { "BENCH_GRPC_SERVER_HOST", $"http://{magiconionMapName}.{serviceDiscoveryDomain}:12346" },
                 },
                 Logging = LogDriver.AwsLogs(new AwsLogDriverProps
                 {
@@ -214,8 +267,9 @@ namespace Cdk
                 },
             });
 
-            // dframMasterService must create after echoService
+            // dframMasterService must create after echoService/magiconionService
             dframeMasterService.Node.AddDependency(echoService);
+            dframeMasterService.Node.AddDependency(magiconionTaskDef); 
 
             #endregion
 

@@ -112,7 +112,7 @@ kubectl kustomize sandbox/k8s/dframe/overlays/rbacless | kubectl delete -f -
 
 ### Sample2. Deploy to RBAC Kubernetes
 
-To run on RBAC cluster, use following commands. This enable ServiceAccount and Roles.
+To run on RBAC cluster, use following commands.
 
 ```shell
 # Deploy
@@ -170,116 +170,72 @@ REGION=ap-northeast-1 # your aws region
 kubectl run -it --rm --restart=Never -n dframe-fargate --image=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe-fargate.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "request" "-processCount" "1" "-workerPerProcess" "10" "-executePerWorker" "10" "-workerName" "SampleWorker"
 ```
 
-## (Advanced) Step1. Launch loadtest target server
+## Launch target server
 
-Now you are ready to benchmark external server.
-Let's launch target server and benchmark to it.
+Next, launch target HTTP and MagicOnion servers.
 
-### Choice 1. Launch Http Echo Server
-
-Let's launch API-Server to serve dframe worker HttpClient benchmark.
-
-This server accept sandbox DFrame `ConsoleApp.SampleHttpWorker` scenario requests.
-
-**Run on local**
-
-```shell
-kubectl kustomize sandbox/k8s/apiserver/overlays/local | kubectl apply -f -
-```
-
-Below sample will run ab test.
-
-```shell
-# confirm server is running and connectable
-curl "http://localhost:8080"
-
-# 10000 requests, 10 concurrency.
-kubectl run -i --rm --restart=Never -n dframe --image=mocoso/apachebench apachebench -- bash -c "ab -n 10000 -c 10 http://apiserver:8080"
-```
-
-**Run on aws**
+Deploy target server to EKS with following commands. Please install AWS LoadBalancer Controller to EKS.
 
 ```shell
 kubectl kustomize sandbox/k8s/apiserver/overlays/aws | kubectl apply -f -
+kubectl kustomize sandbox/k8s/magiconionserver/overlays/aws | kubectl apply -f -
+
+HTTP_LB_ENDPOINT="http://$(kubectl get ingress apiserver -n apiserver -o jsonpath='{.items[].status.loadBalancer.ingress[].hostname}')"
+GRPC_LB_ENDPOINT="http://$(kubectl get service magiconion -n apiserver -o jsonpath='{.status.loadBalancer.ingress[].hostname}'):12346"
 ```
 
-Below sample will run ab test.
+Run below to ab HTTP server from local.
 
 ```shell
-LB_ENDPOINT="http://$(kubectl get ingress apiserver -o jsonpath='{.items[].status.loadBalancer.ingress[].hostname}')/healthz"
-
 # confirm server is running and connectable
 curl "${LB_ENDPOINT}"
 
-# 10000 requests, 10 concurrency.
-kubectl run -i --rm --restart=Never -n dframe --image=mocoso/apachebench apachebench -- bash -c "ab -n 10000 -c 10 ${LB_ENDPOINT}"
+# run ab test from pod. 10000 requests, 10 concurrency.
+kubectl run -i --rm --restart=Never -n dframe --image=mocoso/apachebench apachebench -- bash -c "ab -n 10000 -c 10 ${HTTP_LB_ENDPOINT}"
 ```
 
-### Choice2. Use MagicOnion Echo Server
+## Load test target server
 
-let's launch MagicOnion to serve dframe worker gRPC benchmark.
+Faster load testing try-and-error is available by "change args" and "run DFrame master as pod".
 
-This server accept sandbox DFrame `ConsoleApp.SampleUnaryWorker` scenario and `ConsoleApp.SampleStreamWorker` scenario requests.
-
-**Run on local**
+Before deploy service and others before deploy dframe pod.
 
 ```shell
-kubectl kustomize sandbox/k8s/apiserver/overlays/local | kubectl apply -f -
-# confirm server is running and connectable
-echo localhost:12346
+kubectl kustomize sandbox/k8s/dframe/overlays/fast-itelation | kubectl apply -f -
 ```
 
-**Run on aws**
+Next replace bench target endpoint in ConsoleAppK8s/Program.cs, build and push image.
 
 ```shell
-kubectl kustomize sandbox/k8s/magiconionserver/overlays/aws | kubectl apply -f -
-kubens apiserver
-echo "$(kubectl get service magiconion -o jsonpath='{.status.loadBalancer.ingress[].hostname}'):12346"
+DOCKER_USER_NAME=<YOUR_NAME>
+sed -e "s|<BENCH_HTTP_SERVER_HOST>|${HTTP_LB_ENDPOINT}|g" ./sandbox/ConsoleAppK8s/Program.cs -i
+sed -e "s|<BENCH_GRPC_SERVER_HOST>|${GRPC_LB_ENDPOINT}|g" ./sandbox/ConsoleAppK8s/Program.cs -i
+docker build -t ${DOCKER_USER_NAME}/dframe-k8s:0.1.0 -f ./sandbox/ConsoleAppK8s/Dockerfile .
+docker push ${DOCKER_USER_NAME}/dframe-k8s:0.1.0
 ```
 
-## (Advanced) Step2. Launch DFrame Master and loadtest target
+### SampleHttpWorker Scenario
 
-Faster load testing itelation is available by "change args" and "run DFrame master as pod".
-
-Before trying run dframe, deploy service and and others.
+This sample launch MagicOnion-Worker with `SampleHttpWorker` scenario and execute 1000000 requests, by `10 (process) * 10 (workers) * 10000 (execution)`.
 
 ```shell
-kubectl kustomize sandbox/k8s/dframe/overlays/fast-telation | kubectl apply -f -
+kubectl run -it --rm --restart=Never -n dframe --image=${DOCKER_USER_NAME}/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=${DOCKER_USER_NAME}/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "batch -processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10000" "-workerName" "SampleHttpWorker"
 ```
 
-You are ready to run ondemand pod.
-
-### Run SampleHttpWorker Scenario
-
-Below sample will run 1000000 requests of SampleHttpWorker, with 10 process, 10 workers and 10000 execution.
-
-```shell
-ACCOUNT_ID=431046970529 # your aws account id
-REGION=ap-northeast-1 # your aws region
-
-kubectl run -it --rm --restart=Never -n dframe --image=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "batch -processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10000" "-workerName" "SampleHttpWorker"
-```
-
-### Run SampleUnaryWorker Scenario
+### SampleUnaryWorker Scenario
 
 Below sample will run 1000000 requests of SampleUnaryWorker, with 10 process, 10 workers and 10000 execution.
 
 ```shell
-ACCOUNT_ID=431046970529 # your aws account id
-REGION=ap-northeast-1 # your aws region
-
-kubectl run -it --rm --restart=Never -n dframe --image=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "batch -processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10000" "-workerName" "SampleUnaryWorker"
+kubectl run -it --rm --restart=Never -n dframe --image=${DOCKER_USER_NAME}/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=${DOCKER_USER_NAME}/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "batch -processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10000" "-workerName" "SampleUnaryWorker"
 ```
 
-### Run SampleStreamWorker Scenario
+### SampleStreamWorker Scenario
 
 Below sample will run 1000000 requests of SampleStreamWorker, with 10 process, 10 workers and 10000 execution.
 
 ```shell
-ACCOUNT_ID=431046970529 # your aws account id
-REGION=ap-northeast-1 # your aws region
-
-kubectl run -it --rm --restart=Never -n dframe --image=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "batch -processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10000" "-workerName" "SampleStreamWorker"
+kubectl run -it --rm --restart=Never -n dframe --image=${DOCKER_USER_NAME}/dframe-k8s:0.1.0 --image-pull-policy Always --env DFRAME_MASTER_CONNECT_TO_HOST=dframe-master.dframe.svc.cluster.local --env DFRAME_WORKER_IMAGE_NAME=${DOCKER_USER_NAME}/dframe-k8s --env DFRAME_WORKER_IMAGE_TAG="0.1.0" --env DFRAME_WORKER_IMAGE_PULL_POLICY="Always" --serviceaccount='dframe-master' --port=12345 --labels="app=dframe-master" dframe-master -- "batch -processCount" "10" "-workerPerProcess" "10" "-executePerWorker" "10000" "-workerName" "SampleStreamWorker"
 ```
 
 # ECS
@@ -287,35 +243,61 @@ kubectl run -it --rm --restart=Never -n dframe --image=${ACCOUNT_ID}.dkr.ecr.${R
 You can deploy DFrame to your ECS cluster and run load test via ECS Scaling Provider (DFrame.Ecs).
 This sample contains AWS CDK based ECS deployment.
 
-## Step to deploy
+**Prerequisites**
 
-install cdk cli.
+Following commands are used on this sample.
+
+* [aws-cdk](https://github.com/aws/aws-cdk)
+
+Install cdk cli.
 
 ```shell
 npm install -g aws-cdk
 npm update -g aws-cdk
 ```
 
-build and deploy
+## First step samples
+
+This samples confirm DFrame Master and Workers are successfully communicating.
+Before trying benchmark to external Server, run one of this sample.
+
+To run on ECS, use following commands.
 
 ```shell
 cd sandbox/Ecs
-# deploy via CDK
 cdk synth
-cdk bootstrap # only on initial execution
 cdk deploy
 ```
 
-## Deploy TIPS
+After deployment complete, check ECS logs DFrameWorker communicating with DFrameMaster.
 
-* Use Datadog to monitor benchmark ec2 and fargate metrics.
+> DFrameWorker: https://ap-northeast-1.console.aws.amazon.com/ecs/home?region=ap-northeast-1#/clusters/DFrameCdkStack-Cluster/services/DFrameWorkerService/logs
 
-CDK template use AWS SecretsManager to keep datadog token.
-First, create datadog token secret with secret-id `magiconion-benchmark-datadog-token` via aws cli.
+## Load test target server
+
+Below command will launch 10 worker fargate with `SampleHttpWorker` scenario.
 
 ```shell
-SECRET_ID=magiconion-benchmark-datadog-token
-DD_TOKEN=abcdefg12345
+cdk deploy -c "dframeArg=request -processCount 10 -workerPerProcess 1 -executePerWorker 1 -workerName SampleHttpWorker"
+```
+
+Below command will launch 10 worker fargate with `SampleUnaryWorker` scenario.
+
+```shell
+cdk deploy -c "dframeArg=request -processCount 10 -workerPerProcess 1 -executePerWorker 1 -workerName SampleUnaryWorker"
+```
+
+## TIPS
+
+**Q. How to add Datadog sidecar.**
+
+CDK uses AWS SecretsManager to keep datadog token.
+Once CDK Deployed, create datadog token secret with secret-id `dframe-datadog-token`.
+
+```shell
+# via aws cli
+SECRET_ID=dframe-datadog-token
+DD_TOKEN=abcdefg12345 # replace with your datadog token
 aws secretsmanager create-secret --name "$SECRET_ID"
 aws secretsmanager put-secret-value --secret-id "$SECRET_ID" --secret-string "${DD_TOKEN}"
 ```
@@ -327,42 +309,11 @@ aws secretsmanager describe-secret --secret-id "$SECRET_ID"
 aws secretsmanager get-secret-value --secret-id "$SECRET_ID"
 ```
 
-To install Datadog agent to ec2 or fargate, set `true` in `ReportStackProps` Property.
-EC2 MagicOnion also support install CloudWatch Agent, this agent will collect Mem used and TCP status.
+To add Datadog agent sidecar, set `UseFargateDatadogAgentProfiler = true`, then CDK Deploy again.
 
 ```csharp
 new ReportStackProps
 {
-    UseEc2DatadogAgentProfiler = true, // install datadog agent to MagicOnion Ec2.
-    UseFargateDatadogAgentProfiler = true, // instance datadog fargate agent to bench master/worker.
-    UseEc2CloudWatchAgentProfiler = false, // true to install cloudwatch agent to magiconion ec2
-}
-```
-
-## Destroy TIPS
-
-* cdk destoy failed because instance remain on service discovery.
-
-use script to remove all instances from service discovery.
-
-```csharp
-async Task Main()
-{
-    var serviceName = "server";
-    var client = new Amazon.ServiceDiscovery.AmazonServiceDiscoveryClient();
-    var services = await client.ListServicesAsync(new ListServicesRequest());
-    var service = services.Services.First(x => x.Name == serviceName);
-    var instances = await client.ListInstancesAsync(new ListInstancesRequest
-    {
-        ServiceId = service.Id,
-    });
-    foreach (var instance in instances.Instances)
-    {
-        await client.DeregisterInstanceAsync(new DeregisterInstanceRequest
-        {
-            InstanceId = instance.Id,
-            ServiceId = service.Id,
-        });
-    }
+    UseFargateDatadogAgentProfiler = true, // Add datadog agent sidecar to your fargate containers.
 }
 ```

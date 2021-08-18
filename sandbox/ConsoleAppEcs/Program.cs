@@ -127,10 +127,10 @@ namespace ConsoleAppEcs
 
         public override async Task SetupAsync(WorkerContext context)
         {
-            url = Environment.GetEnvironmentVariable("BENCH_SERVER_HOST");
+            url = Environment.GetEnvironmentVariable("BENCH_HTTP_SERVER_HOST");
             cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
 
-            Console.WriteLine($"connect to: {url}");
+            Console.WriteLine($"connect to: {url} ({nameof(SampleHttpWorker)})");
         }
 
         public override async Task ExecuteAsync(WorkerContext context)
@@ -151,11 +151,11 @@ namespace ConsoleAppEcs
 
         public override async Task SetupAsync(WorkerContext context)
         {
-            var url = Environment.GetEnvironmentVariable("BENCH_SERVER_HOST");
-            _channel = GrpcChannel.ForAddress(url + ":12346");
+            var url = Environment.GetEnvironmentVariable("BENCH_GRPC_SERVER_HOST");
+            _channel = GrpcChannel.ForAddress(url);
             _client = MagicOnionClient.Create<IEchoService>(_channel);
 
-            Console.WriteLine($"connect to: {url}");
+            Console.WriteLine($"connect to: {url} ({nameof(SampleUnaryWorker)})");
         }
         public override async Task ExecuteAsync(WorkerContext context)
         {
@@ -175,10 +175,10 @@ namespace ConsoleAppEcs
 
         public override async Task SetupAsync(WorkerContext context)
         {
-            var url = Environment.GetEnvironmentVariable("BENCH_SERVER_HOST");
-            _channel = GrpcChannel.ForAddress(url + ":12346");
+            var url = Environment.GetEnvironmentVariable("BENCH_GRPC_SERVER_HOST");
+            _channel = GrpcChannel.ForAddress(url);
 
-            Console.WriteLine($"connect to: {url}");
+            Console.WriteLine($"connect to: {url} ({nameof(SampleStreamWorker)})");
 
             var receiver = new EchoReceiver(_channel);
             _client = await StreamingHubClient.ConnectAsync<IEchoHub, IEchoHubReceiver>(_channel, receiver);

@@ -114,7 +114,7 @@ namespace ConsoleAppK8s
         private static HttpClient httpClient;
 
         // todo: change to your endpoint
-        private readonly string _url = "http://77948c50-apiserver-apiserv-98d9-538745285.ap-northeast-1.elb.amazonaws.com/";
+        private readonly string _url = "<BENCH_HTTP_SERVER_HOST>";
         private CancellationTokenSource cts;
 
         static SampleHttpWorker()
@@ -130,6 +130,8 @@ namespace ConsoleAppK8s
         public override async Task SetupAsync(WorkerContext context)
         {
             cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
+
+            Console.WriteLine($"connect to: {_url} ({nameof(SampleHttpWorker)})");
         }
 
         public override async Task ExecuteAsync(WorkerContext context)
@@ -149,12 +151,14 @@ namespace ConsoleAppK8s
         private IEchoService _client;
 
         // todo: change to your endpoint
-        private readonly string _host = "a03a0da6478624a279e63219a6b8b4cc-f661441800542a5b.elb.ap-northeast-1.amazonaws.com";
+        private readonly string _url = "<BENCH_GRPC_SERVER_HOST>";
 
         public override async Task SetupAsync(WorkerContext context)
         {
-            _channel = GrpcChannel.ForAddress(_host + ":12346");
+            _channel = GrpcChannel.ForAddress(_url);
             _client = MagicOnionClient.Create<IEchoService>(_channel);
+
+            Console.WriteLine($"connect to: {_url} ({nameof(SampleUnaryWorker)})");
         }
         public override async Task ExecuteAsync(WorkerContext context)
         {
@@ -173,14 +177,19 @@ namespace ConsoleAppK8s
         private IEchoHub _client;
 
         // todo: change to your endpoint
-        private readonly string _host = "a03a0da6478624a279e63219a6b8b4cc-f661441800542a5b.elb.ap-northeast-1.amazonaws.com";
+        private readonly string _url = "<BENCH_GRPC_SERVER_HOST>";
 
         public override async Task SetupAsync(WorkerContext context)
         {
-            _channel = GrpcChannel.ForAddress(_host + ":12346");
+            _channel = GrpcChannel.ForAddress(_url);
+
+            Console.WriteLine($"connect to: {_url} ({nameof(SampleStreamWorker)})");
+
             var receiver = new EchoReceiver(_channel);
             _client = await StreamingHubClient.ConnectAsync<IEchoHub, IEchoHubReceiver>(_channel, receiver);
             receiver.Client = _client;
+
+            Console.WriteLine($"stream hub connected.");
         }
         public override async Task ExecuteAsync(WorkerContext context)
         {
