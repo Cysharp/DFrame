@@ -13,6 +13,7 @@ namespace Cdk
                 UseFargateDatadogAgentProfiler = false,
                 MasterFargate = new Fargate(Fargate.CpuSpec.Half, Fargate.MemorySpec.Low),
                 WorkerFargate = new Fargate(Fargate.CpuSpec.Half, Fargate.MemorySpec.Low),
+                ServerFargate = new Fargate(Fargate.CpuSpec.Half, Fargate.MemorySpec.Low),
                 Tags = new Dictionary<string, string>()
                 {
                     { "cf-stack", "DFrameCdkStack" },
@@ -27,15 +28,19 @@ namespace Cdk
         /// <summary>
         /// Install Datadog Agent as Fargate sidecar container.
         /// </summary>
-        public bool UseFargateDatadogAgentProfiler { get; set; }
+        public bool UseFargateDatadogAgentProfiler { get; init; }
         /// <summary>
-        /// Fargate of Dframe master 
+        /// Dframe Master Fargate Size
         /// </summary>
-        public Fargate MasterFargate { get; set; }
+        public Fargate MasterFargate { get; init; } = new Fargate();
         /// <summary>
-        /// Fargate of Dframe worker
+        /// Dframe Worker Fargate Size
         /// </summary>
-        public Fargate WorkerFargate { get; set; }
+        public Fargate WorkerFargate { get; init; } = new Fargate();
+        /// <summary>
+        /// Server Fargate Size
+        /// </summary>
+        public Fargate ServerFargate { get; init; } = new Fargate();
 
         public static ReportStackProps GetOrDefault(IStackProps props, ReportStackProps @default = null)
         {

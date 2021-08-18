@@ -55,7 +55,7 @@ namespace Cdk
             });
 
             // iam
-            var iamEcsTaskExecuteRole = GetIamEcsTaskExecuteRole(new[] { dframeWorkerLogGroup, dframeMasterLogGroup });
+            var iamEcsTaskExecuteRole = GetIamEcsTaskExecuteRole(new[] { echoLogGroup, magiconionLogGroup, dframeWorkerLogGroup, dframeMasterLogGroup });
             var iamDFrameTaskDefRole = GetIamEcsDframeMasterTaskDefRole();
             var iamWorkerTaskDefRole = GetIamEcsDframeWorkerTaskDefRole();
 
@@ -65,6 +65,7 @@ namespace Cdk
                 : null;
 
             #region ECS
+            // ecs
             var cluster = new Cluster(this, "EcsCluster", new ClusterProps { ClusterName = $"{StackName}-Cluster", Vpc = vpc, });
 
             // echo server
@@ -72,8 +73,8 @@ namespace Cdk
             {
                 ExecutionRole = iamEcsTaskExecuteRole,
                 TaskRole = iamWorkerTaskDefRole,
-                Cpu = stackProps.WorkerFargate.CpuSize,
-                MemoryLimitMiB = stackProps.WorkerFargate.MemorySize,
+                Cpu = stackProps.ServerFargate.CpuSize,
+                MemoryLimitMiB = stackProps.ServerFargate.MemorySize,
             });
             echoTaskDef.AddContainer("server", new ContainerDefinitionOptions
             {
@@ -97,7 +98,7 @@ namespace Cdk
                     }
                 }
             });
-            echoTaskDef.AddDatadogContainer($"dframe-datadog", ddToken, () => stackProps.UseFargateDatadogAgentProfiler);
+            echoTaskDef.AddDatadogContainer($"datadog", ddToken, () => stackProps.UseFargateDatadogAgentProfiler);
             var echoService = new FargateService(this, "EchoServer", new FargateServiceProps
             {
                 ServiceName = "EchoServer",
@@ -123,8 +124,8 @@ namespace Cdk
             {
                 ExecutionRole = iamEcsTaskExecuteRole,
                 TaskRole = iamWorkerTaskDefRole,
-                Cpu = stackProps.WorkerFargate.CpuSize,
-                MemoryLimitMiB = stackProps.WorkerFargate.MemorySize,
+                Cpu = stackProps.ServerFargate.CpuSize,
+                MemoryLimitMiB = stackProps.ServerFargate.MemorySize,
             });
             magiconionTaskDef.AddContainer("server", new ContainerDefinitionOptions
             {
@@ -148,7 +149,7 @@ namespace Cdk
                     }
                 }
             });
-            magiconionTaskDef.AddDatadogContainer($"dframe-datadog", ddToken, () => stackProps.UseFargateDatadogAgentProfiler);
+            magiconionTaskDef.AddDatadogContainer($"datadog", ddToken, () => stackProps.UseFargateDatadogAgentProfiler);
             var magiconionService = new FargateService(this, "MagicOnionServer", new FargateServiceProps
             {
                 ServiceName = "MagicOnionServer",
@@ -200,7 +201,7 @@ namespace Cdk
                     StreamPrefix = dframeWorkerLogGroup,
                 }),
             });
-            dframeWorkerTaskDef.AddDatadogContainer($"{dframeWorkerContainerName}-datadog", ddToken, () => stackProps.UseFargateDatadogAgentProfiler);
+            dframeWorkerTaskDef.AddDatadogContainer($"datadog", ddToken, () => stackProps.UseFargateDatadogAgentProfiler);
             var dframeWorkerService = new FargateService(this, "DFrameWorkerService", new FargateServiceProps
             {
                 ServiceName = "DFrameWorkerService",
@@ -246,7 +247,7 @@ namespace Cdk
                     StreamPrefix = dframeMasterLogGroup,
                 }),
             });
-            dframeMasterTaskDef.AddDatadogContainer($"dframe-datadog", ddToken, () => stackProps.UseFargateDatadogAgentProfiler);
+            dframeMasterTaskDef.AddDatadogContainer($"datadog", ddToken, () => stackProps.UseFargateDatadogAgentProfiler);
             var dframeMasterService = new FargateService(this, "DFrameMasterService", new FargateServiceProps
             {
                 ServiceName = "DFrameMasterService",

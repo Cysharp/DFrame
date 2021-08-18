@@ -204,7 +204,7 @@ Before deploy service and others before deploy dframe pod.
 kubectl kustomize sandbox/k8s/dframe/overlays/fast-itelation | kubectl apply -f -
 ```
 
-Next replace bench target endpoint in ConsoleAppK8s/Program.cs, build and push image.
+Next, replace bench target endpoint in ConsoleAppK8s/Program.cs, build and push image.
 
 ```shell
 DOCKER_USER_NAME=<YOUR_NAME>
@@ -259,7 +259,7 @@ npm update -g aws-cdk
 ## First step samples
 
 This samples confirm DFrame Master and Workers are successfully communicating.
-Before trying benchmark to external Server, run one of this sample.
+Before trying benchmark to external Server, run this sample.
 
 To run on ECS, use following commands.
 
@@ -271,7 +271,7 @@ cdk deploy
 
 After deployment complete, check ECS logs DFrameWorker communicating with DFrameMaster.
 
-> DFrameWorker: https://ap-northeast-1.console.aws.amazon.com/ecs/home?region=ap-northeast-1#/clusters/DFrameCdkStack-Cluster/services/DFrameWorkerService/logs
+> DFrameWorker Logs: https://ap-northeast-1.console.aws.amazon.com/ecs/home?region=ap-northeast-1#/clusters/DFrameCdkStack-Cluster/services/DFrameWorkerService/logs
 
 ## Load test target server
 
@@ -283,6 +283,10 @@ Below command will launch 10 worker fargate with `SampleHttpWorker` scenario.
 cdk deploy -c "dframeArg=request -processCount 10 -workerPerProcess 1 -executePerWorker 1 -workerName SampleHttpWorker"
 ```
 
+After deployment complete, check ECS logs EchoServer communicating with DFrameMaster.
+
+> EchoServer Logs: https://ap-northeast-1.console.aws.amazon.com/ecs/home?region=ap-northeast-1#/clusters/DFrameCdkStack-Cluster/services/EchoServer/logs
+
 ### SampleUnaryWorker Scenario
 
 Below command will launch 10 worker fargate with `SampleUnaryWorker` scenario.
@@ -291,6 +295,8 @@ Below command will launch 10 worker fargate with `SampleUnaryWorker` scenario.
 cdk deploy -c "dframeArg=request -processCount 10 -workerPerProcess 1 -executePerWorker 1 -workerName SampleUnaryWorker"
 ```
 
+> MagicOnionServer Logs: https://ap-northeast-1.console.aws.amazon.com/ecs/home?region=ap-northeast-1#/clusters/DFrameCdkStack-Cluster/services/MagicOnionServer/logs
+
 ### SampleStreamWorker Scenario
 
 Below command will launch 10 worker fargate with `SampleStreamWorker` scenario.
@@ -298,6 +304,8 @@ Below command will launch 10 worker fargate with `SampleStreamWorker` scenario.
 ```shell
 cdk deploy -c "dframeArg=request -processCount 10 -workerPerProcess 1 -executePerWorker 1 -workerName SampleStreamWorker"
 ```
+
+> MagicOnionServer Logs: https://ap-northeast-1.console.aws.amazon.com/ecs/home?region=ap-northeast-1#/clusters/DFrameCdkStack-Cluster/services/MagicOnionServer/logs
 
 ## TIPS
 
