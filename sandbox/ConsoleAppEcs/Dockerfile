@@ -5,11 +5,13 @@ WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /src
-COPY ["ConsoleAppEcs/ConsoleAppEcs.csproj", "ConsoleAppEcs/"]
-COPY ["EchoMagicOnion.Shared/EchoMagicOnion.Shared.csproj", "EchoMagicOnion.Shared/"]
-RUN dotnet restore "ConsoleAppEcs/ConsoleAppEcs.csproj"
+COPY ["sandbox/ConsoleAppEcs/ConsoleAppEcs.csproj", "sandbox/ConsoleAppEcs/"]
+COPY ["sandbox/EchoMagicOnion.Shared/EchoMagicOnion.Shared.csproj", "sandbox/EchoMagicOnion.Shared/"]
+COPY ["src/DFrame.Ecs/DFrame.Ecs.csproj", "src/DFrame.Ecs/"]
+COPY ["src/DFrame/DFrame.csproj", "src/DFrame/"]
+RUN dotnet restore "sandbox/ConsoleAppEcs/ConsoleAppEcs.csproj"
 COPY . .
-WORKDIR "/src/ConsoleAppEcs"
+WORKDIR "/src/sandbox/ConsoleAppEcs"
 RUN dotnet build "ConsoleAppEcs.csproj" -c Release -o /app/build
 
 FROM build AS publish

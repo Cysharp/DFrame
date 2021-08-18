@@ -8,14 +8,15 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-        <PackageReference Include="DFrame.Ecs" Version="0.0.4" />
-        <PackageReference Include="DFrame.LoadTesting" Version="0.0.4" />
         <PackageReference Include="MagicOnion" Version="4.1.2" />
 		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.8" />
         <PackageReference Include="ZLogger" Version="1.4.1" />
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\src\DFrame\DFrame.csproj" />
+		<ProjectReference Include="..\..\src\DFrame.LoadTesting\DFrame.LoadTesting.csproj" />
+		<ProjectReference Include="..\..\src\DFrame.Ecs\DFrame.Ecs.csproj" />
 		<ProjectReference Include="..\EchoMagicOnion.Shared\EchoMagicOnion.Shared.csproj" />
 	</ItemGroup>
 

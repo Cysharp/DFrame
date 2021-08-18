@@ -15,7 +15,7 @@
 **/bin
 **/charts
 **/docker-compose*
-**/Dockerfile*
+#**/Dockerfile*
 **/node_modules
 **/npm-debug.log
 **/obj
@@ -23,4 +23,5 @@
 **/values.dev.yaml
 LICENSE
 README.md
-cdk.out
+# for cdk
+**/cdk.out

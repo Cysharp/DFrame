@@ -24,8 +24,8 @@ namespace Cdk
             // docker deploy
             var dockerImage = new DockerImageAsset(this, "dframeWorkerImage", new DockerImageAssetProps
             {
-                Directory = Path.Combine(Directory.GetCurrentDirectory(), "../"),
-                File = "ConsoleAppEcs/Dockerfile",
+                Directory = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "../../")),
+                File = "sandbox/ConsoleAppEcs/Dockerfile",
             });
             var dframeImage = ContainerImage.FromDockerImageAsset(dockerImage);
 

@@ -8,7 +8,7 @@ namespace Cdk
         public static void Main(string[] args)
         {
             var app = new App();
-            new CdkStack(app, "MagicOnionBenchmarkCdkStack", new ReportStackProps
+            new CdkStack(app, "DFrameCdkStack", new ReportStackProps
             {
                 UseFargateDatadogAgentProfiler = false,
                 MasterFargate = new Fargate(Fargate.CpuSpec.Half, Fargate.MemorySpec.Low),
