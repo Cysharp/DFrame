@@ -19,6 +19,9 @@ jobs:
       NUGET_XMLDOC_MODE: skip
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 6.0.x
       # build src
       - run: dotnet build -c Debug ./src/DFrame
       - run: dotnet build -c Debug ./src/DFrame.Kubernetes

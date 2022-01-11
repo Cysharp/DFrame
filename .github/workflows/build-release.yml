@@ -24,6 +24,9 @@ jobs:
       NUGET_XMLDOC_MODE: skip
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 6.0.x
       # pack nuget
       - run: dotnet build -c Release -p:Version=${{ env.GIT_TAG }}
       # - run: dotnet test -c Release --no-build
