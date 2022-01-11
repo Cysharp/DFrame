@@ -36,9 +36,9 @@ namespace DFrame
             try
             {
                 var logger = provider.GetRequiredService(typeof(ILogger<DFrameWorkerApp>));
-                var logger2 = provider.GetRequiredService(typeof(ILogger<ConsoleAppFramework.ConsoleAppEngine>));
+                var logger2 = provider.GetRequiredService(typeof(ILogger<ConsoleAppFramework.ConsoleApp>));
                 var app = new DFrameWorkerApp((ILogger<DFrameWorkerApp>)logger, provider, options);
-                app.Context = new ConsoleAppFramework.ConsoleAppContext(new string[0], DateTime.UtcNow, cancellationToken, (ILogger<ConsoleAppFramework.ConsoleAppEngine>)logger2, null!, provider);
+                app.Context = new ConsoleAppFramework.ConsoleAppContext(new string[0], DateTime.UtcNow, cancellationToken, (ILogger<ConsoleAppFramework.ConsoleApp>)logger2, null!, provider);
 
                 await app.Main();
             }
