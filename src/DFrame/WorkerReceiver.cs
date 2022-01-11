@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DFrame
 {
@@ -35,7 +36,7 @@ namespace DFrame
             // this.logger = logger;
             this.channel = channel;
             this.nodeId = nodeId;
-            this.workerCollection = (DFrameWorkerCollection)serviceProvider.GetService(typeof(DFrameWorkerCollection));
+            this.workerCollection = (DFrameWorkerCollection)serviceProvider.GetRequiredService(typeof(DFrameWorkerCollection));
             this.serviceProvider = serviceProvider;
             this.options = options;
             this.receiveShutdown = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -58,7 +59,7 @@ namespace DFrame
             var newCoWorkers = coWorkers.ToBuilder();
             for (int i = 0; i < createCount; i++)
             {
-                var coWorker = serviceProvider.GetService(description.WorkerType);
+                var coWorker = serviceProvider.GetRequiredService(description.WorkerType);
                 var t = (new WorkerContext(channel, options), (Worker)coWorker);
                 newCoWorkers.Add(t);
                 requireSetupCoWorkers.Add(t);

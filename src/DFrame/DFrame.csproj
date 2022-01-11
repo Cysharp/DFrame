@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net5.0</TargetFramework>
-        <LangVersion>9.0</LangVersion>
+        <TargetFramework>net6.0</TargetFramework>
         <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
         <RootNamespace>DFrame</RootNamespace>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
@@ -18,8 +18,8 @@
     
     <ItemGroup>
         <PackageReference Include="MagicOnion" Version="4.1.2" />
-        <PackageReference Include="ConsoleAppFramework" Version="3.2.0" />
-        <PackageReference Include="ZLogger" Version="1.4.1" />
+        <PackageReference Include="ConsoleAppFramework" Version="4.0.4" />
+        <PackageReference Include="ZLogger" Version="1.6.1" />
     </ItemGroup>
 
     <ItemGroup>

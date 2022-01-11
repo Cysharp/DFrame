@@ -17,7 +17,7 @@ namespace DFrame
         {
             this.failSignal = failSignal;
 
-            var location = Assembly.GetEntryAssembly().Location;
+            var location = Assembly.GetEntryAssembly()!.Location;
 
             var cmd = $"dotnet \"{location}\" --worker-flag";
 

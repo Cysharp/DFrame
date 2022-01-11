@@ -36,7 +36,7 @@ namespace WebApp
             services.AddDFrameProfiler(new DFrameProfilerOption { EnableProfiler = true });
             services.AddDbContextPool<DFrameProfilerContext>(options =>
             {
-                options.UseMySql(Configuration.GetConnectionString("mysql"), action =>
+                options.UseMySql(ServerVersion.AutoDetect(Configuration.GetConnectionString("mysql")), action =>
                 {
                     action.MigrationsAssembly(nameof(WebApp));
                 });

@@ -37,17 +37,17 @@ namespace DFrame.Profiler
                     Duration = duration.TotalSeconds,
                 };
 
-                if (_option?.OnPreInsertAsync != null)
+                if (_option.OnPreInsertAsync != null)
                 {
-                    await _option?.OnPreInsertAsync.Invoke(entity, token);
+                    await _option.OnPreInsertAsync.Invoke(entity, token);
                 }
 
                 await _context.AddAsync<ProfileHistory>(entity, token);
                 await _context.SaveChangesAsync(token);
 
-                if (_option?.OnPostInsertAsync != null)
+                if (_option.OnPostInsertAsync != null)
                 {
-                    await _option?.OnPostInsertAsync.Invoke(entity, token);
+                    await _option.OnPostInsertAsync.Invoke(entity, token);
                 }
             }
         }
@@ -58,7 +58,7 @@ namespace DFrame.Profiler
             {
                 if (_option?.OnPreInsertAsync != null)
                 {
-                    await _option?.OnPreInsertAsync.Invoke(entity, token);
+                    await _option.OnPreInsertAsync.Invoke(entity, token);
                 }
 
                 await _context.AddAsync<ProfileHistory>(entity, token);
@@ -66,7 +66,7 @@ namespace DFrame.Profiler
 
                 if (_option?.OnPostInsertAsync != null)
                 {
-                    await _option?.OnPostInsertAsync.Invoke(entity, token);
+                    await _option.OnPostInsertAsync.Invoke(entity, token);
                 }
             }
         }

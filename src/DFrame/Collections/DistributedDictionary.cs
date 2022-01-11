@@ -120,7 +120,7 @@ namespace DFrame.Collections
             var d = GetDictionary();
             lock (d)
             {
-                if (d.TryGetValue(key, out value))
+                if (d.TryGetValue(key, out value!))
                 {
                     return UnaryResult(value);
                 }

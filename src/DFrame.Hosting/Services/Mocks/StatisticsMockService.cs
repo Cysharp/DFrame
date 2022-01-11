@@ -215,7 +215,7 @@ namespace DFrame.Hosting.Services
                 Size = size;
             }
 
-            public override bool Equals(object obj)
+            public override bool Equals(object? obj)
             {
                 return obj is RequestData data &&
                        Request == data.Request &&

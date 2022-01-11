@@ -11,9 +11,9 @@ namespace DFrame.Internal
         internal static async Task WithCancellation(this Task task, CancellationToken cancellationToken)
         {
             var tcs = new TaskCompletionSource<object?>();
-            var registration = cancellationToken.Register(state =>
+            var registration = cancellationToken.Register(static state =>
             {
-                var t = (TaskCompletionSource<object?>)state;
+                var t = (TaskCompletionSource<object?>)state!;
                 t.TrySetResult(null);
             }, tcs);
 
@@ -34,9 +34,9 @@ namespace DFrame.Internal
         {
             // CancellationToken
             var cancellationTask = new TaskCompletionSource<object?>();
-            var registration = cancellationToken.Register(state =>
+            var registration = cancellationToken.Register(static state =>
             {
-                var t = (TaskCompletionSource<object?>)state;
+                var t = (TaskCompletionSource<object?>)state!;
                 t.TrySetResult(null);
             }, cancellationTask);
 

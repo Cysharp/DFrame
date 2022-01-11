@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29613.14
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DFrame", "src\DFrame\DFrame.csproj", "{542C0EB5-A964-4172-9B0B-1206EF6500CD}"
 EndProject
@@ -38,6 +38,15 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DFrame.Ecs", "src\DFrame.Ecs\DFrame.Ecs.csproj", "{B6DA278D-BFB6-493E-A9DA-44C96113EA70}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleAppEcs", "sandbox\ConsoleAppEcs\ConsoleAppEcs.csproj", "{140CC1E5-C5F0-4B5E-A729-8291F49101AE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{15E00CDF-0E36-4FF1-A88B-E211066D8FDE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{7936D1DB-0FEB-4D5C-97BB-ADB105A98A81}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\build-debug.yml = .github\workflows\build-debug.yml
+		.github\workflows\build-release.yml = .github\workflows\build-release.yml
+		.github\workflows\toc.yml = .github\workflows\toc.yml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -122,6 +131,7 @@ Global
 		{C3431BDA-9904-43AD-9F1B-386E75BD291D} = {DDD04377-167A-4FDC-90D5-01EDCB7BA465}
 		{7B8431BB-DDB1-4ACA-825D-5B4741A48480} = {4BC5A82E-0433-4F47-A273-A95DB89689D7}
 		{140CC1E5-C5F0-4B5E-A729-8291F49101AE} = {DDD04377-167A-4FDC-90D5-01EDCB7BA465}
+		{7936D1DB-0FEB-4D5C-97BB-ADB105A98A81} = {15E00CDF-0E36-4FF1-A88B-E211066D8FDE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {77245B01-4128-4759-BF61-CC223FAA2E01}
