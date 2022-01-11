@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace DFrame
@@ -24,7 +25,7 @@ namespace DFrame
 
             foreach (var asm in searchAssemblies)
             {
-                if (asm.FullName.StartsWith("System") || asm.FullName.StartsWith("Microsoft.Extensions")) continue;
+                if (asm.FullName!.StartsWith("System") || asm.FullName.StartsWith("Microsoft.Extensions")) continue;
 
                 Type[] types;
                 try
@@ -33,7 +34,7 @@ namespace DFrame
                 }
                 catch (ReflectionTypeLoadException ex)
                 {
-                    types = ex.Types;
+                    types = ex.Types.Where(x => x != null).ToArray()!;
                 }
 
                 foreach (var worker in types)
@@ -70,7 +71,7 @@ namespace DFrame
 
         public IEnumerable<DFrameWorkerTypeInfo> All => dframeTypes.Values;
 
-        public bool TryGetWorker(string workerName, out DFrameWorkerTypeInfo worker)
+        public bool TryGetWorker(string workerName, [NotNullWhen(true)] out DFrameWorkerTypeInfo? worker)
         {
             return dframeTypes.TryGetValue(workerName, out worker);
         }

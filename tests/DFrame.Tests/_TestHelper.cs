@@ -101,7 +101,7 @@ namespace DFrame.Tests
             return true;
         }
 
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, System.Exception exception, System.Func<TState, System.Exception, string> formatter)
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, System.Exception? exception, System.Func<TState, System.Exception?, string> formatter)
         {
             helper.WriteLine($"[{logLevel.ToString()}]" + formatter.Invoke(state, exception));
             if (exception != null)

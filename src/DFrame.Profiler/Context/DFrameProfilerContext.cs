@@ -44,7 +44,7 @@ namespace DFrame.Profiler.Context
         public string ContextId { get; set; }
         [Required]
         [Column(Order = 2)]
-        public string ProductVersion { get; set; } = Assembly.GetEntryAssembly().GetName().Version.ToString();
+        public string ProductVersion { get; set; } = Assembly.GetEntryAssembly()!.GetName().Version!.ToString();
         [Required]
         [Column(Order = 3)]
         public string WorkerName { get; set; }

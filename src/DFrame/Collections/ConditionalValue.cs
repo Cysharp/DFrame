@@ -18,7 +18,7 @@
         {
             if (value.HasValue)
             {
-                return new ConditionalValue<T>(true, (T)value.Value);
+                return new ConditionalValue<T>(true, (T?)value.Value);
             }
             else
             {

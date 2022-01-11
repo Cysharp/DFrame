@@ -115,7 +115,7 @@ namespace DFrame
                     return true;
                 }
 
-                public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+                public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
                 {
                     if (exception != null)
                     {
@@ -216,7 +216,7 @@ namespace DFrame
             var receiver = new WorkerReceiver(channel, nodeId, provider, options);
             var callOption = new CallOptions(new Metadata { { "node-id", nodeId.ToString() } });
 
-            var client = StreamingHubClient.Connect<IMasterHub, IWorkerReceiver>(callInvoker, receiver, option: callOption, serializerOptions: options.SerializerOptions);
+            var client = await StreamingHubClient.ConnectAsync<IMasterHub, IWorkerReceiver>(callInvoker, receiver, option: callOption, serializerOptions: options.SerializerOptions);
             // Connect explicitly???
             receiver.Client = client;
 

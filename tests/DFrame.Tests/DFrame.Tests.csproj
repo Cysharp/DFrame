@@ -1,7 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net5.0</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
+        <!--<Nullable>enable</Nullable>-->
+        <NoWarn>$(NoWarn);8632</NoWarn> <!-- CS8632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. -->
+        <ImplicitUsings>enable</ImplicitUsings>
         <IsPackable>false</IsPackable>
     </PropertyGroup>
 
