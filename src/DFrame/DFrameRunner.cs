@@ -237,13 +237,13 @@ namespace DFrame
         }
     }
 
-    internal sealed class DFrameRamupRunner : DFrameRunnerBase
+    internal sealed class DFrameRampupRunner : DFrameRunnerBase
     {
         readonly int maxWorkloadPerWorker;
         readonly int workloadSpawnCount;
         readonly int workloadSpawnSecond;
 
-        public DFrameRamupRunner(ILogger<DFrameApp> logger, IServiceProvider provider, DFrameOptions options, DFrameWorkloadCollection workers, int maxWorkloadPerWorker, int workloadSpawnCount, int workloadSpawnSecond)
+        public DFrameRampupRunner(ILogger<DFrameApp> logger, IServiceProvider provider, DFrameOptions options, DFrameWorkloadCollection workers, int maxWorkloadPerWorker, int workloadSpawnCount, int workloadSpawnSecond)
 
             : base(logger, provider, options, workers)
         {

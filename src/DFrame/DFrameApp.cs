@@ -168,7 +168,7 @@ namespace DFrame
             int workloadSpawnSecond
             )
         {
-            return new DFrameRamupRunner(logger, provider, options, workers, maxWorkloadPerWorker, workloadSpawnCount, workloadSpawnSecond).RunAsync(workloadName, workerCount, maxWorkloadPerWorker, maxWorkloadPerWorker, this.Context);
+            return new DFrameRampupRunner(logger, provider, options, workers, maxWorkloadPerWorker, workloadSpawnCount, workloadSpawnSecond).RunAsync(workloadName, workerCount, maxWorkloadPerWorker, maxWorkloadPerWorker, this.Context);
         }
     }
 
