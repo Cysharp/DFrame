@@ -26,16 +26,16 @@ Install via NuGet
 
 Sample code of HTTP/1 load testing.
 
-Implement `Worker` class in your assembly.
+Implement `Workload` class in your assembly.
 
 ```csharp
-public class SampleHttpWorker : Worker
+public class SampleHttpWorker : Workload
 {
     const string url = "http://localhost:5000";
 
     HttpClient httpClient;
 
-    public override async Task SetupAsync(WorkerContext context)
+    public override async Task SetupAsync(WorkloadContext context)
     {
         var handler = new HttpClientHandler
         {
@@ -45,12 +45,12 @@ public class SampleHttpWorker : Worker
         httpClient.DefaultRequestHeaders.Add("ContentType", "application/json");
     }
 
-    public override async Task ExecuteAsync(WorkerContext context)
+    public override async Task ExecuteAsync(WorkloadContext context)
     {
         await httpClient.GetAsync(_url, cts.Token);
     }
 
-    public override async Task TeardownAsync(WorkerContext context)
+    public override async Task TeardownAsync(WorkloadContext context)
     {
     }
 }
@@ -82,59 +82,64 @@ Commands:
 
 ```
 batch Options:
-  -workerName <String>      (Required)
-  -processCount <Int32>     (Default: 1)
+  -workloadname <String>     (Required)
+  -workercount <Int32>       (Default: 1)
 
-request Options:
-  -workerName <String>          (Required)
-  -processCount <Int32>         (Required)
-  -workerPerProcess <Int32>     (Required)
-  -executePerWorker <Int32>     (Required)
+Options:
+  -workloadname <String>          (Required)
+  -workercount <Int32>            (Required)
+  -workloadperworker <Int32>      (Required)
+  -executeperworkload <Int32>     (Required)
 
-rampup Options:
-  -workerName <String>             (Required)
-  -processCount <Int32>            (Required)
-  -maxWorkerPerProcess <Int32>     (Required)
-  -workerSpawnCount <Int32>        (Required)
-  -workerSpawnSecond <Int32>       (Required)
+Options:
+  -workloadname <String>            (Required)
+  -workercount <Int32>              (Required)
+  -maxworkloadperworker <Int32>     (Required)
+  -workloadspawncount <Int32>       (Required)
+  -workloadspawnsecond <Int32>      (Required)
 ```
 
-* processCount - scaling process count. in kuberenetes means Pod count. for inprocess, recommend to use 1.
-* workerPerProcess - worker count of process. This is similar to concurrent count.
-* executePerWorker - execute count per worker, if use for batch, recommend to set 1.
-* workerName - execute worker name, default is type name of Worker.
+* workerCount - scaling worker count. in kuberenetes means Pod count. for inprocess, recommend to use 1.
+* workloadPerWorker - workload count of worker. This is similar to concurrent count.
+* executePerWorkload - execute count per workload, if use for batch, recommend to set 1.
+* workloadName - execute workload name, default is type name of Workload.
 
 ```
-SampleApp.exe "reqeust -processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName "SampleHttpWorker"
+SampleApp.exe request -workercount 1 -workloadperworker 10 -executeperworkload 10 -workloadname SampleHttpWorkload
 ```
 
 If use `RunDFrameLoadTestingAsync`, shows execution result like apache bench.
 
 ```test
 Show Load Testing result report.
-Finished 10000 requests
+Finished 1 requests
+
 Scaling Type:           InProcessScalingProvider
-Request count:          10000
-ProcessCount:              1
-WorkerPerProcess:          10
-ExecutePerWorker:       1000
-Concurrency level:      10
-Complete requests:      10000
+Workload Name:          SampleWorkload
+
+Request count:          1
+WorkerCount:            0
+WorkloadPerWorker:      0
+ExecutePerWorkload:     0
+Concurrency level:      1
+Complete requests:      1
 Failed requests:        0
-Time taken for tests:   19.15 seconds
-Requests per seconds:   522.16 [#/sec] (mean)
-Time per request:       19.15 [ms] (mean)
-Time per request:       1.92 [ms] (mean, across all concurrent requests)
+
+Time taken for tests:   0.05 seconds
+Requests per seconds:   18.97 [#/sec] (mean)
+Time per request:       52.73 [ms] (mean)
+Time per request:       52.73 [ms] (mean, across all concurrent requests)
+
 Percentage of the requests served within a certain time (ms)
- 50%      18
- 66%      19
- 75%      19
- 80%      20
- 90%      20
- 95%      20
- 98%      21
- 99%      22
-100%      378 (longest request)
+ 50%      52
+ 66%      52
+ 75%      52
+ 80%      52
+ 90%      52
+ 95%      52
+ 98%      52
+ 99%      52
+100%      52 (longest request)
 ```
 
 Distributed Collections
