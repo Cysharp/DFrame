@@ -154,7 +154,7 @@ namespace DFrame
             string workloadName,
             int workerCount,
             int workloadPerWorker,
-            int executePerWorkload)
+            int executePerWorkload = 1)
         {
             return new DFrameConcurrentRequestRunner(logger, provider, options, workers, workloadPerWorker, executePerWorkload).RunAsync(workloadName, workerCount, workloadPerWorker, executePerWorkload, this.Context);
         }
