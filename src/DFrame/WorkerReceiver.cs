@@ -7,6 +7,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace DFrame
 {
@@ -29,6 +30,7 @@ namespace DFrame
         readonly DFrameOptions options;
         readonly IServiceProvider serviceProvider;
         readonly TaskCompletionSource<object?> receiveShutdown;
+        readonly ILogger logger;
         ImmutableArray<(WorkloadContext context, Workload workload)> workloads;
 
         internal WorkerReceiver(GrpcChannel channel, Guid workerId, IServiceProvider serviceProvider, DFrameOptions options)
@@ -39,6 +41,7 @@ namespace DFrame
             this.workloadCollection = (DFrameWorkloadCollection)serviceProvider.GetRequiredService(typeof(DFrameWorkloadCollection));
             this.serviceProvider = serviceProvider;
             this.options = options;
+            this.logger = serviceProvider.GetRequiredService<ILogger<WorkerReceiver>>();
             this.receiveShutdown = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
             this.workloads = ImmutableArray<(WorkloadContext context, Workload worker)>.Empty;
         }
@@ -49,6 +52,7 @@ namespace DFrame
 
         public async void CreateWorkloadAndSetup(int createCount, string workloadName)
         {
+            logger.LogInformation($"Creating {createCount} workload(s) of '{workloadName}'");
             ThreadPoolUtility.SetMinThread(createCount);
             if (!workloadCollection.TryGetWorkload(workloadName, out var description))
             {
@@ -73,6 +77,7 @@ namespace DFrame
 
         public async void Execute(int executeCount)
         {
+            logger.LogInformation($"Executing {workloads.Length} workload(s). (ExecutePerWorkload={executeCount})");
             // TODO:add progress...
             //var progress = workloads.Length * executeCount / 10;
             //var increment = 0;
@@ -122,6 +127,7 @@ namespace DFrame
 
         public async void ExecuteUntilReceiveStop()
         {
+            logger.LogInformation($"Executing workload(s) until a stop request is received.");
             while (!receiveStopped)
             {
                 await Task.WhenAll(workloads.Select(x => Task.Run(async () =>
