@@ -36,8 +36,6 @@ namespace DFrame
             var group = await Group.AddAsync("global-masterhub-group");
             var broadcaster = group.CreateBroadcaster<IWorkerReceiver>();
             workerConnectionContext.Broadcaster = broadcaster;
-
-            workerConnectionContext.AddConnection(workerId);
         }
 
         protected override ValueTask OnDisconnected()
@@ -48,6 +46,7 @@ namespace DFrame
 
         public Task ConnectAsync()
         {
+            workerConnectionContext.AddConnection(workerId);
             return Task.CompletedTask;
         }
 
