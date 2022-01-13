@@ -25,7 +25,7 @@ namespace DFrame
         // readonly ILogger<WorkerReceiver> logger;
         readonly GrpcChannel channel;
         readonly Guid workerId;
-        readonly DFrameWorkloadCollection workerCollection;
+        readonly DFrameWorkloadCollection workloadCollection;
         readonly DFrameOptions options;
         readonly IServiceProvider serviceProvider;
         readonly TaskCompletionSource<object?> receiveShutdown;
@@ -36,7 +36,7 @@ namespace DFrame
             // this.logger = logger;
             this.channel = channel;
             this.workerId = workerId;
-            this.workerCollection = (DFrameWorkloadCollection)serviceProvider.GetRequiredService(typeof(DFrameWorkloadCollection));
+            this.workloadCollection = (DFrameWorkloadCollection)serviceProvider.GetRequiredService(typeof(DFrameWorkloadCollection));
             this.serviceProvider = serviceProvider;
             this.options = options;
             this.receiveShutdown = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -50,7 +50,7 @@ namespace DFrame
         public async void CreateWorkloadAndSetup(int createCount, string workloadName)
         {
             ThreadPoolUtility.SetMinThread(createCount);
-            if (!workerCollection.TryGetWorkload(workloadName, out var description))
+            if (!workloadCollection.TryGetWorkload(workloadName, out var description))
             {
                 throw new InvalidOperationException($"Workload:{workloadName} does not found in assembly.");
             }
