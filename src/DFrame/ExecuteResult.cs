@@ -7,7 +7,7 @@ namespace DFrame
     public class ExecuteResult
     {
         [Key(0)]
-        public string WorkerId { get; }
+        public string WorkloadId { get; }
         [Key(1)]
         public TimeSpan Elapsed { get; }
         [Key(2)]
@@ -19,7 +19,7 @@ namespace DFrame
 
         public ExecuteResult(string workerId, TimeSpan elapsed, int executionNo, bool hasError, string? errorMessage)
         {
-            WorkerId = workerId;
+            WorkloadId = workerId;
             Elapsed = elapsed;
             ExecutionNo = executionNo;
             HasError = hasError;

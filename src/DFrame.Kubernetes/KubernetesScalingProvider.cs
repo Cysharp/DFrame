@@ -93,11 +93,11 @@ namespace DFrame.Kubernetes
             _env = kubernetesEnvironment;
         }
 
-        public async Task StartWorkerAsync(DFrameOptions options, int processCount, IServiceProvider provider, IFailSignal failSignal, CancellationToken cancellationToken)
+        public async Task StartWorkerAsync(DFrameOptions options, int workerCount, IServiceProvider provider, IFailSignal failSignal, CancellationToken cancellationToken)
         {
             _failSignal = failSignal;
 
-            Console.WriteLine($"Scale out workers {_env.ScalingType}. {_ns}/{_env.Name} ({processCount} pods)");
+            Console.WriteLine($"Scale out workers {_env.ScalingType}. {_ns}/{_env.Name} ({workerCount} pods)");
 
             // todo: Can be replace with SRV record on svc.
             // confirm kubernetes master can connect with cluster api.
@@ -115,10 +115,10 @@ namespace DFrame.Kubernetes
                 switch (_env.ScalingType)
                 {
                     case ScalingType.Deployment:
-                        await ScaleoutDeploymentAsync(processCount, options.WorkerConnectToHost, options.WorkerConnectToPort, cancellationToken);
+                        await ScaleoutDeploymentAsync(workerCount, options.WorkerConnectToHost, options.WorkerConnectToPort, cancellationToken);
                         break;
                     case ScalingType.Job:
-                        await ScaleoutJobAsync(processCount, options.WorkerConnectToHost, options.WorkerConnectToPort, cancellationToken);
+                        await ScaleoutJobAsync(workerCount, options.WorkerConnectToHost, options.WorkerConnectToPort, cancellationToken);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(ScalingType));

@@ -13,7 +13,7 @@ namespace WebApp.Migrations
                     HistoryId = table.Column<string>(nullable: false),
                     ContextId = table.Column<string>(nullable: false),
                     ProductVersion = table.Column<string>(nullable: false),
-                    WorkerName = table.Column<string>(nullable: false),
+                    WorkloadName = table.Column<string>(nullable: false),
                     Argument = table.Column<string>(nullable: false),
                     Requests = table.Column<int>(nullable: false),
                     Errors = table.Column<int>(nullable: false),

@@ -15,13 +15,13 @@ namespace DFrame
         Task tasks = default!;
         IFailSignal failSignal = default!;
 
-        public Task StartWorkerAsync(DFrameOptions options, int processCount, IServiceProvider provider, IFailSignal failSignal, CancellationToken cancellationToken)
+        public Task StartWorkerAsync(DFrameOptions options, int workerCount, IServiceProvider provider, IFailSignal failSignal, CancellationToken cancellationToken)
         {
             this.failSignal = failSignal;
             cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-            var tasks = new Task[processCount];
-            for (int i = 0; i < processCount; i++)
+            var tasks = new Task[workerCount];
+            for (int i = 0; i < workerCount; i++)
             {
                 tasks[i] = Core(provider, options, cancellationTokenSource.Token);
             }

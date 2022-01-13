@@ -24,7 +24,7 @@ namespace DFrame
 
         public Action<ILoggingBuilder>? ConfigureInnerHostLogging { get; set; }
 
-        public Action<ExecuteResult[], DFrameOptions, ExecuteScenario>? OnExecuteResult { get; set; } // TODO: If failed, automatically show logs?
+        public Action<ExecuteResult[], DFrameOptions, ExecutedWorkloadInfo>? OnExecuteResult { get; set; } // TODO: If failed, automatically show logs?
 
         public DFrameOptions(string masterListenHost, int masterListenPort)
             : this(masterListenHost, masterListenPort, masterListenHost, masterListenPort, new InProcessScalingProvider())
@@ -53,19 +53,19 @@ namespace DFrame
         Continue
     }
 
-    public struct ExecuteScenario
+    public struct ExecutedWorkloadInfo
     {
-        public string ScenarioName { get; }
-        public int ProcessCount { get; }
-        public int WorkerPerProcess { get; }
-        public int ExecutePerWorker { get; }
+        public string WorkloadName { get; }
+        public int WorkerCount { get; }
+        public int WorkloadPerWorker { get; }
+        public int ExecutePerWorkload { get; }
 
-        public ExecuteScenario(string scenarioName, int processCount, int workerPerProcess, int executePerWorker)
+        public ExecutedWorkloadInfo(string workloadName, int workerCount, int workloadPerWorker, int executePerWorkload)
         {
-            ScenarioName = scenarioName;
-            ProcessCount = processCount;
-            WorkerPerProcess = workerPerProcess;
-            ExecutePerWorker = executePerWorker;
+            WorkloadName = workloadName;
+            WorkerCount = workerCount;
+            WorkloadPerWorker = workloadPerWorker;
+            ExecutePerWorkload = executePerWorkload;
         }
     }
 }

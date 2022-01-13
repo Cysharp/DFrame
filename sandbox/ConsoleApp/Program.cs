@@ -27,25 +27,25 @@ namespace ConsoleApp
             {
                 // master
                 //args = new[] { "help", "rampup" };
-                args = "batch -processCount 1 -workerName SampleWorker".Split(' ');
-                //args = "request -processCount 5 -workerPerProcess 10 -executePerWorker 10 -workerName SampleUnaryWorker".Split(' ');
-                //args = "request -processCount 5 -workerPerProcess 10 -executePerWorker 10 -workerName SampleStreamWorker".Split(' ');
+                args = "batch -workerCount 1 -workloadName SampleWorkload".Split(' ');
+                //args = "request -workerCount 5 -workloadPerWorker 10 -executePerWorkload 10 -workloadName SampleUnaryWorker".Split(' ');
+                //args = "request -workerCount 5 -workloadPerWorker 10 -executePerWorkload 10 -workloadName SampleStreamWorker".Split(' ');
 
-                //args = "rampup -processCount 5 -maxWorkerPerProcess 12 -workerSpawnCount 4 -workerSpawnSecond 5 -workerName SampleHttpWorker".Split(' ');
+                //args = "rampup -workerCount 5 -maxworkloadPerWorker 12 -workerSpawnCount 4 -workerSpawnSecond 5 -workloadName SampleHttpWorker".Split(' ');
 
-                // args = "request -processCount 5 -workerPerProcess 10 -executePerWorker 10 -workerName SampleHttpWorker".Split(' ');
-                //args = "-processCount 1 -workerPerProcess 64     -executePerWorker 10000 -workerName SampleHttpWorker".Split(' ');
-                //args = "-processCount 1 -workerPerProcess 20 -executePerWorker 10000 -workerName SampleUnaryWorker".Split(' ');
+                // args = "request -workerCount 5 -workloadPerWorker 10 -executePerWorkload 10 -workloadName SampleHttpWorker".Split(' ');
+                //args = "-workerCount 1 -workloadPerWorker 64     -executePerWorkload 10000 -workloadName SampleHttpWorker".Split(' ');
+                //args = "-workerCount 1 -workloadPerWorker 20 -executePerWorkload 10000 -workloadName SampleUnaryWorker".Split(' ');
 
-                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleHttpWorker".Split(' ');
-                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 10000 -workerName SampleHttpWorker".Split(' ');
-                //args = "-processCount 10 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleHttpWorker".Split(' ');
-                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleUnaryWorker".Split(' ');
-                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 10000 -workerName SampleUnaryWorker".Split(' ');
-                //args = "-processCount 10 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleUnaryWorker".Split(' ');
-                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleStreamWorker".Split(' ');
-                //args = "-processCount 1 -workerPerProcess 10 -executePerWorker 10000 -workerName SampleStreamWorker".Split(' ');
-                //args = "-processCount 10 -workerPerProcess 10 -executePerWorker 1000 -workerName SampleStreamWorker".Split(' ');
+                //args = "-workerCount 1 -workloadPerWorker 10 -executePerWorkload 1000 -workloadName SampleHttpWorker".Split(' ');
+                //args = "-workerCount 1 -workloadPerWorker 10 -executePerWorkload 10000 -workloadName SampleHttpWorker".Split(' ');
+                //args = "-workerCount 10 -workloadPerWorker 10 -executePerWorkload 1000 -workloadName SampleHttpWorker".Split(' ');
+                //args = "-workerCount 1 -workloadPerWorker 10 -executePerWorkload 1000 -workloadName SampleUnaryWorker".Split(' ');
+                //args = "-workerCount 1 -workloadPerWorker 10 -executePerWorkload 10000 -workloadName SampleUnaryWorker".Split(' ');
+                //args = "-workerCount 10 -workloadPerWorker 10 -executePerWorkload 1000 -workloadName SampleUnaryWorker".Split(' ');
+                //args = "-workerCount 1 -workloadPerWorker 10 -executePerWorkload 1000 -workloadName SampleStreamWorker".Split(' ');
+                //args = "-workerCount 1 -workloadPerWorker 10 -executePerWorkload 10000 -workloadName SampleStreamWorker".Split(' ');
+                //args = "-workerCount 10 -workloadPerWorker 10 -executePerWorkload 1000 -workloadName SampleStreamWorker".Split(' ');
                 // listen on
                 // host = "0.0.0.0";
             }
@@ -80,16 +80,16 @@ namespace ConsoleApp
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class SampleWorker : Worker
+    public class SampleWorkload : Workload
     {
         IDistributedQueue<int> queue;
 
-        public override async Task SetupAsync(WorkerContext context)
+        public override async Task SetupAsync(WorkloadContext context)
         {
-            queue = context.CreateDistributedQueue<int>("sampleworker-testq");
+            queue = context.CreateDistributedQueue<int>("sampleworkload-testq");
         }
 
-        public override async Task ExecuteAsync(WorkerContext context)
+        public override async Task ExecuteAsync(WorkloadContext context)
         {
             var randI = (int)new Random().Next(1, 3999);
             //Console.WriteLine($"Enqueue from {Environment.MachineName} {context.WorkerId}: {randI}");
@@ -97,7 +97,7 @@ namespace ConsoleApp
             await queue.EnqueueAsync(randI);
         }
 
-        public override async Task TeardownAsync(WorkerContext context)
+        public override async Task TeardownAsync(WorkloadContext context)
         {
             while (true)
             {
@@ -114,14 +114,14 @@ namespace ConsoleApp
         }
     }
 
-    public class SampleHttpWorker : Worker
+    public class SampleHttpWorkload : Workload
     {
         private static HttpClient httpClient;
 
         private readonly string _url = "http://localhost:5000";
         private CancellationTokenSource cts;
 
-        static SampleHttpWorker()
+        static SampleHttpWorkload()
         {
             var handler = new HttpClientHandler
             {
@@ -136,30 +136,30 @@ namespace ConsoleApp
             // Console.WriteLine($"MaxConnectionsPerServer: {handler.MaxConnectionsPerServer}");
         }
 
-        public override async Task SetupAsync(WorkerContext context)
+        public override async Task SetupAsync(WorkloadContext context)
         {
             cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
         }
 
-        public override async Task ExecuteAsync(WorkerContext context)
+        public override async Task ExecuteAsync(WorkloadContext context)
         {
             await httpClient.GetAsync(_url, cts.Token);
             // await r.Content.ReadAsByteArrayAsync();
         }
 
-        public override async Task TeardownAsync(WorkerContext context)
+        public override async Task TeardownAsync(WorkloadContext context)
         {
         }
     }
 
-    public class SampleUnaryWorker : Worker
+    public class SampleUnaryWorkload : Workload
     {
         private GrpcChannel _channel;
         private IEchoService _client;
 
         private readonly string _host = "http://localhost";
 
-        public override async Task SetupAsync(WorkerContext context)
+        public override async Task SetupAsync(WorkloadContext context)
         {
             _channel = GrpcChannel.ForAddress(_host + ":12346", new GrpcChannelOptions
             {
@@ -167,38 +167,38 @@ namespace ConsoleApp
             });
             _client = MagicOnionClient.Create<IEchoService>(_channel);
         }
-        public override async Task ExecuteAsync(WorkerContext context)
+        public override async Task ExecuteAsync(WorkloadContext context)
         {
-            await _client.Echo(context.WorkerId);
+            await _client.Echo(context.WorkloadId);
         }
 
-        public override async Task TeardownAsync(WorkerContext context)
+        public override async Task TeardownAsync(WorkloadContext context)
         {
             await _channel.ShutdownAsync().ConfigureAwait(false);
         }
     }
 
-    public class SampleStreamWorker : Worker
+    public class SampleStreamWorkload : Workload
     {
         private GrpcChannel _channel;
         private IEchoHub _client;
 
         private readonly string _host = "http://localhost";
 
-        public override async Task SetupAsync(WorkerContext context)
+        public override async Task SetupAsync(WorkloadContext context)
         {
             _channel = GrpcChannel.ForAddress(_host + ":12346");
             var receiver = new EchoReceiver(_channel);
             _client = await StreamingHubClient.ConnectAsync<IEchoHub, IEchoHubReceiver>(_channel, receiver);
             receiver.Client = _client;
         }
-        public override async Task ExecuteAsync(WorkerContext context)
+        public override async Task ExecuteAsync(WorkloadContext context)
         {
-            await _client.EchoAsync(context.WorkerId);
+            await _client.EchoAsync(context.WorkloadId);
             //await _client.EchoBroadcastAsync(context.WorkerId);
         }
 
-        public override async Task TeardownAsync(WorkerContext context)
+        public override async Task TeardownAsync(WorkloadContext context)
         {
             await _client.DisposeAsync();
             await _channel.ShutdownAsync().ConfigureAwait(false);

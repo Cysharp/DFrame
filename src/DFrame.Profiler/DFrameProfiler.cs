@@ -7,7 +7,7 @@ namespace DFrame.Profiler
 {
     public interface IDFrameProfiler
     {
-        ValueTask InsertAsync(string contextId, string workerName, string[] arguments, int requests, int errors, TimeSpan Duration, CancellationToken token);
+        ValueTask InsertAsync(string contextId, string workloadName, string[] arguments, int requests, int errors, TimeSpan Duration, CancellationToken token);
         ValueTask InsertAsync(ProfileHistory entity, CancellationToken token);
     }
 
@@ -22,7 +22,7 @@ namespace DFrame.Profiler
             _option = option;
         }
 
-        public async ValueTask InsertAsync(string contextId, string workerName, string[] arguments, int requests, int errors, TimeSpan duration, CancellationToken token = default)
+        public async ValueTask InsertAsync(string contextId, string workloadName, string[] arguments, int requests, int errors, TimeSpan duration, CancellationToken token = default)
         {
             // run only if profiler is enabled.
             if (_option.EnableProfiler)
@@ -30,7 +30,7 @@ namespace DFrame.Profiler
                 var entity = new ProfileHistory
                 {
                     ContextId = contextId,
-                    WorkerName = workerName,
+                    WorkloadName = workloadName,
                     Argument = string.Join(" ", arguments),
                     Requests = requests,
                     Errors = errors,

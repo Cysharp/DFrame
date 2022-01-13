@@ -89,7 +89,7 @@ namespace DFrame.Hosting.Services
             {
                 // todo: requests and errors will obtain after progress implementation
                 var profiler = scope.ServiceProvider.GetService<IDFrameProfiler>();
-                await profiler.InsertAsync(_executeContext.ExecuteId, _executeContext.Argument.WorkerName, _executeContext.Argument.Arguments, 0, 0, duration, default);
+                await profiler.InsertAsync(_executeContext.ExecuteId, _executeContext.Argument.WorkloadName, _executeContext.Argument.Arguments, 0, 0, duration, default);
             }
         }
 

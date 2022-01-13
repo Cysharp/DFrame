@@ -70,11 +70,11 @@ namespace DFrame.Ecs
             _ecsMaster = new EcsService(_env.ClusterName, _env.MasterServiceName, "", _env.ContainerName);
         }
 
-        public async Task StartWorkerAsync(DFrameOptions options, int processCount, IServiceProvider provider, IFailSignal failSignal, CancellationToken cancellationToken)
+        public async Task StartWorkerAsync(DFrameOptions options, int workerCount, IServiceProvider provider, IFailSignal failSignal, CancellationToken cancellationToken)
         {
             _failSignal = failSignal;
 
-            Console.WriteLine($"Scale out {processCount} workers. Cluster {_ecsWorker.ClusterName}, MasterService {_ecsMaster.ServiceName}, WorkerService {_ecsWorker.ServiceName}, TaskDef {_ecsWorker.TaskDefinitionName}");
+            Console.WriteLine($"Scale out {workerCount} workers. Cluster {_ecsWorker.ClusterName}, MasterService {_ecsMaster.ServiceName}, WorkerService {_ecsWorker.ServiceName}, TaskDef {_ecsWorker.TaskDefinitionName}");
 
             Console.WriteLine($"checking ECS is ready.");
             if (!await _ecsMaster.ExistsClusterAsync())
@@ -104,7 +104,7 @@ namespace DFrame.Ecs
                 var updatedTaskDefinition = await _ecsWorker.UpdateTaskDefinitionImageAsync(_env.Image);
 
                 // update service and deploy new task
-                await _ecsWorker.UpdateServiceDeploymentAsync(updatedTaskDefinition.TaskRevision, processCount);
+                await _ecsWorker.UpdateServiceDeploymentAsync(updatedTaskDefinition.TaskRevision, workerCount);
             }
         }
 

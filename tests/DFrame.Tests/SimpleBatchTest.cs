@@ -19,21 +19,21 @@ namespace DFrame.Tests
         [Fact]
         public async Task ExecuteTest()
         {
-            var v = await TestHelper.RunDFrameAsync<FirstWorker, int>(helper);
+            var v = await TestHelper.RunDFrameAsync<FirstWorkload, int>(helper);
             v.Should().Be(100);
         }
     }
 
-    public class FirstWorker : Worker
+    public class FirstWorkload : Workload
     {
         ResultBox<int> box;
 
-        public FirstWorker(ResultBox<int> box)
+        public FirstWorkload(ResultBox<int> box)
         {
             this.box = box;
         }
 
-        public override async Task ExecuteAsync(WorkerContext context)
+        public override async Task ExecuteAsync(WorkloadContext context)
         {
             box.Value = 100;
         }

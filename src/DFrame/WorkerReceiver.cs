@@ -12,7 +12,7 @@ namespace DFrame
 {
     public interface IWorkerReceiver
     {
-        void CreateCoWorkerAndSetup(int createCount, string workerName);
+        void CreateWorkloadAndSetup(int createCount, string workloadName);
         void Execute(int executeCount);
         void ExecuteUntilReceiveStop();
         void Stop();
@@ -24,60 +24,60 @@ namespace DFrame
     {
         // readonly ILogger<WorkerReceiver> logger;
         readonly GrpcChannel channel;
-        readonly Guid nodeId;
-        readonly DFrameWorkerCollection workerCollection;
+        readonly Guid workerId;
+        readonly DFrameWorkloadCollection workerCollection;
         readonly DFrameOptions options;
         readonly IServiceProvider serviceProvider;
         readonly TaskCompletionSource<object?> receiveShutdown;
-        ImmutableArray<(WorkerContext context, Worker worker)> coWorkers;
+        ImmutableArray<(WorkloadContext context, Workload workload)> workloads;
 
-        internal WorkerReceiver(GrpcChannel channel, Guid nodeId, IServiceProvider serviceProvider, DFrameOptions options)
+        internal WorkerReceiver(GrpcChannel channel, Guid workerId, IServiceProvider serviceProvider, DFrameOptions options)
         {
             // this.logger = logger;
             this.channel = channel;
-            this.nodeId = nodeId;
-            this.workerCollection = (DFrameWorkerCollection)serviceProvider.GetRequiredService(typeof(DFrameWorkerCollection));
+            this.workerId = workerId;
+            this.workerCollection = (DFrameWorkloadCollection)serviceProvider.GetRequiredService(typeof(DFrameWorkloadCollection));
             this.serviceProvider = serviceProvider;
             this.options = options;
             this.receiveShutdown = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
-            this.coWorkers = ImmutableArray<(WorkerContext context, Worker worker)>.Empty;
+            this.workloads = ImmutableArray<(WorkloadContext context, Workload worker)>.Empty;
         }
 
         public IMasterHub Client { get; set; } = default!;
 
         public Task WaitShutdown => receiveShutdown.Task;
 
-        public async void CreateCoWorkerAndSetup(int createCount, string workerName)
+        public async void CreateWorkloadAndSetup(int createCount, string workloadName)
         {
             ThreadPoolUtility.SetMinThread(createCount);
-            if (!workerCollection.TryGetWorker(workerName, out var description))
+            if (!workerCollection.TryGetWorkload(workloadName, out var description))
             {
-                throw new InvalidOperationException($"Worker:{workerName} does not found in assembly.");
+                throw new InvalidOperationException($"Workload:{workloadName} does not found in assembly.");
             }
 
-            var requireSetupCoWorkers = new List<(WorkerContext context, Worker worker)>(createCount);
-            var newCoWorkers = coWorkers.ToBuilder();
+            var requireSetupWorkloads = new List<(WorkloadContext context, Workload workload)>(createCount);
+            var newWorkloads = workloads.ToBuilder();
             for (int i = 0; i < createCount; i++)
             {
-                var coWorker = serviceProvider.GetRequiredService(description.WorkerType);
-                var t = (new WorkerContext(channel, options), (Worker)coWorker);
-                newCoWorkers.Add(t);
-                requireSetupCoWorkers.Add(t);
+                var workload = serviceProvider.GetRequiredService(description.WorkloadType);
+                var t = (new WorkloadContext(channel, options), (Workload)workload);
+                newWorkloads.Add(t);
+                requireSetupWorkloads.Add(t);
             }
 
-            await Task.WhenAll(requireSetupCoWorkers.Select(x => x.worker.SetupAsync(x.context)));
+            await Task.WhenAll(requireSetupWorkloads.Select(x => x.workload.SetupAsync(x.context)));
 
-            coWorkers = newCoWorkers.ToImmutable();
-            await Client.CreateCoWorkerCompleteAsync();
+            workloads = newWorkloads.ToImmutable();
+            await Client.CreateWorkloadCompleteAsync();
         }
 
         public async void Execute(int executeCount)
         {
             // TODO:add progress...
-            //var progress = coWorkers.Length * executeCount / 10;
+            //var progress = workloads.Length * executeCount / 10;
             //var increment = 0;
 
-            var result = await Task.WhenAll(coWorkers.Select(x => Task.Run(async () =>
+            var result = await Task.WhenAll(workloads.Select(x => Task.Run(async () =>
             {
                 var list = new List<ExecuteResult>(executeCount);
                 for (int i = 0; i < executeCount; i++)
@@ -86,14 +86,14 @@ namespace DFrame
                     var sw = ValueStopwatch.StartNew();
                     try
                     {
-                        await x.worker.ExecuteAsync(x.context);
+                        await x.workload.ExecuteAsync(x.context);
                     }
                     catch (Exception ex)
                     {
                         errorMsg = ex.ToString();
                     }
 
-                    var executeResult = new ExecuteResult(x.context.WorkerId, sw.Elapsed, i, (errorMsg != null), errorMsg);
+                    var executeResult = new ExecuteResult(x.context.WorkloadId, sw.Elapsed, i, (errorMsg != null), errorMsg);
                     list.Add(executeResult);
 
                     // TODO:toriaezu
@@ -107,7 +107,7 @@ namespace DFrame
 
         public async void Teardown()
         {
-            await Task.WhenAll(coWorkers.Select(x => x.worker.TeardownAsync(x.context)));
+            await Task.WhenAll(workloads.Select(x => x.workload.TeardownAsync(x.context)));
             await Client.TeardownCompleteAsync();
         }
 
@@ -124,20 +124,20 @@ namespace DFrame
         {
             while (!receiveStopped)
             {
-                await Task.WhenAll(coWorkers.Select(x => Task.Run(async () =>
+                await Task.WhenAll(workloads.Select(x => Task.Run(async () =>
                 {
                     string? errorMsg = null;
                     var sw = ValueStopwatch.StartNew();
                     try
                     {
-                        await x.worker.ExecuteAsync(x.context);
+                        await x.workload.ExecuteAsync(x.context);
                     }
                     catch (Exception ex)
                     {
                         errorMsg = ex.ToString();
                     }
 
-                    var executeResult = new ExecuteResult(x.context.WorkerId, sw.Elapsed, 0, (errorMsg != null), errorMsg);
+                    var executeResult = new ExecuteResult(x.context.WorkloadId, sw.Elapsed, 0, (errorMsg != null), errorMsg);
                     // TODO:toriaezu
                     _ = Task.Run(() => Client.ReportProgressAsync(executeResult));
                 })));

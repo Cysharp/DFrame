@@ -16,7 +16,7 @@ namespace DFrame
             await hostBuilder.RunDFrameAsync(args, options);
         }
 
-        static void SummaryResult(ExecuteResult[] results, DFrameOptions options, ExecuteScenario executeScenario)
+        static void SummaryResult(ExecuteResult[] results, DFrameOptions options, ExecutedWorkloadInfo executeScenario)
         {
             // TODO: Logger
             if (!results.Any())
@@ -36,7 +36,7 @@ namespace DFrame
         /// </summary>
         /// <param name="results"></param>
         /// <param name="options"></param>
-        static async Task OutputReportAb(ExecuteResult[] results, DFrameOptions options, ExecuteScenario executeScenario)
+        static async Task OutputReportAb(ExecuteResult[] results, DFrameOptions options, ExecutedWorkloadInfo executeScenario)
         {
             var scalingType = options.ScalingProvider.GetType().Name;
             var abReport = new AbReport(results, executeScenario, scalingType);
@@ -76,11 +76,11 @@ namespace DFrame
     public class AbReport
     {
         public string ScalingType { get; }
-        public string ScenarioName { get; }
+        public string WorkloadName { get; }
         public int RequestCount { get; }
-        public int ProcessCount { get; }
-        public int WorkerPerProcess { get; }
-        public int ExecutePerWorker { get; }
+        public int WorkerCount { get; }
+        public int WorkloadPerWorker { get; }
+        public int ExecutePerWorkload { get; }
         public int Concurrency { get; }
         public int CompleteRequests { get; }
         public int FailedRequests { get; }
@@ -102,19 +102,19 @@ namespace DFrame
             }
         }
 
-        public AbReport(ExecuteResult[] results, ExecuteScenario executeScenario, string scalingType)
+        public AbReport(ExecuteResult[] results, ExecutedWorkloadInfo executedWorkloadInfo, string scalingType)
         {
             ScalingType = scalingType;
-            ScenarioName = executeScenario.ScenarioName;
-            RequestCount = executeScenario.ProcessCount * executeScenario.WorkerPerProcess * executeScenario.ExecutePerWorker;
-            Concurrency = executeScenario.WorkerPerProcess;
+            WorkloadName = executedWorkloadInfo.WorkloadName;
+            RequestCount = executedWorkloadInfo.WorkerCount * executedWorkloadInfo.WorkloadPerWorker * executedWorkloadInfo.ExecutePerWorkload;
+            Concurrency = executedWorkloadInfo.WorkloadPerWorker;
             TotalRequests = results.Length;
             CompleteRequests = results.Where(x => !x.HasError).Count();
             FailedRequests = results.Where(x => x.HasError).Count();
 
             // Time to complete all requests.
             // * Get sum of IWorkerReciever.Execute time on each workerId, max execution time will be actual execution time.
-            TimeTaken = results.GroupBy(x => x.WorkerId).Select(xs => xs.Sum(x => x.Elapsed.TotalSeconds)).Max();
+            TimeTaken = results.GroupBy(x => x.WorkloadId).Select(xs => xs.Sum(x => x.Elapsed.TotalSeconds)).Max();
             // The average time spent per request. The first value is calculated with the formula `concurrency * timetaken * 1000 / done` while the second value is calculated with the formula `timetaken * 1000 / done`
             TimePerRequest = TimeTaken * 1000 / RequestCount;
 
@@ -137,12 +137,12 @@ namespace DFrame
             return $@"Finished {RequestCount} requests
 
 Scaling Type:           {ScalingType}
-Scenario Name:          {ScenarioName}
+Workload Name:          {WorkloadName}
 
 Request count:          {RequestCount}
-{nameof(ProcessCount)}:           {ProcessCount}
-{nameof(WorkerPerProcess)}:       {WorkerPerProcess}
-{nameof(ExecutePerWorker)}:       {ExecutePerWorker}
+WorkerCount:            {WorkerCount}
+WorkloadPerWorker:      {WorkloadPerWorker}
+ExecutePerWorkload:     {ExecutePerWorkload}
 Concurrency level:      {Concurrency}
 Complete requests:      {CompleteRequests}
 Failed requests:        {FailedRequests}

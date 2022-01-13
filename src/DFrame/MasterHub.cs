@@ -12,7 +12,7 @@ namespace DFrame
     public interface IMasterHub : IStreamingHub<IMasterHub, IWorkerReceiver>
     {
         Task ConnectAsync();
-        Task CreateCoWorkerCompleteAsync();
+        Task CreateWorkloadCompleteAsync();
         Task ReportProgressAsync(ExecuteResult result);
         Task ExecuteCompleteAsync(ExecuteResult[] result);
         Task TeardownCompleteAsync();
@@ -21,7 +21,7 @@ namespace DFrame
     public sealed class MasterHub : StreamingHubBase<IMasterHub, IWorkerReceiver>, IMasterHub
     {
         readonly WorkerConnectionGroupContext workerConnectionContext;
-        Guid nodeId;
+        Guid workerId;
 
         public MasterHub(WorkerConnectionGroupContext connectionContext)
         {
@@ -30,19 +30,19 @@ namespace DFrame
 
         protected override async ValueTask OnConnecting()
         {
-            nodeId = Guid.Parse(Context.CallContext.RequestHeaders.GetValue("node-id"));
+            workerId = Guid.Parse(Context.CallContext.RequestHeaders.GetValue("worker-id"));
 
             // TODO:use specified id???
             var group = await Group.AddAsync("global-masterhub-group");
             var broadcaster = group.CreateBroadcaster<IWorkerReceiver>();
             workerConnectionContext.Broadcaster = broadcaster;
 
-            workerConnectionContext.AddConnection(nodeId);
+            workerConnectionContext.AddConnection(workerId);
         }
 
         protected override ValueTask OnDisconnected()
         {
-            workerConnectionContext.RemoveConnection(nodeId);
+            workerConnectionContext.RemoveConnection(workerId);
             return default;
         }
 
@@ -51,9 +51,9 @@ namespace DFrame
             return Task.CompletedTask;
         }
 
-        public Task CreateCoWorkerCompleteAsync()
+        public Task CreateWorkloadCompleteAsync()
         {
-            workerConnectionContext.OnCreateCoWorkerAndSetup.Done(nodeId);
+            workerConnectionContext.OnCreateWorkloadAndSetup.Done(workerId);
             return Task.CompletedTask;
         }
 
@@ -67,20 +67,20 @@ namespace DFrame
         {
             // TODO:remove execute result?
             workerConnectionContext.AddExecuteResult(result);
-            workerConnectionContext.OnExecute.Done(nodeId);
+            workerConnectionContext.OnExecute.Done(workerId);
             return Task.CompletedTask;
         }
 
         public Task TeardownCompleteAsync()
         {
-            workerConnectionContext.OnTeardown.Done(nodeId);
+            workerConnectionContext.OnTeardown.Done(workerId);
             return Task.CompletedTask;
         }
     }
 
     public class WorkerConnectionGroupContext
     {
-        int maxProcessCount;
+        int maxWorkerCount;
         bool throwErrorOnRemoved;
         HashSet<Guid> connections = default!;
         TaskCompletionSource<object?> allConnectionConnectComplete = default!;
@@ -90,16 +90,16 @@ namespace DFrame
         public IWorkerReceiver Broadcaster { get; internal set; } = default!;
 
         public CountingSource OnConnected { get; private set; } = default!;
-        public CountingSource OnCreateCoWorkerAndSetup { get; private set; } = default!;
+        public CountingSource OnCreateWorkloadAndSetup { get; private set; } = default!;
         public CountingSource OnExecute { get; private set; } = default!;
         public CountingSource OnTeardown { get; private set; } = default!;
 
         // TODO: reset???
-        public void Initialize(int processCount, bool throwErrorOnRemoved)
+        public void Initialize(int workerCount, bool throwErrorOnRemoved)
         {
             this.connections = new HashSet<Guid>();
             this.allConnectionConnectComplete = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
-            this.maxProcessCount = processCount;
+            this.maxWorkerCount = workerCount;
             this.executeResult = new List<ExecuteResult>();
             this.throwErrorOnRemoved = throwErrorOnRemoved;
         }
@@ -133,7 +133,7 @@ namespace DFrame
                 // already connected, decr.
                 if (connections.Remove(guid))
                 {
-                    maxProcessCount--;
+                    maxWorkerCount--;
                 }
 
                 if (throwErrorOnRemoved)
@@ -147,11 +147,11 @@ namespace DFrame
 
         void SignalWhenReachedAllWorkerIsConnected()
         {
-            if (connections.Count == maxProcessCount)
+            if (connections.Count == maxWorkerCount)
             {
                 var connectionIds = connections.ToArray();
                 this.OnConnected = new CountingSource(connectionIds, throwErrorOnRemoved);
-                this.OnCreateCoWorkerAndSetup = new CountingSource(connectionIds, throwErrorOnRemoved);
+                this.OnCreateWorkloadAndSetup = new CountingSource(connectionIds, throwErrorOnRemoved);
                 this.OnExecute = new CountingSource(connectionIds, throwErrorOnRemoved);
                 this.OnTeardown = new CountingSource(connectionIds, throwErrorOnRemoved);
 
@@ -229,11 +229,11 @@ namespace DFrame
 
     internal class ConnectionDisconnectedException : Exception
     {
-        public Guid NodeId { get; }
+        public Guid WorkerId { get; }
 
-        public ConnectionDisconnectedException(Guid nodeId)
+        public ConnectionDisconnectedException(Guid workerId)
         {
-            NodeId = nodeId;
+            WorkerId = workerId;
         }
     }
 }

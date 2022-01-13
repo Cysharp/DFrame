@@ -14,12 +14,12 @@
         <InputSelectEnum @bind-Value="ExecuteData.Mode" />
         <br />
 
-        <p>workerName</p>
-        <input @bind-value="ExecuteData.WorkerName" placeholder="SampleWorker">
+        <p>workloadName</p>
+        <input @bind-value="ExecuteData.WorkloadName" placeholder="SampleWorkload">
         <br />
 
-        <p>processCount</p>
-        <input @bind-value="ExecuteData.ProcessCount" placeholder="1" type="number">
+        <p>workerCount</p>
+        <input @bind-value="ExecuteData.WorkerCount" placeholder="1" type="number">
         <br />
 
         @if (ExecuteData.Mode == ExecuteMode.Request)

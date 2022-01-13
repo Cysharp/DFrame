@@ -31,11 +31,11 @@ namespace DFrame.Hosting.Data
         [Required(ErrorMessage = "Select mode")]
         public ExecuteMode Mode { get; set; } = ExecuteMode.Batch;
 
-        [Required(ErrorMessage = "Input worker name.")]
-        public string WorkerName { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Input workload name.")]
+        public string WorkloadName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Input process count")]
-        public int ProcessCount { get; set; } = 1;
+        [Required(ErrorMessage = "Input worker count")]
+        public int WorkerCount { get; set; } = 1;
 
         public RequestData Request { get; set; } = new RequestData();
         public RampupData Rampup { get; set; } = new RampupData();
@@ -48,19 +48,19 @@ namespace DFrame.Hosting.Data
             return Mode switch
             {
                 ExecuteMode.Batch => !string.IsNullOrWhiteSpace(HostAddress)
-                    && !string.IsNullOrWhiteSpace(WorkerName)
-                    && ProcessCount > 0,
+                    && !string.IsNullOrWhiteSpace(WorkloadName)
+                    && WorkerCount > 0,
                 ExecuteMode.Request => !string.IsNullOrWhiteSpace(HostAddress)
-                    && !string.IsNullOrWhiteSpace(WorkerName)
-                    && ProcessCount > 0
-                    && Request.WorkerPerProcess > 0
-                    && Request.ExecutePerWorker > 0,
+                    && !string.IsNullOrWhiteSpace(WorkloadName)
+                    && WorkerCount > 0
+                    && Request.WorkloadPerWorker > 0
+                    && Request.ExecutePerWorkload > 0,
                 ExecuteMode.Rampup => !string.IsNullOrWhiteSpace(HostAddress)
-                    && !string.IsNullOrWhiteSpace(WorkerName)
-                    && ProcessCount > 0
-                    && Rampup.MaxWorkerPerProcess > 0
-                    && Rampup.WorkerSpawnCount > 0
-                    && Rampup.WorkerSpawnSecond > 0,
+                    && !string.IsNullOrWhiteSpace(WorkloadName)
+                    && WorkerCount > 0
+                    && Rampup.MaxWorkloadPerWorker > 0
+                    && Rampup.WorkloadSpawnCount > 0
+                    && Rampup.WorkloadSpawnSecond > 0,
                 _ => throw new NotImplementedException(),
             };
         }
@@ -69,24 +69,24 @@ namespace DFrame.Hosting.Data
         {
             return Mode switch
             {
-                ExecuteMode.Batch => $"{Mode.GetDisplayName()} -workerName {WorkerName} -processCount {ProcessCount}".Split(' '),
-                ExecuteMode.Request => $"{Mode.GetDisplayName()} -workerName {WorkerName} -processCount {ProcessCount} -workerPerProcess {Request.WorkerPerProcess} -executePerWorker {Request.ExecutePerWorker}".Split(' '),
-                ExecuteMode.Rampup => $"{Mode.GetDisplayName()} -workerName {WorkerName} -processCount {ProcessCount} -maxWorkerPerProcess {Rampup.MaxWorkerPerProcess} -workerSpawnCount {Rampup.WorkerSpawnCount} -workerSpawnSecond {Rampup.WorkerSpawnSecond}".Split(' '),
+                ExecuteMode.Batch => $"{Mode.GetDisplayName()} -workloadName {WorkloadName} -workerCount {WorkerCount}".Split(' '),
+                ExecuteMode.Request => $"{Mode.GetDisplayName()} -workloadName {WorkloadName} -workerCount {WorkerCount} -workloadPerWorker {Request.WorkloadPerWorker} -executePerWorkload {Request.ExecutePerWorkload}".Split(' '),
+                ExecuteMode.Rampup => $"{Mode.GetDisplayName()} -workloadName {WorkloadName} -workerCount {WorkerCount} -maxWorkloadPerWorker {Rampup.MaxWorkloadPerWorker} -workloadSpawnCount {Rampup.WorkloadSpawnCount} -workloadSpawnSecond {Rampup.WorkloadSpawnSecond}".Split(' '),
                 _ => throw new NotImplementedException(),
             };
         }
 
         public class RequestData
         {
-            public int WorkerPerProcess { get; set; } = 1;
-            public int ExecutePerWorker { get; set; } = 1;
+            public int WorkloadPerWorker { get; set; } = 1;
+            public int ExecutePerWorkload { get; set; } = 1;
         }
 
         public class RampupData
         {
-            public int MaxWorkerPerProcess { get; set; } = 1;
-            public int WorkerSpawnCount { get; set; } = 1;
-            public int WorkerSpawnSecond { get; set; } = 1;
+            public int MaxWorkloadPerWorker { get; set; } = 1;
+            public int WorkloadSpawnCount { get; set; } = 1;
+            public int WorkloadSpawnSecond { get; set; } = 1;
         }
     }
 }
