@@ -1,4 +1,4 @@
-﻿using ConsoleAppFramework;
+using ConsoleAppFramework;
 using DFrame.Collections;
 using DFrame.Internal;
 using Grpc.Core;
@@ -187,7 +187,8 @@ namespace DFrame
 
         public async Task Main()
         {
-            logger.LogInformation("Starting DFrame worker");
+            var workerId = Guid.NewGuid();
+            logger.LogInformation($"Starting DFrame worker (WorkerId:{workerId})");
 
             var channel = GrpcChannel.ForAddress("http://" + options.WorkerConnectToHost + ":" + options.WorkerConnectToPort, new GrpcChannelOptions
             {
@@ -209,10 +210,8 @@ namespace DFrame
             });
 
 
-
             var callInvoker = channel.CreateCallInvoker();
 
-            var workerId = Guid.NewGuid();
             var receiver = new WorkerReceiver(channel, workerId, provider, options);
             var callOption = new CallOptions(new Metadata { { "worker-id", workerId.ToString() } });
 

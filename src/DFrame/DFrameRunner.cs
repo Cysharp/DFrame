@@ -61,11 +61,13 @@ namespace DFrame
                 var workerConnection = masterHost.Services.GetRequiredService<WorkerConnectionGroupContext>();
                 workerConnection.Initialize(workerCount, options.WorkerDisconnectedBehaviour == WorkerDisconnectedBehaviour.Stop);
 
-                logger.LogInformation("Starting workers.");
+                logger.LogInformation($"Runner '{this.GetType().Name}' starts {workerCount} worker(s) using '{options.ScalingProvider.GetType().Name}'.");
                 await options.ScalingProvider.StartWorkerAsync(options, workerCount, provider, failSignal, cancellationToken).WithTimeoutAndCancellationAndTaskSignal(options.Timeout, cancellationToken, failSignal.Task);
 
                 // wait worker is connected
+                logger.LogInformation($"Waiting for workers to be ready.");
                 await workerConnection.WaitAllConnectedWithTimeoutAsync(options.Timeout, cancellationToken, failSignal.Task);
+                logger.LogInformation($"Workers are ready.");
 
                 var broadcaster = workerConnection.Broadcaster;
 
@@ -86,10 +88,11 @@ namespace DFrame
                     }
                 }
 
+                logger.LogInformation($"Create and execute workload '{workloadName}' on the workers.");
                 await CreateWorkloadAndExecuteAsync(broadcaster, workerConnection, workloadName, cancellationToken, failSignal);
 
                 // Worker Teardown
-                logger.LogTrace("Send SetTeardownup command to workers and wait complete message.");
+                logger.LogInformation("Send Teardown command to workers and wait complete message.");
                 broadcaster.Teardown();
                 await workerConnection.OnTeardown.WaitWithTimeoutAsync(options.Timeout, cancellationToken, failSignal.Task);
 
@@ -223,12 +226,12 @@ namespace DFrame
         protected override async Task CreateWorkloadAndExecuteAsync(IWorkerReceiver broadcaster, WorkerConnectionGroupContext workerConnection, string workloadName, CancellationToken cancellationToken, TaskFailSignal failSignal)
         {
             // Worker CreateWorkload
-            logger.LogTrace("Send CreateWorkload/Setup command to workers and wait complete message.");
+            logger.LogInformation("Send CreateWorkload/Setup command to workers and wait complete message.");
             broadcaster.CreateWorkloadAndSetup(workloadPerWorker, workloadName);
             await workerConnection.OnCreateWorkloadAndSetup.WaitWithTimeoutAsync(options.Timeout, cancellationToken, failSignal.Task);
 
             // Worker Execute
-            logger.LogTrace("Send Execute command to workers and wait complete message.");
+            logger.LogInformation("Send Execute command to workers and wait complete message.");
             broadcaster.Execute(executePerWorkload);
             await workerConnection.OnExecute.WaitWithTimeoutAsync(options.Timeout, cancellationToken, failSignal.Task);
         }
@@ -255,7 +258,7 @@ namespace DFrame
             for (int i = 0; i < loopCount; i++)
             {
                 // Worker CreateWorkload
-                logger.LogTrace("Send CreateWorkload/Setup command to workers and wait complete message.");
+                logger.LogInformation($"Send CreateWorkload/Setup command to workers and wait complete message.(RampUpStep={i+1}/{loopCount}; WorkloadSpawnCount={workloadSpawnCount})");
                 workerConnection.OnCreateWorkloadAndSetup.Reset();
                 broadcaster.CreateWorkloadAndSetup(workloadSpawnCount, workloadName);
                 await workerConnection.OnCreateWorkloadAndSetup.WaitWithTimeoutAsync(options.Timeout, cancellationToken, failSignal.Task);
@@ -263,7 +266,7 @@ namespace DFrame
                 // Worker Execute
                 if (i == 0)
                 {
-                    logger.LogTrace("Send Execute command to workers.");
+                    logger.LogInformation("Send Execute command to workers.");
                     broadcaster.ExecuteUntilReceiveStop();
                 }
 
@@ -272,7 +275,7 @@ namespace DFrame
             }
 
             // Send Stop Command
-            logger.LogTrace("Send Stop command to workers.");
+            logger.LogInformation("Send Stop command to workers.");
             broadcaster.Stop();
 
             // Wait Execute Complete.
