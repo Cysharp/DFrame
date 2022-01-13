@@ -34,7 +34,7 @@ namespace ConsoleAppK8s
                 //args = "request -workerCount 5 -workloadPerWorker 10 -executePerWorkload 10 -workloadName SampleUnaryWorker".Split(' ');
                 //args = "request -workerCount 5 -workloadPerWorker 10 -executePerWorkload 10 -workloadName SampleStreamWorker".Split(' ');
 
-                //args = "rampup -workerCount 5 -maxworkloadPerWorker 12 -workerSpawnCount 4 -workerSpawnSecond 5 -workloadName SampleHttpWorker".Split(' ');
+                //args = "rampup -workerCount 5 -maxworkloadPerWorker 12 -workloadSpawnCount 4 -workloadSpawnSecond 5 -workloadName SampleHttpWorker".Split(' ');
 
                 // args = "request -workerCount 5 -workloadPerWorker 10 -executePerWorkload 10 -workloadName SampleHttpWorker".Split(' ');
                 //args = "-workerCount 1 -workloadPerWorker 64     -executePerWorkload 10000 -workloadName SampleHttpWorker".Split(' ');
