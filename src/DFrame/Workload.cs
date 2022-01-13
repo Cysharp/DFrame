@@ -4,22 +4,22 @@ using System.Threading.Tasks;
 
 namespace DFrame
 {
-    public abstract class Worker
+    public abstract class Workload
     {
-        public abstract Task ExecuteAsync(WorkerContext context);
+        public abstract Task ExecuteAsync(WorkloadContext context);
 
-        public virtual Task SetupAsync(WorkerContext context)
+        public virtual Task SetupAsync(WorkloadContext context)
         {
             return Task.CompletedTask;
         }
 
-        public virtual Task TeardownAsync(WorkerContext context)
+        public virtual Task TeardownAsync(WorkloadContext context)
         {
             return Task.CompletedTask;
         }
     }
 
-    public abstract class Worker<TMaster> : Worker
+    public abstract class Workload<TMaster> : Workload
         where TMaster : Master
     {
 
@@ -32,12 +32,12 @@ namespace DFrame
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public class WorkerAttribute : Attribute
+    public class WorkloadAttribute : Attribute
     {
         public string Name { get; }
         public bool DisallowSingleExecute { get; }
 
-        public WorkerAttribute(string name, bool disallowSingleExecute = false)
+        public WorkloadAttribute(string name, bool disallowSingleExecute = false)
         {
             Name = name;
             DisallowSingleExecute = disallowSingleExecute;

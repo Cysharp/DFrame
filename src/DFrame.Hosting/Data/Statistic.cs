@@ -5,11 +5,11 @@ namespace DFrame.Hosting.Data
     public class AbStatistic
     {
         public string? ScalingType { get; set; }
-        public string? ScenarioName { get; set; }
+        public string? WorkloadName { get; set; }
         public int RequestCount { get; set; }
-        public int ProcessCount { get; set; }
-        public int WorkerPerProcess { get; set; }
-        public int ExecutePerWorker { get; set; }
+        public int WorkerCount { get; set; }
+        public int WorkloadPerWorker { get; set; }
+        public int ExecutePerWorkload { get; set; }
         public int ConcurrencyLevel { get; set; }
         public int CompleteRequests { get; set; }
         public int FailedRequests { get; set; }

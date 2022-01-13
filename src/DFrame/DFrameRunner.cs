@@ -23,34 +23,34 @@ namespace DFrame
         protected ILogger<DFrameApp> logger;
         protected IServiceProvider provider;
         protected DFrameOptions options;
-        protected DFrameWorkerCollection workers;
+        protected DFrameWorkloadCollection workloads;
         protected IHost? masterHost;
 
-        public DFrameRunnerBase(ILogger<DFrameApp> logger, IServiceProvider provider, DFrameOptions options, DFrameWorkerCollection workers)
+        public DFrameRunnerBase(ILogger<DFrameApp> logger, IServiceProvider provider, DFrameOptions options, DFrameWorkloadCollection workloads)
         {
             this.provider = provider;
             this.logger = logger;
-            this.workers = workers;
+            this.workloads = workloads;
             this.options = options;
         }
 
-        protected abstract Task CreateCoWorkerAndExecuteAsync(IWorkerReceiver broadcaster, WorkerConnectionGroupContext workerConnection, string workerName, CancellationToken cancellationToken, TaskFailSignal failSignal);
+        protected abstract Task CreateWorkloadAndExecuteAsync(IWorkerReceiver broadcaster, WorkerConnectionGroupContext workerConnection, string workloadName, CancellationToken cancellationToken, TaskFailSignal failSignal);
 
         public async Task RunAsync(
-            string workerName,
-            int processCount,
-            int maxWorkerPerProcess, // TODO: remove it
-            int executePerWorker, // TODO: remove it
+            string workloadName,
+            int workerCount,
+            int maxWorkloadPerWorker, // TODO: remove it
+            int executePerWorkload, // TODO: remove it
             ConsoleAppFramework.ConsoleAppContext consoleAppContext) // TODO:remove this context.
         {
             var cancellationToken = consoleAppContext.CancellationToken;
             var args = consoleAppContext.Arguments;
 
-            ThreadPoolUtility.SetMinThread(maxWorkerPerProcess);
-            // validate worker is exists.
-            if (!workers.TryGetWorker(workerName, out var workerInfo))
+            ThreadPoolUtility.SetMinThread(maxWorkloadPerWorker);
+            // validate workload is exists.
+            if (!workloads.TryGetWorkload(workloadName, out var workloadInfo))
             {
-                throw new InvalidOperationException($"Worker:{workerName} does not found in assembly.");
+                throw new InvalidOperationException($"Workload:{workloadName} does not found in assembly.");
             }
 
             var failSignal = new TaskFailSignal();
@@ -59,10 +59,10 @@ namespace DFrame
             await using (options.ScalingProvider)
             {
                 var workerConnection = masterHost.Services.GetRequiredService<WorkerConnectionGroupContext>();
-                workerConnection.Initialize(processCount, options.WorkerDisconnectedBehaviour == WorkerDisconnectedBehaviour.Stop);
+                workerConnection.Initialize(workerCount, options.WorkerDisconnectedBehaviour == WorkerDisconnectedBehaviour.Stop);
 
-                logger.LogInformation("Starting worker nodes.");
-                await options.ScalingProvider.StartWorkerAsync(options, processCount, provider, failSignal, cancellationToken).WithTimeoutAndCancellationAndTaskSignal(options.Timeout, cancellationToken, failSignal.Task);
+                logger.LogInformation("Starting workers.");
+                await options.ScalingProvider.StartWorkerAsync(options, workerCount, provider, failSignal, cancellationToken).WithTimeoutAndCancellationAndTaskSignal(options.Timeout, cancellationToken, failSignal.Task);
 
                 // wait worker is connected
                 await workerConnection.WaitAllConnectedWithTimeoutAsync(options.Timeout, cancellationToken, failSignal.Task);
@@ -70,9 +70,9 @@ namespace DFrame
                 var broadcaster = workerConnection.Broadcaster;
 
                 Master? master = default;
-                if (workerInfo.MasterType != null)
+                if (workloadInfo.MasterType != null)
                 {
-                    master = provider.GetRequiredService(workerInfo.MasterType) as Master;
+                    master = provider.GetRequiredService(workloadInfo.MasterType) as Master;
                 }
 
                 // MasterSetup
@@ -86,14 +86,14 @@ namespace DFrame
                     }
                 }
 
-                await CreateCoWorkerAndExecuteAsync(broadcaster, workerConnection, workerName, cancellationToken, failSignal);
+                await CreateWorkloadAndExecuteAsync(broadcaster, workerConnection, workloadName, cancellationToken, failSignal);
 
                 // Worker Teardown
                 logger.LogTrace("Send SetTeardownup command to workers and wait complete message.");
                 broadcaster.Teardown();
                 await workerConnection.OnTeardown.WaitWithTimeoutAsync(options.Timeout, cancellationToken, failSignal.Task);
 
-                options.OnExecuteResult?.Invoke(workerConnection.ExecuteResult.ToArray(), options, new ExecuteScenario(workerName, processCount, maxWorkerPerProcess, executePerWorker));
+                options.OnExecuteResult?.Invoke(workerConnection.ExecuteResult.ToArray(), options, new ExecutedWorkloadInfo(workloadName, workerCount, maxWorkloadPerWorker, executePerWorkload));
 
                 // Worker Shutdown
                 broadcaster.Shutdown();
@@ -152,7 +152,7 @@ namespace DFrame
                 })
                 .Build();
 
-            logger.LogInformation("Starting DFrame master node.");
+            logger.LogInformation("Starting DFrame master.");
 
             var task = host.RunAsync(cancellationToken);
             if (task.IsFaulted)
@@ -210,55 +210,55 @@ namespace DFrame
 
     internal sealed class DFrameConcurrentRequestRunner : DFrameRunnerBase
     {
-        readonly int workerPerProcess;
-        readonly int executePerWorker;
+        readonly int workloadPerWorker;
+        readonly int executePerWorkload;
 
-        public DFrameConcurrentRequestRunner(ILogger<DFrameApp> logger, IServiceProvider provider, DFrameOptions options, DFrameWorkerCollection workers, int workerPerProcess, int executePerWorker)
+        public DFrameConcurrentRequestRunner(ILogger<DFrameApp> logger, IServiceProvider provider, DFrameOptions options, DFrameWorkloadCollection workers, int workloadPerWorker, int executePerWorkload)
             : base(logger, provider, options, workers)
         {
-            this.workerPerProcess = workerPerProcess;
-            this.executePerWorker = executePerWorker;
+            this.workloadPerWorker = workloadPerWorker;
+            this.executePerWorkload = executePerWorkload;
         }
 
-        protected override async Task CreateCoWorkerAndExecuteAsync(IWorkerReceiver broadcaster, WorkerConnectionGroupContext workerConnection, string workerName, CancellationToken cancellationToken, TaskFailSignal failSignal)
+        protected override async Task CreateWorkloadAndExecuteAsync(IWorkerReceiver broadcaster, WorkerConnectionGroupContext workerConnection, string workloadName, CancellationToken cancellationToken, TaskFailSignal failSignal)
         {
-            // Worker CreateCoWorker
-            logger.LogTrace("Send CreateWorker/Setup command to workers and wait complete message.");
-            broadcaster.CreateCoWorkerAndSetup(workerPerProcess, workerName);
-            await workerConnection.OnCreateCoWorkerAndSetup.WaitWithTimeoutAsync(options.Timeout, cancellationToken, failSignal.Task);
+            // Worker CreateWorkload
+            logger.LogTrace("Send CreateWorkload/Setup command to workers and wait complete message.");
+            broadcaster.CreateWorkloadAndSetup(workloadPerWorker, workloadName);
+            await workerConnection.OnCreateWorkloadAndSetup.WaitWithTimeoutAsync(options.Timeout, cancellationToken, failSignal.Task);
 
             // Worker Execute
             logger.LogTrace("Send Execute command to workers and wait complete message.");
-            broadcaster.Execute(executePerWorker);
+            broadcaster.Execute(executePerWorkload);
             await workerConnection.OnExecute.WaitWithTimeoutAsync(options.Timeout, cancellationToken, failSignal.Task);
         }
     }
 
     internal sealed class DFrameRamupRunner : DFrameRunnerBase
     {
-        readonly int maxWorkerPerProcess;
-        readonly int workerSpawnCount;
-        readonly int workerSpawnSecond;
+        readonly int maxWorkloadPerWorker;
+        readonly int workloadSpawnCount;
+        readonly int workloadSpawnSecond;
 
-        public DFrameRamupRunner(ILogger<DFrameApp> logger, IServiceProvider provider, DFrameOptions options, DFrameWorkerCollection workers, int maxWorkerPerProcess, int workerSpawnCount, int workerSpawnSecond)
+        public DFrameRamupRunner(ILogger<DFrameApp> logger, IServiceProvider provider, DFrameOptions options, DFrameWorkloadCollection workers, int maxWorkloadPerWorker, int workloadSpawnCount, int workloadSpawnSecond)
 
             : base(logger, provider, options, workers)
         {
-            this.maxWorkerPerProcess = maxWorkerPerProcess;
-            this.workerSpawnCount = workerSpawnCount;
-            this.workerSpawnSecond = workerSpawnSecond;
+            this.maxWorkloadPerWorker = maxWorkloadPerWorker;
+            this.workloadSpawnCount = workloadSpawnCount;
+            this.workloadSpawnSecond = workloadSpawnSecond;
         }
 
-        protected override async Task CreateCoWorkerAndExecuteAsync(IWorkerReceiver broadcaster, WorkerConnectionGroupContext workerConnection, string workerName, CancellationToken cancellationToken, TaskFailSignal failSignal)
+        protected override async Task CreateWorkloadAndExecuteAsync(IWorkerReceiver broadcaster, WorkerConnectionGroupContext workerConnection, string workloadName, CancellationToken cancellationToken, TaskFailSignal failSignal)
         {
-            var loopCount = maxWorkerPerProcess / workerSpawnCount;
+            var loopCount = maxWorkloadPerWorker / workloadSpawnCount;
             for (int i = 0; i < loopCount; i++)
             {
-                // Worker CreateCoWorker
-                logger.LogTrace("Send CreateWorker/Setup command to workers and wait complete message.");
-                workerConnection.OnCreateCoWorkerAndSetup.Reset();
-                broadcaster.CreateCoWorkerAndSetup(workerSpawnCount, workerName);
-                await workerConnection.OnCreateCoWorkerAndSetup.WaitWithTimeoutAsync(options.Timeout, cancellationToken, failSignal.Task);
+                // Worker CreateWorkload
+                logger.LogTrace("Send CreateWorkload/Setup command to workers and wait complete message.");
+                workerConnection.OnCreateWorkloadAndSetup.Reset();
+                broadcaster.CreateWorkloadAndSetup(workloadSpawnCount, workloadName);
+                await workerConnection.OnCreateWorkloadAndSetup.WaitWithTimeoutAsync(options.Timeout, cancellationToken, failSignal.Task);
 
                 // Worker Execute
                 if (i == 0)
@@ -268,7 +268,7 @@ namespace DFrame
                 }
 
                 // Wait Spawn.
-                await Task.Delay(TimeSpan.FromSeconds(workerSpawnSecond));
+                await Task.Delay(TimeSpan.FromSeconds(workloadSpawnSecond));
             }
 
             // Send Stop Command

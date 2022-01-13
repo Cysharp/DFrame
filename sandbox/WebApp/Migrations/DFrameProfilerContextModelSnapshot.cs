@@ -42,7 +42,7 @@ namespace WebApp.Migrations
                     b.Property<int>("Requests")
                         .HasColumnType("int");
 
-                    b.Property<string>("WorkerName")
+                    b.Property<string>("WorkloadName")
                         .IsRequired()
                         .HasColumnType("longtext CHARACTER SET utf8mb4");
 

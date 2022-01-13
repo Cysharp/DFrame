@@ -33,7 +33,7 @@ namespace DFrame.Tests
         }
     }
 
-    class QueueBatch : Worker
+    class QueueBatch : Workload
     {
         ResultBox<bool> box;
 
@@ -42,7 +42,7 @@ namespace DFrame.Tests
             this.box = box;
         }
 
-        public override async Task ExecuteAsync(WorkerContext context)
+        public override async Task ExecuteAsync(WorkloadContext context)
         {
             var q = context.CreateDistributedQueue<int>("QueueBatchTest");
 
@@ -80,7 +80,7 @@ namespace DFrame.Tests
         }
     }
 
-    class DictionaryBatch : Worker
+    class DictionaryBatch : Workload
     {
         ResultBox<bool> box;
 
@@ -89,7 +89,7 @@ namespace DFrame.Tests
             this.box = box;
         }
 
-        public override async Task ExecuteAsync(WorkerContext context)
+        public override async Task ExecuteAsync(WorkloadContext context)
         {
             var dict = context.CreateDistributedDictionary<string, int>("DictionaryBatchTest");
 

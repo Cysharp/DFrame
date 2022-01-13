@@ -13,7 +13,7 @@ namespace DFrame
         CancellationTokenSource cts = new CancellationTokenSource();
         IFailSignal failSignal = default!;
 
-        public async Task StartWorkerAsync(DFrameOptions options, int processCount, IServiceProvider provider, IFailSignal failSignal, CancellationToken cancellationToken)
+        public async Task StartWorkerAsync(DFrameOptions options, int workerCount, IServiceProvider provider, IFailSignal failSignal, CancellationToken cancellationToken)
         {
             this.failSignal = failSignal;
 
@@ -21,7 +21,7 @@ namespace DFrame
 
             var cmd = $"dotnet \"{location}\" --worker-flag";
 
-            for (int i = 0; i < processCount; i++)
+            for (int i = 0; i < workerCount; i++)
             {
                 var startProcessTask = ProcessX.StartAsync(cmd);
                 WriteAll(startProcessTask);

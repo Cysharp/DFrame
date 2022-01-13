@@ -36,12 +36,12 @@ namespace DFrame.Hosting.Services
         {
             _statistics = new AbStatistic
             {
-                ScenarioName = report.ScenarioName,
+                WorkloadName = report.WorkloadName,
                 ScalingType = report.ScalingType,
                 RequestCount = report.RequestCount,
-                ProcessCount = report.ProcessCount,
-                WorkerPerProcess = report.WorkerPerProcess,
-                ExecutePerWorker = report.ExecutePerWorker,
+                WorkerCount = report.WorkerCount,
+                WorkloadPerWorker = report.WorkloadPerWorker,
+                ExecutePerWorkload = report.ExecutePerWorkload,
                 ConcurrencyLevel = report.Concurrency,
                 CompleteRequests = report.CompleteRequests,
                 FailedRequests = report.FailedRequests,

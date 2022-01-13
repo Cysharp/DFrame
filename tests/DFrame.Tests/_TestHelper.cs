@@ -52,7 +52,7 @@ namespace DFrame.Tests
 
         public static Task<TResult> RunDFrameAsync<TTestType, TResult>(ITestOutputHelper helper)
         {
-            var args = $"batch -processCount 1 -workerPerProcess 1 -executePerWorker 1 -workerName {typeof(TTestType).Name}".Split(' ');
+            var args = $"batch -workerCount 1 -workloadPerWorker 1 -executePerWorkload 1 -workloadName {typeof(TTestType).Name}".Split(' ');
             return RunDFrameAsync<TResult>(helper, args);
         }
     }

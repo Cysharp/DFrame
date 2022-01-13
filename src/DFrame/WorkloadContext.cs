@@ -8,17 +8,17 @@ using System;
 
 namespace DFrame
 {
-    public class WorkerContext
+    public class WorkloadContext
     {
         readonly GrpcChannel masterChannel;
         readonly MessagePackSerializerOptions serializerOptions;
 
-        public string WorkerId { get; }
+        public string WorkloadId { get; }
 
-        public WorkerContext(GrpcChannel masterChannel, DFrameOptions options)
+        public WorkloadContext(GrpcChannel masterChannel, DFrameOptions options)
         {
             this.masterChannel = masterChannel;
-            this.WorkerId = Guid.NewGuid().ToString();
+            this.WorkloadId = Guid.NewGuid().ToString();
             this.serializerOptions = options.SerializerOptions;
         }
 

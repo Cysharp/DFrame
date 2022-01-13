@@ -24,11 +24,11 @@ namespace DFrame
     {
         public static async Task RunDFrameAsync(this IHostBuilder hostBuilder, string[] args, DFrameOptions options)
         {
-            var workerCollection = DFrameWorkerCollection.FromCurrentAssemblies();
+            var workloadCollection = DFrameWorkloadCollection.FromCurrentAssemblies();
 
             if (args.Length == 0)
             {
-                ShowDFrameAppList(workerCollection);
+                ShowDFrameAppList(workloadCollection);
                 return;
             }
 
@@ -38,11 +38,11 @@ namespace DFrame
                 .ConfigureServices(x =>
                 {
                     x.AddSingleton(options);
-                    x.AddSingleton(workerCollection);
+                    x.AddSingleton(workloadCollection);
 
-                    foreach (var item in workerCollection.All)
+                    foreach (var item in workloadCollection.All)
                     {
-                        x.AddTransient(item.WorkerType);
+                        x.AddTransient(item.WorkloadType);
                     }
                 })
                 .ConfigureLogging(x =>
@@ -70,9 +70,9 @@ namespace DFrame
             }
         }
 
-        static void ShowDFrameAppList(DFrameWorkerCollection types)
+        static void ShowDFrameAppList(DFrameWorkloadCollection types)
         {
-            Console.WriteLine("WorkerNames:");
+            Console.WriteLine("Workloads:");
             foreach (var item in types.All)
             {
                 Console.WriteLine(item.Name);
@@ -131,9 +131,9 @@ namespace DFrame
         readonly ILogger<DFrameApp> logger;
         readonly IServiceProvider provider;
         readonly DFrameOptions options;
-        readonly DFrameWorkerCollection workers;
+        readonly DFrameWorkloadCollection workers;
 
-        public DFrameApp(ILogger<DFrameApp> logger, IServiceProvider provider, DFrameOptions options, DFrameWorkerCollection workers)
+        public DFrameApp(ILogger<DFrameApp> logger, IServiceProvider provider, DFrameOptions options, DFrameWorkloadCollection workers)
         {
             this.provider = provider;
             this.logger = logger;
@@ -143,32 +143,32 @@ namespace DFrame
 
         [Command("batch")]
         public Task ExecuteAsBatch(
-            string workerName,
-            int processCount = 1)
+            string workloadName,
+            int workerCount = 1)
         {
-            return ExecuteAsConcurrentRequest(workerName, processCount, 1, 1);
+            return ExecuteAsConcurrentRequest(workloadName, workerCount, 1, 1);
         }
 
         [Command("request")]
         public Task ExecuteAsConcurrentRequest(
-            string workerName,
-            int processCount,
-            int workerPerProcess,
-            int executePerWorker)
+            string workloadName,
+            int workerCount,
+            int workloadPerWorker,
+            int executePerWorkload)
         {
-            return new DFrameConcurrentRequestRunner(logger, provider, options, workers, workerPerProcess, executePerWorker).RunAsync(workerName, processCount, workerPerProcess, executePerWorker, this.Context);
+            return new DFrameConcurrentRequestRunner(logger, provider, options, workers, workloadPerWorker, executePerWorkload).RunAsync(workloadName, workerCount, workloadPerWorker, executePerWorkload, this.Context);
         }
 
         [Command("rampup")]
         public Task ExecuteAsRampup(
-            string workerName,
-            int processCount,
-            int maxWorkerPerProcess,
-            int workerSpawnCount,
-            int workerSpawnSecond
+            string workloadName,
+            int workerCount,
+            int maxWorkloadPerWorker,
+            int workloadSpawnCount,
+            int workloadSpawnSecond
             )
         {
-            return new DFrameRamupRunner(logger, provider, options, workers, maxWorkerPerProcess, workerSpawnCount, workerSpawnSecond).RunAsync(workerName, processCount, maxWorkerPerProcess, maxWorkerPerProcess, this.Context);
+            return new DFrameRamupRunner(logger, provider, options, workers, maxWorkloadPerWorker, workloadSpawnCount, workloadSpawnSecond).RunAsync(workloadName, workerCount, maxWorkloadPerWorker, maxWorkloadPerWorker, this.Context);
         }
     }
 
@@ -187,7 +187,7 @@ namespace DFrame
 
         public async Task Main()
         {
-            logger.LogInformation("Starting DFrame worker node");
+            logger.LogInformation("Starting DFrame worker");
 
             var channel = GrpcChannel.ForAddress("http://" + options.WorkerConnectToHost + ":" + options.WorkerConnectToPort, new GrpcChannelOptions
             {
@@ -212,9 +212,9 @@ namespace DFrame
 
             var callInvoker = channel.CreateCallInvoker();
 
-            var nodeId = Guid.NewGuid();
-            var receiver = new WorkerReceiver(channel, nodeId, provider, options);
-            var callOption = new CallOptions(new Metadata { { "node-id", nodeId.ToString() } });
+            var workerId = Guid.NewGuid();
+            var receiver = new WorkerReceiver(channel, workerId, provider, options);
+            var callOption = new CallOptions(new Metadata { { "worker-id", workerId.ToString() } });
 
             var client = await StreamingHubClient.ConnectAsync<IMasterHub, IWorkerReceiver>(callInvoker, receiver, option: callOption, serializerOptions: options.SerializerOptions);
             // Connect explicitly???
@@ -222,7 +222,7 @@ namespace DFrame
 
             await client.ConnectAsync();
 
-            logger.LogInformation($"Worker -> Master connect completed successfully, WorkerNodeId:{nodeId.ToString()}.");
+            logger.LogInformation($"Worker -> Master connect completed successfully, WorkerId:{workerId.ToString()}.");
             try
             {
                 // wait for shutdown command from master.
@@ -230,13 +230,13 @@ namespace DFrame
             }
             finally
             {
-                await ShutdownAsync(client, channel, nodeId);
+                await ShutdownAsync(client, channel, workerId);
             }
         }
 
-        async Task ShutdownAsync(IMasterHub client, GrpcChannel channel, Guid nodeId)
+        async Task ShutdownAsync(IMasterHub client, GrpcChannel channel, Guid workerId)
         {
-            logger.LogInformation($"Worker shutdown, WorkerNodeId:{nodeId.ToString()}.");
+            logger.LogInformation($"Worker shutdown, WorkerId:{workerId.ToString()}.");
 
             logger.LogTrace($"Worker StreamingHubClient disposing.");
             await client.DisposeAsync();
@@ -283,7 +283,7 @@ namespace DFrame
 
     public class Reporter
     {
-        int nodeCount;
+        int workerCount;
         List<ExecuteResult> executeResult = new List<ExecuteResult>();
 
         public IReadOnlyList<ExecuteResult> ExecuteResult => executeResult;
@@ -292,23 +292,23 @@ namespace DFrame
         public IWorkerReceiver Broadcaster { get; set; } = default!;
 
         public CountReporting OnConnected { get; private set; } = default!;
-        public CountReporting OnCreateCoWorker { get; private set; } = default!;
+        public CountReporting OnCreateWorkload { get; private set; } = default!;
         public CountReporting OnSetup { get; private set; } = default!;
         public CountReporting OnExecute { get; private set; } = default!;
         public CountReporting OnTeardown { get; private set; } = default!;
 
         // Initialize
-        public void Reset(int nodeCount)
+        public void Reset(int workerCount)
         {
-            this.nodeCount = nodeCount;
-            this.OnConnected = new CountReporting(nodeCount)
+            this.workerCount = workerCount;
+            this.OnConnected = new CountReporting(workerCount)
             {
                 OnIncrement = count => WorkerProgressNotifier.OnConnected.PublishAsync(count).ConfigureAwait(false),
             };
-            this.OnCreateCoWorker = new CountReporting(nodeCount);
-            this.OnSetup = new CountReporting(nodeCount);
-            this.OnExecute = new CountReporting(nodeCount);
-            this.OnTeardown = new CountReporting(nodeCount)
+            this.OnCreateWorkload = new CountReporting(workerCount);
+            this.OnSetup = new CountReporting(workerCount);
+            this.OnExecute = new CountReporting(workerCount);
+            this.OnTeardown = new CountReporting(workerCount)
             {
                 OnIncrement = count => WorkerProgressNotifier.OnTeardown.PublishAsync(count).ConfigureAwait(false),
             };
