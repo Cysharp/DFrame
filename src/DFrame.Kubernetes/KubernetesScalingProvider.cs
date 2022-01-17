@@ -47,11 +47,9 @@ namespace DFrame.Kubernetes
         public string ImagePullPolicy { get; set; } = Environment.GetEnvironmentVariable("DFRAME_WORKER_IMAGE_PULL_POLICY") ?? "IfNotPresent";
         /// <summary>
         /// NodeSelector for Worker Kubernetes Pod.
-        /// If setting from EnvironmentVariables, use following.
-        /// DFRAME_WORKER_NODESELECTOR__0__KEY: VAL
-        /// DFRAME_WORKER_NODESELECTOR__1__KEY: VAL
+        /// Environment Variables sample: DFRAME_WORKER_NODESELECTOR='KEY1=FOO;KEY2=BAR'
         /// </summary>
-        public IDictionary<string, string> NodeSelector { get; set; } = new EnvironmentVariablesSource(string.Empty).GetNodeSelectors(prefix: "DFRAME_WORKER_NODESELECTOR");
+        public IDictionary<string, string> NodeSelector { get; set; } = new EnvironmentVariablesSource(string.Empty).GetNodeSelectors("DFRAME_WORKER_NODESELECTOR");
         /// <summary>
         /// Wait worker pod creationg timeout seconds. default 120 sec.
         /// </summary>

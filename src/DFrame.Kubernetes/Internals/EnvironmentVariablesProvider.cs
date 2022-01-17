@@ -63,16 +63,6 @@ namespace DFrame.Kubernetes.Internals
     /// <summary>
     /// Offer EnvironmentVariables Source with specific Data type.
     /// </summary>
-    /// Usage Samples.....
-    /// // pattern 1. use prefix.
-    /// var provider = new EnvironmentVariablesProvider("DFRAME_WORKER_");
-    /// provider.Dump();
-    /// var source1 = new EnvironmentVariablesSource("DFRAME_WORKER_");
-    /// source1.GetNodeSelectors("NODESELECTOR").Dump("pattern 1.");
-    /// 
-    /// // pattern 2. use full env key.
-    /// var source2 = new EnvironmentVariablesSource(string.Empty);
-    /// source2.GetNodeSelectors("DFRAME_WORKER_NODESELECTOR").Dump("pattern 2.");
     internal class EnvironmentVariablesSource
     {
         private IDictionary<string, string> _data;
@@ -85,24 +75,25 @@ namespace DFrame.Kubernetes.Internals
 
         /// <summary>
         /// Get Kubernetse NodeSelector from Environment Variables.
-        /// env sample: `DFRAME_WORKER_NODESELECTOR__0__KEY = VALUE` will become `KEY = VALUE` entries.
+        /// env sample: `DFRAME_WORKER_NODESELECTOR='KEY1=FOO;KEY2=BAR'` will become `KEY1 = FOO` and `KEY2 = BAR`entries.
         /// </summary>
-        /// <param name="prefix"></param>
+        /// <param name="key"></param>
         /// <returns></returns>
-        public IDictionary<string, string> GetNodeSelectors(string prefix)
+        public IDictionary<string, string> GetNodeSelectors(string key)
         {
-            // pick up `DFRAME_WORKER_NODESELECTOR*` entries
+            // pick up `DFRAME_WORKER_NODESELECTOR` entries
             var nodeSelectors = _data
-                .Where(x => x.Key.StartsWith(prefix))
-                .Select((x, i) =>
+                .Where(x => string.Equals(x.Key,key, StringComparison.OrdinalIgnoreCase))
+                .SelectMany(x => x.Value.Split(';')) // ['KEY1=FOO', 'KEY2=BAR']
+                .Select(x =>
                 {
-                    // DFRAME_WORKER_NODESELECTOR:0:KEY -> KEY
-                    var key = x.Key
-                        .Substring(prefix.Length) // DFRAME_WORKER_NODESELECTOR:0:KEY -> :0:KEY
-                        .Substring($":{i}:".Length); // :0:KEY -> KEY
-                    return (key, x.Value);
+                    var entry = x.Split('=');
+                    if (entry.Length != 2)
+                        return null;
+                    return entry; // [KEY1, FOO], [KEY2, BAR]
                 })
-                .ToDictionary(kv => kv.key, kv => kv.Value);
+                .Where(x => x != null)
+                .ToDictionary(kv => kv[0], kv => kv[1]);
 
             return nodeSelectors;
         }
