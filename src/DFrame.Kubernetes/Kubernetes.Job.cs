@@ -64,8 +64,18 @@ namespace DFrame.Kubernetes
         /// <param name="imagePullPolicy"></param>
         /// <param name="imagePullSecret"></param>
         /// <param name="parallelism"></param>
+        /// <param name="nodeSelector"></param>
         /// <returns></returns>
-        public V1Job CreateJobDefinition(string name, string image, string imageTag, string host, int port, string imagePullPolicy = "IfNotPresent", string imagePullSecret = "", int parallelism = 1)
+        public V1Job CreateJobDefinition(
+            string name, 
+            string image, 
+            string imageTag, 
+            string host, 
+            int port, 
+            string imagePullPolicy = "IfNotPresent", 
+            string imagePullSecret = "", 
+            int parallelism = 1,
+            IDictionary<string, string> nodeSelector = null)
         {
             var labels = new Dictionary<string, string>
             {
@@ -147,6 +157,10 @@ namespace DFrame.Kubernetes
                         Name = imagePullSecret,
                     },
                 };
+            }
+            if (nodeSelector != null && nodeSelector.Count != 0)
+            {
+                definition.Spec.Template.Spec.NodeSelector = nodeSelector;
             }
             return definition;
         }
