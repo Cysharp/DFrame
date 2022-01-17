@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using DFrame.Kubernetes.Exceptions;
+using DFrame.Kubernetes.Internals;
 using DFrame.Kubernetes.Models;
 
 namespace DFrame.Kubernetes
@@ -29,31 +30,36 @@ namespace DFrame.Kubernetes
         /// </summary>
         public string Name { get; set; } = Environment.GetEnvironmentVariable("DFRAME_WORKER_NAME") ?? "dframe-worker";
         /// <summary>
-        /// Image Tag for Worker Kubernetes Image.
+        /// Image Tag for Worker Kubernetes pod.
         /// </summary>
         public string Image { get; set; } = Environment.GetEnvironmentVariable("DFRAME_WORKER_IMAGE_NAME") ?? "";
         /// <summary>
-        /// Image Tag for Worker Kubernetes Image.
+        /// Image Tag for Worker Kubernetes pod.
         /// </summary>
         public string ImageTag { get; set; } = Environment.GetEnvironmentVariable("DFRAME_WORKER_IMAGE_TAG") ?? "";
         /// <summary>
-        /// Image PullSecret for Worker Kubernetes Image. default empty.
+        /// Image PullSecret for Worker Kubernetes pod. default empty.
         /// </summary>
         public string ImagePullSecret { get; set; } = Environment.GetEnvironmentVariable("DFRAME_WORKER_IMAGE_PULL_SECERT") ?? "";
         /// <summary>
-        /// Image PullPolicy for Worker Kubernetes Image. default IfNotPresent.
+        /// Image PullPolicy for Worker Kubernetes pod. default IfNotPresent.
         /// </summary>
         public string ImagePullPolicy { get; set; } = Environment.GetEnvironmentVariable("DFRAME_WORKER_IMAGE_PULL_POLICY") ?? "IfNotPresent";
+        /// <summary>
+        /// NodeSelector for Worker Kubernetes Pod.
+        /// Environment Variables sample: DFRAME_WORKER_NODESELECTOR='KEY1=FOO;KEY2=BAR'
+        /// </summary>
+        public IDictionary<string, string> NodeSelector { get; set; } = new EnvironmentVariablesSource(string.Empty).GetNodeSelectors("DFRAME_WORKER_NODESELECTOR");
         /// <summary>
         /// Wait worker pod creationg timeout seconds. default 120 sec.
         /// </summary>
         public int WorkerPodCreationTimeout { get; set; } = int.Parse(Environment.GetEnvironmentVariable("DFRAME_WORKER_POD_CREATE_TIMEOUT") ?? "120");
         /// <summary>
-        /// Cluster endpoint health check retry count
+        /// Cluster endpoint health check retry count.
         /// </summary>
         public int ClusterEndpointHealthRetry { get; set; } = int.Parse(Environment.GetEnvironmentVariable("DFRAME_CLUSTER_ENDPOINT_HEALTH_RETRY") ?? "60");
         /// <summary>
-        /// Cluster endpoint health check interval second
+        /// Cluster endpoint health check interval second.
         /// </summary>
         public int ClusterEndpointHealthInterval { get; set; } = int.Parse(Environment.GetEnvironmentVariable("DFRAME_CLUSTER_ENDPOINT_HEALTH_INTERVAL_SEC") ?? "10");
         /// <summary>
@@ -79,18 +85,24 @@ namespace DFrame.Kubernetes
 
         public KubernetesScalingProvider()
         {
+            _env = new KubernetesEnvironment();
             _operations = new Kubernetes(new KubernetesApiConfig
             {
                 ResponseHeaderType = HeaderContentType.Json,
                 SkipCertificateValidation = true,
             });
-            _env = new KubernetesEnvironment();
             _ns = _operations.Namespace;
         }
 
-        public KubernetesScalingProvider(KubernetesEnvironment kubernetesEnvironment) : base()
+        public KubernetesScalingProvider(KubernetesEnvironment kubernetesEnvironment)
         {
             _env = kubernetesEnvironment;
+            _operations = new Kubernetes(new KubernetesApiConfig
+            {
+                ResponseHeaderType = HeaderContentType.Json,
+                SkipCertificateValidation = true,
+            });
+            _ns = _operations.Namespace;
         }
 
         public async Task StartWorkerAsync(DFrameOptions options, int workerCount, IServiceProvider provider, IFailSignal failSignal, CancellationToken cancellationToken)
@@ -99,7 +111,6 @@ namespace DFrame.Kubernetes
 
             Console.WriteLine($"Scale out workers {_env.ScalingType}. {_ns}/{_env.Name} ({workerCount} pods)");
 
-            // todo: Can be replace with SRV record on svc.
             // confirm kubernetes master can connect with cluster api.
             Console.WriteLine($"Checking cluster Endpoint health.");
             var healthy = await _operations.TryConnectClusterEndpointAsync(_env.ClusterEndpointHealthRetry, TimeSpan.FromSeconds(_env.ClusterEndpointHealthInterval), cancellationToken);
@@ -169,7 +180,7 @@ namespace DFrame.Kubernetes
         /// <returns></returns>
         private async ValueTask ScaleoutJobAsync(int nodeCount, string connectToHost, int connectToPort, CancellationToken cancellationToken)
         {
-            var def = _operations.CreateJobDefinition(_env.Name, _env.Image, _env.ImageTag, connectToHost, connectToPort, _env.ImagePullPolicy, _env.ImagePullSecret, nodeCount);
+            var def = _operations.CreateJobDefinition(_env.Name, _env.Image, _env.ImageTag, connectToHost, connectToPort, _env.ImagePullPolicy, _env.ImagePullSecret, nodeCount, _env.NodeSelector);
 
             try
             {
@@ -236,7 +247,7 @@ namespace DFrame.Kubernetes
         /// <returns></returns>
         private async ValueTask ScaleoutDeploymentAsync(int nodeCount, string connectToHost, int connectToPort, CancellationToken cancellationToken)
         {
-            var def = _operations.CreateDeploymentDefinition(_env.Name, _env.Image, _env.ImageTag, connectToHost, connectToPort, _env.ImagePullPolicy, _env.ImagePullSecret, nodeCount);
+            var def = _operations.CreateDeploymentDefinition(_env.Name, _env.Image, _env.ImageTag, connectToHost, connectToPort, _env.ImagePullPolicy, _env.ImagePullSecret, nodeCount, _env.NodeSelector);
             try
             {
                 // watch worker pod creation.

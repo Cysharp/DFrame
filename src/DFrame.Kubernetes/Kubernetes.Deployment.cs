@@ -53,6 +53,8 @@ namespace DFrame.Kubernetes
         ///               memory: 1000Mi
         ///       imagePullSecrets:
         ///         - name: {imagePullSecret}
+        ///       nodeSelector:
+        ///         eks.amazonaws.com/capacityType: SPOT
         /// </remarks>
         /// <param name="name"></param>
         /// <param name="image"></param>
@@ -62,8 +64,18 @@ namespace DFrame.Kubernetes
         /// <param name="imagePullPolicy"></param>
         /// <param name="imagePullSecret"></param>
         /// <param name="replicas"></param>
+        /// <param name="nodeSelector"></param>
         /// <returns></returns>
-        public V1Deployment CreateDeploymentDefinition(string name, string image, string imageTag, string host, int port, string imagePullPolicy = "IfNotPresent", string imagePullSecret = "", int replicas = 1)
+        public V1Deployment CreateDeploymentDefinition(
+            string name, 
+            string image, 
+            string imageTag, 
+            string host, 
+            int port, 
+            string imagePullPolicy = "IfNotPresent", 
+            string imagePullSecret = "", 
+            int replicas = 1, 
+            IDictionary<string, string> nodeSelector = null)
         {
             var labels = new Dictionary<string, string>
             {
@@ -145,6 +157,11 @@ namespace DFrame.Kubernetes
                     },
                 };
             }
+            if (nodeSelector != null && nodeSelector.Count != 0)
+            {
+                definition.Spec.Template.Spec.NodeSelector = nodeSelector;
+            }
+
             return definition;
         }
 
