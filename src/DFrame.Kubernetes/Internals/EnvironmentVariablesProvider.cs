@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using DFrame.Kubernetes.Models;
+using System.Collections;
 
 namespace DFrame.Kubernetes.Internals
 {
@@ -97,5 +98,34 @@ namespace DFrame.Kubernetes.Internals
 
             return nodeSelectors;
         }
-    }
+
+        /// <summary>
+        /// Get Kubernetse NodeSelector from Environment Variables.
+        /// env sample: `DFRAME_WORKER_RESOURCES_REQUESTS='cpu=2000m;memory=1000Mi'` will become `cpu = 2000m` and `memory = 1000Mi`entries.
+        /// env sample: `DFRAME_WORKER_RESOURCES_LIMITS='cpu=2000m;memory=1000Mi'` will become `cpu = 2000m` and `memory = 1000Mi`entries.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public IDictionary<string, string> GetResources(string key)
+        {
+            // pick up `DFRAME_WORKER_RESOURCES_REQUESTS` entries
+            // pick up `DFRAME_WORKER_RESOURCES_LIMITS` entries
+            var resources = _data
+                .Where(x => string.Equals(x.Key, key, StringComparison.OrdinalIgnoreCase))
+                .SelectMany(x => x.Value.Split(';')) // ['KEY1=FOO', 'KEY2=BAR']
+                .Select(x =>
+                {
+                    var entry = x.Split('=');
+                    if (entry.Length != 2)
+                        return null;
+                    if (entry[0] != "cpu" && entry[0] != "memory")
+                        return null;
+                    return entry; // [KEY1, FOO], [KEY2, BAR]
+                })
+                .Where(x => x != null)
+                .ToDictionary(kv => kv[0], kv => kv[1]);
+
+            return resources;
+        }
+   }
 }
