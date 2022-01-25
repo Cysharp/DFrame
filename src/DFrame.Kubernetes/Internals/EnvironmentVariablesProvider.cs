@@ -84,7 +84,7 @@ namespace DFrame.Kubernetes.Internals
         {
             // pick up `DFRAME_WORKER_NODESELECTOR` entries
             var nodeSelectors = _data
-                .Where(x => string.Equals(x.Key,key, StringComparison.OrdinalIgnoreCase))
+                .Where(x => string.Equals(x.Key, key, StringComparison.OrdinalIgnoreCase))
                 .SelectMany(x => x.Value.Split(';')) // ['KEY1=FOO', 'KEY2=BAR']
                 .Select(x =>
                 {
@@ -118,8 +118,9 @@ namespace DFrame.Kubernetes.Internals
                     var entry = x.Split('=');
                     if (entry.Length != 2)
                         return null;
-                    if (entry[0] != "cpu" && entry[0] != "memory")
+                    if (!entry[0].Equals("cpu", StringComparison.OrdinalIgnoreCase) && !entry[0].Equals("memory", StringComparison.OrdinalIgnoreCase))
                         return null;
+                    entry[0] = entry[0].ToLower();
                     return entry; // [KEY1, FOO], [KEY2, BAR]
                 })
                 .Where(x => x != null)
@@ -127,5 +128,5 @@ namespace DFrame.Kubernetes.Internals
 
             return resources;
         }
-   }
+    }
 }
