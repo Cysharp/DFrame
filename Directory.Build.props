@@ -1,5 +1,7 @@
 <Project>
   <PropertyGroup>
+    <VersionPrefix>0.1.0</VersionPrefix>
+
     <!-- NuGet Packaging -->
     <PackageVersion>$(Version)</PackageVersion>
     <Authors>Cysharp</Authors>

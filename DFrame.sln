@@ -41,11 +41,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleAppEcs", "sandbox\Co
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{15E00CDF-0E36-4FF1-A88B-E211066D8FDE}"
 	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
 		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{7936D1DB-0FEB-4D5C-97BB-ADB105A98A81}"
 	ProjectSection(SolutionItems) = preProject
+		.github\workflows\build-canary.yml = .github\workflows\build-canary.yml
 		.github\workflows\build-debug.yml = .github\workflows\build-debug.yml
 		.github\workflows\build-release.yml = .github\workflows\build-release.yml
 		.github\workflows\toc.yml = .github\workflows\toc.yml
