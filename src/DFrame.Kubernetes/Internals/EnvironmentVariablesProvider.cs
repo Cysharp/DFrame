@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using DFrame.Kubernetes.Models;
+using System.Collections;
 
 namespace DFrame.Kubernetes.Internals
 {
@@ -83,7 +84,7 @@ namespace DFrame.Kubernetes.Internals
         {
             // pick up `DFRAME_WORKER_NODESELECTOR` entries
             var nodeSelectors = _data
-                .Where(x => string.Equals(x.Key,key, StringComparison.OrdinalIgnoreCase))
+                .Where(x => string.Equals(x.Key, key, StringComparison.OrdinalIgnoreCase))
                 .SelectMany(x => x.Value.Split(';')) // ['KEY1=FOO', 'KEY2=BAR']
                 .Select(x =>
                 {
@@ -96,6 +97,36 @@ namespace DFrame.Kubernetes.Internals
                 .ToDictionary(kv => kv[0], kv => kv[1]);
 
             return nodeSelectors;
+        }
+
+        /// <summary>
+        /// Get Kubernetse NodeSelector from Environment Variables.
+        /// env sample: `DFRAME_WORKER_RESOURCES_REQUESTS='cpu=2000m;memory=1000Mi'` will become `cpu = 2000m` and `memory = 1000Mi`entries.
+        /// env sample: `DFRAME_WORKER_RESOURCES_LIMITS='cpu=2000m;memory=1000Mi'` will become `cpu = 2000m` and `memory = 1000Mi`entries.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public IDictionary<string, string> GetResources(string key)
+        {
+            // pick up `DFRAME_WORKER_RESOURCES_REQUESTS` entries
+            // pick up `DFRAME_WORKER_RESOURCES_LIMITS` entries
+            var resources = _data
+                .Where(x => string.Equals(x.Key, key, StringComparison.OrdinalIgnoreCase))
+                .SelectMany(x => x.Value.Split(';')) // ['KEY1=FOO', 'KEY2=BAR']
+                .Select(x =>
+                {
+                    var entry = x.Split('=');
+                    if (entry.Length != 2)
+                        return null;
+                    if (!entry[0].Equals("cpu", StringComparison.OrdinalIgnoreCase) && !entry[0].Equals("memory", StringComparison.OrdinalIgnoreCase))
+                        return null;
+                    entry[0] = entry[0].ToLower();
+                    return entry; // [KEY1, FOO], [KEY2, BAR]
+                })
+                .Where(x => x != null)
+                .ToDictionary(kv => kv[0], kv => kv[1]);
+
+            return resources;
         }
     }
 }

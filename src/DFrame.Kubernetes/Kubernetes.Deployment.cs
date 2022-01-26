@@ -65,6 +65,8 @@ namespace DFrame.Kubernetes
         /// <param name="imagePullSecret"></param>
         /// <param name="replicas"></param>
         /// <param name="nodeSelector"></param>
+        /// <param name="resourcesLimits"></param>
+        /// <param name="resourcesRequests"></param>
         /// <returns></returns>
         public V1Deployment CreateDeploymentDefinition(
             string name, 
@@ -75,12 +77,45 @@ namespace DFrame.Kubernetes
             string imagePullPolicy = "IfNotPresent", 
             string imagePullSecret = "", 
             int replicas = 1, 
-            IDictionary<string, string> nodeSelector = null)
+            IDictionary<string, string> nodeSelector = null,
+            IDictionary<string, string> resourcesLimits = null,
+            IDictionary<string, string> resourcesRequests = null)
         {
+            // labels
             var labels = new Dictionary<string, string>
             {
                 { "app", name },
             };
+
+            // resources
+            var resources = new V1ResourceRequirements
+            {
+                Limits = new Dictionary<string, ResourceQuantity>
+                {
+                    { "cpu", new ResourceQuantity{ Value = "2000m" } },
+                    { "memory", new ResourceQuantity{ Value = "1000Mi" } },
+                },
+                Requests = new Dictionary<string, ResourceQuantity>
+                {
+                    { "cpu", new ResourceQuantity{ Value = "100m" } },
+                    { "memory", new ResourceQuantity{ Value = "100Mi" } },
+                }
+            };
+            if (resourcesLimits != null && resourcesLimits.Count != 0)
+            {
+                foreach (var item in resourcesLimits)
+                {
+                    resources.Limits[item.Key] = new ResourceQuantity { Value = item.Value };
+                }
+            }
+            if (resourcesRequests != null && resourcesRequests.Count != 0)
+            {
+                foreach (var item in resourcesRequests)
+                {
+                    resources.Requests[item.Key] = new ResourceQuantity { Value = item.Value };
+                }
+            }
+
             var definition = new V1Deployment
             {
                 ApiVersion = "apps/v1",
@@ -126,20 +161,7 @@ namespace DFrame.Kubernetes
                                             Value = port.ToString(),
                                         }
                                     },
-                                    Resources = new V1ResourceRequirements
-                                    {
-                                        // todo: should be configuable
-                                        Limits = new Dictionary<string, ResourceQuantity>
-                                        {
-                                            { "cpu", new ResourceQuantity{ Value = "2000m" } },
-                                            { "memory", new ResourceQuantity{ Value = "1000Mi" } },
-                                        },
-                                        Requests = new Dictionary<string, ResourceQuantity>
-                                        {
-                                            { "cpu", new ResourceQuantity{ Value = "100m" } },
-                                            { "memory", new ResourceQuantity{ Value = "100Mi" } },
-                                        }
-                                    },
+                                    Resources = resources,
                                 },
                             },
                         },
@@ -147,6 +169,7 @@ namespace DFrame.Kubernetes
                 }
             };
 
+            // additional configurations
             if (!string.IsNullOrEmpty(imagePullSecret))
             {
                 definition.Spec.Template.Spec.ImagePullSecrets = new[]

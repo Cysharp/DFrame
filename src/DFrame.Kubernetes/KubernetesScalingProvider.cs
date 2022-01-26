@@ -51,6 +51,16 @@ namespace DFrame.Kubernetes
         /// </summary>
         public IDictionary<string, string> NodeSelector { get; set; } = new EnvironmentVariablesSource(string.Empty).GetNodeSelectors("DFRAME_WORKER_NODESELECTOR");
         /// <summary>
+        /// Resources.Limits for Worker Kubernetes Pod.
+        /// Environment Variables sample: DFRAME_WORKER_RESOURCES_LIMITS='cpu=2000m;memory=1000Mi'
+        /// </summary>
+        public IDictionary<string, string> ResourcesLimits { get; set; } = new EnvironmentVariablesSource(string.Empty).GetNodeSelectors("DFRAME_WORKER_RESOURCES_LIMITS");
+        /// <summary>
+        /// Resources.Requests for Worker Kubernetes Pod.
+        /// Environment Variables sample: DFRAME_WORKER_RESOURCES_REQUESTS='cpu=2000m;memory=1000Mi'
+        /// </summary>
+        public IDictionary<string, string> ResourcesRequests { get; set; } = new EnvironmentVariablesSource(string.Empty).GetNodeSelectors("DFRAME_WORKER_RESOURCES_REQUESTS");
+        /// <summary>
         /// Wait worker pod creationg timeout seconds. default 120 sec.
         /// </summary>
         public int WorkerPodCreationTimeout { get; set; } = int.Parse(Environment.GetEnvironmentVariable("DFRAME_WORKER_POD_CREATE_TIMEOUT") ?? "120");
@@ -180,7 +190,19 @@ namespace DFrame.Kubernetes
         /// <returns></returns>
         private async ValueTask ScaleoutJobAsync(int nodeCount, string connectToHost, int connectToPort, CancellationToken cancellationToken)
         {
-            var def = _operations.CreateJobDefinition(_env.Name, _env.Image, _env.ImageTag, connectToHost, connectToPort, _env.ImagePullPolicy, _env.ImagePullSecret, nodeCount, _env.NodeSelector);
+            var def = _operations.CreateJobDefinition(
+                _env.Name, 
+                _env.Image, 
+                _env.ImageTag, 
+                connectToHost, 
+                connectToPort, 
+                _env.ImagePullPolicy, 
+                _env.ImagePullSecret, 
+                nodeCount, 
+                _env.NodeSelector,
+                _env.ResourcesLimits,
+                _env.ResourcesRequests
+            );
 
             try
             {
@@ -247,7 +269,18 @@ namespace DFrame.Kubernetes
         /// <returns></returns>
         private async ValueTask ScaleoutDeploymentAsync(int nodeCount, string connectToHost, int connectToPort, CancellationToken cancellationToken)
         {
-            var def = _operations.CreateDeploymentDefinition(_env.Name, _env.Image, _env.ImageTag, connectToHost, connectToPort, _env.ImagePullPolicy, _env.ImagePullSecret, nodeCount, _env.NodeSelector);
+            var def = _operations.CreateDeploymentDefinition(
+                _env.Name, 
+                _env.Image, 
+                _env.ImageTag, 
+                connectToHost, 
+                connectToPort, 
+                _env.ImagePullPolicy, 
+                _env.ImagePullSecret, 
+                nodeCount, 
+                _env.NodeSelector,
+                _env.ResourcesLimits,
+                _env.ResourcesRequests);
             try
             {
                 // watch worker pod creation.
