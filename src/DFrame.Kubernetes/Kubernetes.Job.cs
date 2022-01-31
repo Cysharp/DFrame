@@ -77,6 +77,7 @@ namespace DFrame.Kubernetes
             string imagePullPolicy = "IfNotPresent", 
             string imagePullSecret = "", 
             int parallelism = 1,
+            string serviceAccount = "",
             IDictionary<string, string> nodeSelector = null,
             IDictionary<string, string> resourcesLimits = null,
             IDictionary<string, string> resourcesRequests = null)
@@ -171,6 +172,10 @@ namespace DFrame.Kubernetes
             };
 
             // additional configurations
+            if (!string.IsNullOrEmpty(serviceAccount))
+            {
+                definition.Spec.Template.Spec.ServiceAccount = serviceAccount;
+            }
             if (!string.IsNullOrEmpty(imagePullSecret))
             {
                 definition.Spec.Template.Spec.ImagePullSecrets = new[]

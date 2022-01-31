@@ -46,6 +46,11 @@ namespace DFrame.Kubernetes
         /// </summary>
         public string ImagePullPolicy { get; set; } = Environment.GetEnvironmentVariable("DFRAME_WORKER_IMAGE_PULL_POLICY") ?? "IfNotPresent";
         /// <summary>
+        /// ServiceAccount for Worker Kubernetes Pod.
+        /// Environment Variables sample: DFRAME_WORKER_SERVICEACCOUNT='foo-serviceaccount'
+        /// </summary>
+        public string ServiceAccount { get; set; } = Environment.GetEnvironmentVariable("DFRAME_WORKER_SERVICEACCOUNT") ?? "IfNotPresent";
+        /// <summary>
         /// NodeSelector for Worker Kubernetes Pod.
         /// Environment Variables sample: DFRAME_WORKER_NODESELECTOR='KEY1=FOO;KEY2=BAR'
         /// </summary>
@@ -191,14 +196,15 @@ namespace DFrame.Kubernetes
         private async ValueTask ScaleoutJobAsync(int nodeCount, string connectToHost, int connectToPort, CancellationToken cancellationToken)
         {
             var def = _operations.CreateJobDefinition(
-                _env.Name, 
-                _env.Image, 
-                _env.ImageTag, 
-                connectToHost, 
-                connectToPort, 
-                _env.ImagePullPolicy, 
-                _env.ImagePullSecret, 
-                nodeCount, 
+                _env.Name,
+                _env.Image,
+                _env.ImageTag,
+                connectToHost,
+                connectToPort,
+                _env.ImagePullPolicy,
+                _env.ImagePullSecret,
+                nodeCount,
+                _env.ServiceAccount,
                 _env.NodeSelector,
                 _env.ResourcesLimits,
                 _env.ResourcesRequests
@@ -270,14 +276,15 @@ namespace DFrame.Kubernetes
         private async ValueTask ScaleoutDeploymentAsync(int nodeCount, string connectToHost, int connectToPort, CancellationToken cancellationToken)
         {
             var def = _operations.CreateDeploymentDefinition(
-                _env.Name, 
-                _env.Image, 
-                _env.ImageTag, 
-                connectToHost, 
-                connectToPort, 
-                _env.ImagePullPolicy, 
-                _env.ImagePullSecret, 
-                nodeCount, 
+                _env.Name,
+                _env.Image,
+                _env.ImageTag,
+                connectToHost,
+                connectToPort,
+                _env.ImagePullPolicy,
+                _env.ImagePullSecret,
+                nodeCount,
+                _env.ServiceAccount,
                 _env.NodeSelector,
                 _env.ResourcesLimits,
                 _env.ResourcesRequests);
