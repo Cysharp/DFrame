@@ -49,7 +49,7 @@ namespace DFrame.Kubernetes
         /// ServiceAccount for Worker Kubernetes Pod.
         /// Environment Variables sample: DFRAME_WORKER_SERVICEACCOUNT='foo-serviceaccount'
         /// </summary>
-        public string ServiceAccount { get; set; } = Environment.GetEnvironmentVariable("DFRAME_WORKER_SERVICEACCOUNT") ?? "IfNotPresent";
+        public string ServiceAccount { get; set; } = Environment.GetEnvironmentVariable("DFRAME_WORKER_SERVICEACCOUNT") ?? "";
         /// <summary>
         /// NodeSelector for Worker Kubernetes Pod.
         /// Environment Variables sample: DFRAME_WORKER_NODESELECTOR='KEY1=FOO;KEY2=BAR'
