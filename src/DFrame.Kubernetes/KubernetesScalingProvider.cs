@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -54,12 +54,12 @@ namespace DFrame.Kubernetes
         /// Resources.Limits for Worker Kubernetes Pod.
         /// Environment Variables sample: DFRAME_WORKER_RESOURCES_LIMITS='cpu=2000m;memory=1000Mi'
         /// </summary>
-        public IDictionary<string, string> ResourcesLimits { get; set; } = new EnvironmentVariablesSource(string.Empty).GetNodeSelectors("DFRAME_WORKER_RESOURCES_LIMITS");
+        public IDictionary<string, string> ResourcesLimits { get; set; } = new EnvironmentVariablesSource(string.Empty).GetResources("DFRAME_WORKER_RESOURCES_LIMITS");
         /// <summary>
         /// Resources.Requests for Worker Kubernetes Pod.
         /// Environment Variables sample: DFRAME_WORKER_RESOURCES_REQUESTS='cpu=2000m;memory=1000Mi'
         /// </summary>
-        public IDictionary<string, string> ResourcesRequests { get; set; } = new EnvironmentVariablesSource(string.Empty).GetNodeSelectors("DFRAME_WORKER_RESOURCES_REQUESTS");
+        public IDictionary<string, string> ResourcesRequests { get; set; } = new EnvironmentVariablesSource(string.Empty).GetResources("DFRAME_WORKER_RESOURCES_REQUESTS");
         /// <summary>
         /// Wait worker pod creationg timeout seconds. default 120 sec.
         /// </summary>
