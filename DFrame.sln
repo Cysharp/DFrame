@@ -53,6 +53,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{7936D1
 		.github\workflows\toc.yml = .github\workflows\toc.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DFrame.Controller", "src\DFrame.Controller\DFrame.Controller.csproj", "{924897EC-941D-4FA9-894B-571B4E4F56F5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DFrame2", "src\DFrame2\DFrame2\DFrame2.csproj", "{795BF552-6123-45D4-8B17-AFC021FE6B98}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp2", "sandbox\ConsoleApp2\ConsoleApp2.csproj", "{E74D802D-1FD9-458D-9870-EFED1FE1F38C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -123,6 +129,18 @@ Global
 		{140CC1E5-C5F0-4B5E-A729-8291F49101AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{140CC1E5-C5F0-4B5E-A729-8291F49101AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{140CC1E5-C5F0-4B5E-A729-8291F49101AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{924897EC-941D-4FA9-894B-571B4E4F56F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{924897EC-941D-4FA9-894B-571B4E4F56F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{924897EC-941D-4FA9-894B-571B4E4F56F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{924897EC-941D-4FA9-894B-571B4E4F56F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{795BF552-6123-45D4-8B17-AFC021FE6B98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{795BF552-6123-45D4-8B17-AFC021FE6B98}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{795BF552-6123-45D4-8B17-AFC021FE6B98}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{795BF552-6123-45D4-8B17-AFC021FE6B98}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E74D802D-1FD9-458D-9870-EFED1FE1F38C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E74D802D-1FD9-458D-9870-EFED1FE1F38C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E74D802D-1FD9-458D-9870-EFED1FE1F38C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E74D802D-1FD9-458D-9870-EFED1FE1F38C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -137,6 +155,7 @@ Global
 		{7B8431BB-DDB1-4ACA-825D-5B4741A48480} = {4BC5A82E-0433-4F47-A273-A95DB89689D7}
 		{140CC1E5-C5F0-4B5E-A729-8291F49101AE} = {DDD04377-167A-4FDC-90D5-01EDCB7BA465}
 		{7936D1DB-0FEB-4D5C-97BB-ADB105A98A81} = {15E00CDF-0E36-4FF1-A88B-E211066D8FDE}
+		{E74D802D-1FD9-458D-9870-EFED1FE1F38C} = {DDD04377-167A-4FDC-90D5-01EDCB7BA465}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {77245B01-4128-4759-BF61-CC223FAA2E01}

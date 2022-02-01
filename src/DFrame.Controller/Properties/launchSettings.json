@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "DFrame.Controller": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+﻿@page "/"
+
+<PageTitle>DFrame Controller</PageTitle>
+
+<h1>Current Workers : @currentConnectionCount</h1>
+
+
+<EditForm Model="@inputFormModel" OnSubmit=@HandleSubmit>
+    WorkloadName: <InputText id="workloadname" @bind-Value="inputFormModel.WorkloadName" /><br />
+    WorkloadPerWorker: <InputNumber id="workloadperworker" @bind-Value="inputFormModel.WorkloadPerWorker" /><br />
+    ExecutePerWorkload: <InputNumber id="executeperworkload" @bind-Value="inputFormModel.ExecutePerWorkload" /><br />
+    <button type="submit">Submit</button>
+</EditForm>

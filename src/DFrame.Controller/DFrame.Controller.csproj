@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MagicOnion" Version="4.3.1" />
+    <PackageReference Include="MessagePipe" Version="1.7.1" />
+    <PackageReference Include="ZLogger" Version="1.6.1" />
+  </ItemGroup>
+
+</Project>
