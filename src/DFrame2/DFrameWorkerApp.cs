@@ -39,6 +39,7 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
         this.completeTearDown = new TaskCompletionSource();
     }
 
+    [RootCommand]
     public async Task Run()
     {
         logger.LogInformation($"Starting DFrame worker (WorkerId:{workerId})");

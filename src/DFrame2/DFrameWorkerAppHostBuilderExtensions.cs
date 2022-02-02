@@ -16,7 +16,7 @@ public static class DFrameAppHostBuilderExtensions
     {
         var workloadCollection = DFrameWorkloadCollection.FromCurrentAssemblies();
 
-        if (args.Length == 0)
+        if (args.Length == 1 && args[0] == "help")
         {
             ShowDFrameAppList(workloadCollection);
             return;
@@ -37,15 +37,14 @@ public static class DFrameAppHostBuilderExtensions
             })
             .ConfigureLogging(x =>
             {
-                if (options.ConfigureInnerHostLogging != null)
-                {
-                    options.ConfigureInnerHostLogging(x);
-                }
-
                 x.AddProvider(errorHolder);
             });
 
-        var app = ConsoleApp.CreateFromHostBuilder(hostBuilder, args);
+        var app = ConsoleApp.CreateFromHostBuilder(hostBuilder, args, x=>
+        {
+            x.ReplaceToUseSimpleConsoleLogger = false;
+        });
+        app.AddCommands<DFrameWorkerApp>();
         await app.RunAsync();
 
         if (errorHolder.Exception != null)
