@@ -203,7 +203,7 @@ namespace DFrame
                     KeepAlivePingDelay = TimeSpan.FromSeconds(60),
                     KeepAlivePingTimeout = TimeSpan.FromSeconds(30),
                     EnableMultipleHttp2Connections = true,
-                    ConnectTimeout = TimeSpan.FromSeconds(1), // TODO:options.Timeout,
+                    ConnectTimeout = TimeSpan.FromSeconds(59), // TODO:options.Timeout,
                 },
 
                 LoggerFactory = this.provider.GetService<ILoggerFactory>()
