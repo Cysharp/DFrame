@@ -187,6 +187,7 @@ public class WorkerConnectionGroupContext
     public event Action<bool>? RunningStateChanged = null;
 
     // TODO:what's this???
+    Guid? executionId = null;
     List<ExecuteResult> executeResult = default!;
     public IReadOnlyList<ExecuteResult> ExecuteResult => executeResult;
 
@@ -199,13 +200,16 @@ public class WorkerConnectionGroupContext
         this.executeResult = new List<ExecuteResult>();
     }
 
-    public void StartWorkerFlow(string workloadName, int createWorkloadCount, int executeCount)
+    public Guid[] StartWorkerFlow(string workloadName, int createWorkloadCount, int executeCount)
     {
         lock (ConnectionLock)
         {
-            if (connections.Count == 0) return; // can not start.
+            if (connections.Count == 0) return Array.Empty<Guid>(); // can not start.
+            
+            executionId = Guid.NewGuid();
             RunningState = new RunningState(this, executeCount, connections);
-            GlobalBroadcaster.CreateWorkloadAndSetup(Guid.NewGuid(), createWorkloadCount, workloadName);
+            GlobalBroadcaster.CreateWorkloadAndSetup(executionId.Value, createWorkloadCount, workloadName);
+            return connections.ToArray(); // TODO:should return workerId!
         }
     }
 

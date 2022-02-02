@@ -1,4 +1,7 @@
-﻿using MagicOnion;
+﻿// This file is share with DFrame.Controller and DFrame.
+// Original exists in DFrame.Controller.
+
+using MagicOnion;
 using MessagePack;
 
 namespace DFrame;

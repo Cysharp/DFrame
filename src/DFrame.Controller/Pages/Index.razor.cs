@@ -10,6 +10,7 @@ public partial class Index : IDisposable
 
     InputFormModel inputFormModel = new InputFormModel();
     int currentConnectionCount;
+    Guid[] runnningConnections = Array.Empty<Guid>(); // TODO:more info...!
 
     protected override void OnInitialized()
     {
@@ -44,7 +45,7 @@ public partial class Index : IDisposable
             return;
         }
 
-        ConnectionGroupContext.StartWorkerFlow(inputFormModel.WorkloadName, inputFormModel.WorkloadPerWorker, inputFormModel.ExecutePerWorkload);
+        runnningConnections = ConnectionGroupContext.StartWorkerFlow(inputFormModel.WorkloadName, inputFormModel.WorkloadPerWorker, inputFormModel.ExecutePerWorkload);
     }
 
     public class InputFormModel
