@@ -52,7 +52,7 @@ public sealed class ControllerHub : StreamingHubBase<IControllerHub, IWorkerRece
 
     public Task ReportProgressAsync(ExecuteResult result)
     {
-        workerConnectionContext.ReportExecuteResult(result);
+        workerConnectionContext.ReportExecuteResult(workerId, result);
         return Task.CompletedTask;
     }
 

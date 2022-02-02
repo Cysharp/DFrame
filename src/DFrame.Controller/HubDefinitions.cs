@@ -24,13 +24,18 @@ public interface IWorkerReceiver
     void Teardown();
 }
 
-[UnitOf(typeof(Guid), UnitGenerateOptions.MessagePackFormatter | UnitGenerateOptions.ParseMethod)]
+internal static class GenerateOptions
+{
+    internal const UnitGenerateOptions Guid = UnitGenerateOptions.MessagePackFormatter | UnitGenerateOptions.ParseMethod | UnitGenerateOptions.Comparable | UnitGenerateOptions.WithoutComparisonOperator;
+}
+
+[UnitOf(typeof(Guid), GenerateOptions.Guid)]
 public readonly partial struct ExecutionId { }
 
-[UnitOf(typeof(Guid), UnitGenerateOptions.MessagePackFormatter | UnitGenerateOptions.ParseMethod)]
+[UnitOf(typeof(Guid), GenerateOptions.Guid)]
 public readonly partial struct WorkerId { }
 
-[UnitOf(typeof(Guid), UnitGenerateOptions.MessagePackFormatter | UnitGenerateOptions.ParseMethod)]
+[UnitOf(typeof(Guid), GenerateOptions.Guid)]
 public readonly partial struct WorkloadId { }
 
 [MessagePackObject]

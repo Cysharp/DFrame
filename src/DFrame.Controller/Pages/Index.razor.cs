@@ -9,12 +9,12 @@ public partial class Index : IDisposable
     public WorkerConnectionGroupContext ConnectionGroupContext { get; set; } = default!;
 
     InputFormModel inputFormModel = new InputFormModel();
-    int currentConnectionCount;
-    WorkerId[] runnningConnections = Array.Empty<WorkerId>(); // TODO:more info...!
+
+    int GetCurrentConnectingCount() => ConnectionGroupContext.CurrentConnectingCount;
+    SummarizedExecutionResult[] GetRunnningResults() => ConnectionGroupContext.CurrentSortedSummarizedExecutionResults;
 
     protected override void OnInitialized()
     {
-        currentConnectionCount = ConnectionGroupContext.CurrentConnectingCount;
         ConnectionGroupContext.OnConnectingCountChanged += Context_OnConnectingCountChanged;
         ConnectionGroupContext.OnExecuteProgress += Context_OnExecuteProgress;
     }
@@ -27,21 +27,16 @@ public partial class Index : IDisposable
 
     async void Context_OnConnectingCountChanged(int count)
     {
-        await InvokeAsync(() =>
-        {
-            currentConnectionCount = count;
-            StateHasChanged();
-        });
+        await InvokeAsync(StateHasChanged);
     }
 
 
     async void Context_OnExecuteProgress(ExecuteResult obj)
     {
+        // store logs?
         await InvokeAsync(() =>
         {
-            // TODO: setup progress.
-            //currentConnectionCount = count;
-            //StateHasChanged();
+            StateHasChanged();
         });
     }
 
@@ -58,7 +53,7 @@ public partial class Index : IDisposable
             return;
         }
 
-        runnningConnections = ConnectionGroupContext.StartWorkerFlow(inputFormModel.WorkloadName, inputFormModel.WorkloadPerWorker, inputFormModel.ExecutePerWorkload);
+        ConnectionGroupContext.StartWorkerFlow(inputFormModel.WorkloadName, inputFormModel.WorkloadPerWorker, inputFormModel.ExecutePerWorkload);
     }
 
     public class InputFormModel
@@ -67,4 +62,9 @@ public partial class Index : IDisposable
         public int WorkloadPerWorker { get; set; } = 1;
         public int ExecutePerWorkload { get; set; } = 1;
     }
+}
+
+public record RunnningStatus
+{
+    public WorkerId WorkerId { get; set; }
 }

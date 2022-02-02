@@ -2,8 +2,7 @@
 
 <PageTitle>DFrame Controller</PageTitle>
 
-<h1>Current Workers : @currentConnectionCount</h1>
-
+<h1>Current Workers : @GetCurrentConnectingCount()</h1>
 
 <EditForm Model="@inputFormModel" OnSubmit=@HandleSubmit>
     WorkloadName: <InputText id="workloadname" @bind-Value="inputFormModel.WorkloadName" /><br />
@@ -11,3 +10,33 @@
     ExecutePerWorkload: <InputNumber id="executeperworkload" @bind-Value="inputFormModel.ExecutePerWorkload" /><br />
     <button type="submit">Submit</button>
 </EditForm>
+
+<h2>Executing Results. IsRunning: @ConnectionGroupContext.IsRunning</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Status</th>
+            <th>Count</th>
+            <th>Error</th>
+            <th>Max</th>
+            <th>Min</th>
+            <th>Avg</th>
+            <th>Rps</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in GetRunnningResults())
+        {
+            <tr>
+                <td>@item.ExecutionStatus</td>
+                <td>@item.SucceedCount</td>
+                <td>@item.Error</td>
+                <td>@item.Max</td>
+                <td>@item.Min</td>
+                <td>@item.Avg</td>
+                <td>@item.CurrentRps</td>
+            </tr>
+        }
+    </tbody>
+</table>

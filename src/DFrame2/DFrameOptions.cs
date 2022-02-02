@@ -8,6 +8,8 @@ using System.Collections.Generic;
 
 namespace DFrame
 {
+    // TODO: Fix Options.
+
     public class DFrameOptions
     {
         public string MasterListenHost { get; }
