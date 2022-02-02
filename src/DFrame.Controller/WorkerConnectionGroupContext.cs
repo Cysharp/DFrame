@@ -11,14 +11,15 @@ public class WorkerConnectionGroupContext
     public RunningState? RunningState { get; private set; }
     public ExecutionId? CurrentExecutionId { get; private set; }
 
-    Dictionary<WorkerId, int>? currentResults; // index of currentResultsSorted
-    SummarizedExecutionResult[]? currentResultsSorted; // for performance reason, store stored array.
+    Dictionary<WorkerId, int>? latestResults; // index of latestResultsSorted
+    SummarizedExecutionResult[]? latestResultsSorted; // for performance reason, store stored array.
 
-    public SummarizedExecutionResult[] CurrentSortedSummarizedExecutionResults => currentResultsSorted ?? Array.Empty<SummarizedExecutionResult>();
+    public SummarizedExecutionResult[] LatestSortedSummarizedExecutionResults => latestResultsSorted ?? Array.Empty<SummarizedExecutionResult>();
 
     // Notify.
     public event Action<int>? OnConnectingCountChanged;
     public event Action<ExecuteResult>? OnExecuteProgress;
+    public event Action? OnWorkerExecuteCompleted = null;
     public event Action<bool>? RunningStateChanged = null;
 
     public IWorkerReceiver GlobalBroadcaster { get; internal set; } = default!;
@@ -31,8 +32,9 @@ public class WorkerConnectionGroupContext
 
             CurrentExecutionId = ExecutionId.NewExecutionId();
 
-            var sorted = connections.Select(x => new SummarizedExecutionResult(x, createWorkloadCount)).ToArray();
-            Array.Sort(sorted);
+            var sorted = connections.Select(x => new SummarizedExecutionResult(x, createWorkloadCount))
+                .OrderBy(x => x.WorkerId)
+                .ToArray();
 
             var dict = new Dictionary<WorkerId, int>();
             for (int i = 0; i < sorted.Length; i++)
@@ -40,11 +42,12 @@ public class WorkerConnectionGroupContext
                 var item = sorted[i];
                 dict.TryAdd(item.WorkerId, i);
             }
-            currentResults = dict;
-            currentResultsSorted = sorted;
+            latestResults = dict;
+            latestResultsSorted = sorted;
 
             RunningState = new RunningState(this, executeCount, connections);
             GlobalBroadcaster.CreateWorkloadAndSetup(CurrentExecutionId.Value, createWorkloadCount, workloadName);
+            RunningStateChanged?.Invoke(true);
         }
     }
 
@@ -70,10 +73,10 @@ public class WorkerConnectionGroupContext
             if (RunningState != null)
             {
                 RunningState.RemoveConnection(workerId);
-                if (currentResults!.TryGetValue(workerId, out var i))
+                if (latestResults!.TryGetValue(workerId, out var i))
                 {
                     // disconnected before complete is failed.
-                    currentResultsSorted![i].TrySetStatus(ExecutionStatus.Failed);
+                    latestResultsSorted![i].TrySetStatus(ExecutionStatus.Failed);
                 }
             }
 
@@ -85,11 +88,11 @@ public class WorkerConnectionGroupContext
     {
         lock (connections)
         {
-            if (currentResults != null)
+            if (latestResults != null)
             {
-                if (currentResults.TryGetValue(workerId, out var i))
+                if (latestResults.TryGetValue(workerId, out var i))
                 {
-                    currentResultsSorted![i].Add(result);
+                    latestResultsSorted![i].Add(result);
                 }
             }
 
@@ -101,13 +104,14 @@ public class WorkerConnectionGroupContext
     {
         lock (connections)
         {
-            if (currentResults != null)
+            if (latestResults != null)
             {
-                if (currentResults!.TryGetValue(workerId, out var i))
+                if (latestResults!.TryGetValue(workerId, out var i))
                 {
-                    currentResultsSorted![i].TrySetStatus(ExecutionStatus.Succeed);
+                    latestResultsSorted![i].TrySetStatus(ExecutionStatus.Succeed);
                 }
             }
+            OnWorkerExecuteCompleted?.Invoke();
         }
     }
 
@@ -118,7 +122,6 @@ public class WorkerConnectionGroupContext
             // TODO: store log to inmemory history.
 
             RunningState = null; // complete.
-            currentResults = null;
             CurrentExecutionId = null;
             RunningStateChanged?.Invoke(false);
         }

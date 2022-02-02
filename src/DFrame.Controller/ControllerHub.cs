@@ -58,6 +58,7 @@ public sealed class ControllerHub : StreamingHubBase<IControllerHub, IWorkerRece
 
     public Task ExecuteCompleteAsync()
     {
+        workerConnectionContext.ExecuteComplete(workerId);
         workerConnectionContext.RunningState!.ExecuteComplete(workerId);
         return Task.CompletedTask;
     }

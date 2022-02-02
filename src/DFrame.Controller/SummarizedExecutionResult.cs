@@ -23,8 +23,8 @@ public class SummarizedExecutionResult
     public TimeSpan Latest { get; private set; }
     public TimeSpan Min { get; private set; }
     public TimeSpan Max { get; private set; }
-    public TimeSpan Avg => TimeSpan.FromTicks(TotalElapsed.Ticks / SucceedCount);
-    public int CurrentRps => (int)(SucceedCount / TotalElapsed.TotalSeconds);
+    public TimeSpan Avg => (SucceedCount == 0) ? TimeSpan.Zero : TimeSpan.FromTicks(TotalElapsed.Ticks / SucceedCount);
+    public double CurrentRps => (TotalElapsed.TotalSeconds == 0) ? 0 : (SucceedCount / TotalElapsed.TotalSeconds);
 
     // NOTE: Require Median, Percentile?
 
@@ -53,7 +53,7 @@ public class SummarizedExecutionResult
         if (elapsed < Min) Min = elapsed;
         if (Max < elapsed) Max = elapsed;
 
-        TotalElapsed = TimeSpan.FromTicks(Avg.Ticks + elapsed.Ticks);
+        TotalElapsed += elapsed;
     }
 
     // on complete.

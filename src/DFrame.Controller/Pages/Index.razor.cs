@@ -11,27 +11,41 @@ public partial class Index : IDisposable
     InputFormModel inputFormModel = new InputFormModel();
 
     int GetCurrentConnectingCount() => ConnectionGroupContext.CurrentConnectingCount;
-    SummarizedExecutionResult[] GetRunnningResults() => ConnectionGroupContext.CurrentSortedSummarizedExecutionResults;
+    SummarizedExecutionResult[] GetRunnningResults() => ConnectionGroupContext.LatestSortedSummarizedExecutionResults;
 
     protected override void OnInitialized()
     {
-        ConnectionGroupContext.OnConnectingCountChanged += Context_OnConnectingCountChanged;
-        ConnectionGroupContext.OnExecuteProgress += Context_OnExecuteProgress;
+        ConnectionGroupContext.OnConnectingCountChanged += ConnectionGroupContext_OnConnectingCountChanged;
+        ConnectionGroupContext.OnExecuteProgress += ConnectionGroupContext_OnExecuteProgress;
+        ConnectionGroupContext.OnWorkerExecuteCompleted += ConnectionGroupContext_OnWorkerExecuteCompleted;
+        ConnectionGroupContext.RunningStateChanged += ConnectionGroupContext_RunningStateChanged;
     }
 
     public void Dispose()
     {
-        ConnectionGroupContext.OnConnectingCountChanged -= Context_OnConnectingCountChanged;
-        ConnectionGroupContext.OnExecuteProgress -= Context_OnExecuteProgress;
+        ConnectionGroupContext.OnConnectingCountChanged -= ConnectionGroupContext_OnConnectingCountChanged;
+        ConnectionGroupContext.OnExecuteProgress -= ConnectionGroupContext_OnExecuteProgress;
+        ConnectionGroupContext.OnWorkerExecuteCompleted -= ConnectionGroupContext_OnWorkerExecuteCompleted;
+        ConnectionGroupContext.RunningStateChanged -= ConnectionGroupContext_RunningStateChanged;
     }
 
-    async void Context_OnConnectingCountChanged(int count)
+    async void ConnectionGroupContext_RunningStateChanged(bool obj)
+    {
+        await InvokeAsync(StateHasChanged);
+    }
+
+    async void ConnectionGroupContext_OnWorkerExecuteCompleted()
+    {
+        await InvokeAsync(StateHasChanged);
+    }
+
+    async void ConnectionGroupContext_OnConnectingCountChanged(int count)
     {
         await InvokeAsync(StateHasChanged);
     }
 
 
-    async void Context_OnExecuteProgress(ExecuteResult obj)
+    async void ConnectionGroupContext_OnExecuteProgress(ExecuteResult obj)
     {
         // store logs?
         await InvokeAsync(() =>

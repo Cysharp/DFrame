@@ -26,7 +26,9 @@ public class TrialWorkload : Workload
 
     public override async Task ExecuteAsync(WorkloadContext context)
     {
+        logger.LogInformation("Begin:" + context.WorkloadId);
         await Task.Yield();
-        logger.LogInformation("OK:" + context.WorkloadId);
+        await Task.Delay(TimeSpan.FromSeconds(1));
+        logger.LogInformation("End:" + context.WorkloadId);
     }
 }
