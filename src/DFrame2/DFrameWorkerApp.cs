@@ -17,12 +17,12 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
     readonly DFrameWorkloadCollection workloadCollection;
     readonly IServiceProvider serviceProvider;
 
-    readonly Guid workerId;
+    readonly WorkerId workerId;
 
     List<(WorkloadContext context, Workload workload)> workloads;
     GrpcChannel? channel;
     IControllerHub? client;
-    TaskCompletionSource<Guid> completeWorkloadSetup;
+    TaskCompletionSource<ExecutionId> completeWorkloadSetup;
     TaskCompletionSource completeExecute;
     TaskCompletionSource completeTearDown;
 
@@ -32,9 +32,9 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
         this.options = options;
         this.workloadCollection = workloadCollection;
         this.serviceProvider = serviceProvider;
-        this.workerId = Guid.NewGuid();
+        this.workerId = new WorkerId(Guid.NewGuid());
         this.workloads = new List<(WorkloadContext context, Workload workload)>();
-        this.completeWorkloadSetup = new TaskCompletionSource<Guid>();
+        this.completeWorkloadSetup = new TaskCompletionSource<ExecutionId>();
         this.completeExecute = new TaskCompletionSource();
         this.completeTearDown = new TaskCompletionSource();
     }
@@ -62,7 +62,7 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
                     logger.LogInformation($"Complete execute, wait for teardown start.");
                     await completeTearDown.Task.WaitAsync(waitFor.Token);
 
-                    this.completeWorkloadSetup = new TaskCompletionSource<Guid>();
+                    this.completeWorkloadSetup = new TaskCompletionSource<ExecutionId>();
                     this.completeExecute = new TaskCompletionSource();
                     this.completeTearDown = new TaskCompletionSource();
                 }
@@ -85,12 +85,12 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
                 }
                 client = null;
                 channel = null;
-                this.completeWorkloadSetup = new TaskCompletionSource<Guid>();
+                this.completeWorkloadSetup = new TaskCompletionSource<ExecutionId>();
                 this.completeExecute = new TaskCompletionSource();
                 this.completeTearDown = new TaskCompletionSource();
 
                 logger.LogInformation("Wait 5 seconds to reconnect.");
-                await Task.Delay(TimeSpan.FromSeconds(5), Context.CancellationToken);
+                await Task.Delay(TimeSpan.FromSeconds(5), Context.CancellationToken); // TODO:options.ReconnectTime
             }
         }
     }
@@ -123,7 +123,7 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
         logger.LogInformation($"Connect completed.");
     }
 
-    async void IWorkerReceiver.CreateWorkloadAndSetup(Guid executionId, int createCount, string workloadName)
+    async void IWorkerReceiver.CreateWorkloadAndSetup(ExecutionId executionId, int createCount, string workloadName)
     {
         try
         {
@@ -156,10 +156,6 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
 
     async void IWorkerReceiver.Execute(int executeCount)
     {
-        // TODO:add progress...
-        //var progress = workloads.Length * executeCount / 10;
-        //var increment = 0;
-
         try
         {
             logger.LogInformation($"Executing {workloads.Count} workload(s). (ExecutePerWorkload={executeCount})");
@@ -183,14 +179,12 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
                     var executeResult = new ExecuteResult(x.context.WorkloadId, sw.Elapsed, i, (errorMsg != null), errorMsg);
                     list.Add(executeResult);
 
-                    // TODO:progress?
-                    // _ = Task.Run(() => client!.ReportProgressAsync(executeResult));
+                    await client!.ReportProgressAsync(executeResult);
                 }
                 return list;
             })));
 
-            // TODO:send result? should summarize?
-            await client!.ExecuteCompleteAsync(result.SelectMany(xs => xs).ToArray());
+            await client!.ExecuteCompleteAsync();
             completeExecute.TrySetResult();
         }
         catch (Exception ex)
@@ -227,7 +221,7 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
         //    await Client.ExecuteCompleteAsync(new ExecuteResult[0]); // TODO:use others.
     }
 
-    // for RampUp - Stop
+    // for RampUp - Stop / Cancel of Executing? Only Teardown???
     void IWorkerReceiver.Stop()
     {
         throw new NotImplementedException();

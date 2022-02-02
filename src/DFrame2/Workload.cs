@@ -19,11 +19,9 @@ public abstract class Workload
 public class WorkloadAttribute : Attribute
 {
     public string Name { get; }
-    public bool DisallowSingleExecute { get; }
 
-    public WorkloadAttribute(string name, bool disallowSingleExecute = false)
+    public WorkloadAttribute(string name)
     {
         Name = name;
-        DisallowSingleExecute = disallowSingleExecute;
     }
 }

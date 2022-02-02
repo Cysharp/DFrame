@@ -10,25 +10,38 @@ public partial class Index : IDisposable
 
     InputFormModel inputFormModel = new InputFormModel();
     int currentConnectionCount;
-    Guid[] runnningConnections = Array.Empty<Guid>(); // TODO:more info...!
+    WorkerId[] runnningConnections = Array.Empty<WorkerId>(); // TODO:more info...!
 
     protected override void OnInitialized()
     {
         currentConnectionCount = ConnectionGroupContext.CurrentConnectingCount;
         ConnectionGroupContext.OnConnectingCountChanged += Context_OnConnectingCountChanged;
+        ConnectionGroupContext.OnExecuteProgress += Context_OnExecuteProgress;
     }
 
     public void Dispose()
     {
         ConnectionGroupContext.OnConnectingCountChanged -= Context_OnConnectingCountChanged;
+        ConnectionGroupContext.OnExecuteProgress -= Context_OnExecuteProgress;
     }
 
-    private async void Context_OnConnectingCountChanged(int count)
+    async void Context_OnConnectingCountChanged(int count)
     {
         await InvokeAsync(() =>
         {
             currentConnectionCount = count;
             StateHasChanged();
+        });
+    }
+
+
+    async void Context_OnExecuteProgress(ExecuteResult obj)
+    {
+        await InvokeAsync(() =>
+        {
+            // TODO: setup progress.
+            //currentConnectionCount = count;
+            //StateHasChanged();
         });
     }
 

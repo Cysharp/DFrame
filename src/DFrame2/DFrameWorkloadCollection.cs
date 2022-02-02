@@ -41,9 +41,8 @@ namespace DFrame
                     {
                         var attr = workload.GetCustomAttribute<WorkloadAttribute>(false);
                         var name = attr?.Name ?? workload.Name;
-                        var disallowSingleExecute = attr?.DisallowSingleExecute ?? false;
 
-                        var t = new DFrameWorkloadTypeInfo(workload, name, disallowSingleExecute);
+                        var t = new DFrameWorkloadTypeInfo(workload, name);
                         if (!dframeTypes.TryAdd(name, t))
                         {
                             throw new InvalidOperationException($"Worker name is duplicate. name:{name}, type:{t.WorkloadType.FullName}");
@@ -65,13 +64,11 @@ namespace DFrame
     {
         public Type WorkloadType { get; }
         public string Name { get; }
-        public bool DisallowSingleExecute { get; }
 
-        public DFrameWorkloadTypeInfo(Type workloadType, string name, bool disallowSingleExecute)
+        public DFrameWorkloadTypeInfo(Type workloadType, string name)
         {
             WorkloadType = workloadType;
             Name = name;
-            DisallowSingleExecute = disallowSingleExecute;
         }
     }
 }
