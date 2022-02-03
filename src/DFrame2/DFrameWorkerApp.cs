@@ -4,7 +4,6 @@ using Grpc.Net.Client;
 using MagicOnion.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System.Collections.Immutable;
 
 namespace DFrame;
 
@@ -26,11 +25,11 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
     TaskCompletionSource completeExecute;
     TaskCompletionSource completeTearDown;
 
-    public DFrameWorkerApp(ILogger<DFrameWorkerApp> logger, DFrameOptions options, DFrameWorkloadCollection workloadCollection, IServiceProvider serviceProvider)
+    public DFrameWorkerApp(ILogger<DFrameWorkerApp> logger, DFrameOptions options, IServiceProviderIsService isService, IServiceProvider serviceProvider)
     {
         this.logger = logger;
         this.options = options;
-        this.workloadCollection = workloadCollection;
+        this.workloadCollection = DFrameWorkloadCollection.FromCurrentAssemblies(isService); // TODO:options.Assemblies.
         this.serviceProvider = serviceProvider;
         this.workerId = new WorkerId(Guid.NewGuid());
         this.workloads = new List<(WorkloadContext context, Workload workload)>();
@@ -138,7 +137,8 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
             workloads.Clear();
             for (int i = 0; i < createCount; i++)
             {
-                var workload = serviceProvider.GetRequiredService(description.WorkloadType);
+                // TODO: pass parameters.
+                var workload = ActivatorUtilities.CreateInstance(serviceProvider, description.WorkloadType, Array.Empty<object>());
                 var t = (new WorkloadContext(channel!, options), (Workload)workload);
                 workloads.Add(t);
             }

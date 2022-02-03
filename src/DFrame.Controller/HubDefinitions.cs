@@ -9,6 +9,8 @@ namespace DFrame;
 
 public interface IControllerHub : IStreamingHub<IControllerHub, IWorkerReceiver>
 {
+    // TODO:initialize metadata.
+    // Task InitializeMetadataAsync(WorkloadInfo[] workloads, Dictionary<string, string> metadata);
     Task CreateWorkloadCompleteAsync(ExecutionId executionId);
     Task ReportProgressAsync(ExecuteResult result);
     Task ExecuteCompleteAsync();
@@ -60,4 +62,70 @@ public class ExecuteResult
         HasError = hasError;
         ErrorMessage = errorMessage;
     }
+}
+
+[MessagePackObject]
+public class WorkloadInfo
+{
+    [Key(0)]
+    public string Name { get; }
+
+    // Selections => Enum Names or True/False for boolean
+    [Key(1)]
+    public WorkloadParameterInfo[] Arguments { get; }
+
+    public WorkloadInfo(string name, WorkloadParameterInfo[] arguments)
+    {
+        Name = name;
+        Arguments = arguments;
+    }
+}
+
+[MessagePackObject]
+public class WorkloadParameterInfo
+{
+    public WorkloadParameterInfo(AllowParameterType parameterType, bool isNullable, bool isArray, object? defaultValue, string parameterName, string[] enumNames)
+    {
+        ParameterType = parameterType;
+        IsNullable = isNullable;
+        IsArray = isArray;
+        DefaultValue = defaultValue;
+        ParameterName = parameterName;
+        EnumNames = enumNames;
+    }
+
+    [Key(0)]
+    public AllowParameterType ParameterType { get; }
+    [Key(1)]
+    public bool IsNullable { get; }
+    [Key(2)]
+    public bool IsArray { get; }
+    [Key(3)]
+    public object? DefaultValue { get; }
+    [Key(4)]
+    public string ParameterName { get; }
+    [Key(5)]
+    public string[] EnumNames { get; }
+}
+
+public enum AllowParameterType
+{
+    // Primitives + Enum
+    Enum,
+    Boolean,
+    Char,
+    SByte,
+    Byte,
+    Int16,
+    UInt16,
+    Guid,
+    Int32,
+    UInt32,
+    Int64,
+    UInt64,
+    Single,
+    Double,
+    Decimal,
+    DateTime,
+    String,
 }

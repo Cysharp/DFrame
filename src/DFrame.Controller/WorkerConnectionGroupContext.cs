@@ -1,9 +1,14 @@
 ﻿namespace DFrame.Controller;
 
 // Singleton Global State.
-public class WorkerConnectionGroupContext
+public class WorkerConnectionGroupContext: INotifyStateChanged
 {
-    public readonly object ConnectionLock = new object();
+    // Notify.
+    public event Action? StateChanged;
+    public event Action<ExecuteResult>? OnExecuteProgress;
+
+    // lock share with RunningState
+    internal readonly object ConnectionLock = new object();
     readonly HashSet<WorkerId> connections = new HashSet<WorkerId>();
 
     public int CurrentConnectingCount { get; private set; }
@@ -15,12 +20,6 @@ public class WorkerConnectionGroupContext
     SummarizedExecutionResult[]? latestResultsSorted; // for performance reason, store stored array.
 
     public SummarizedExecutionResult[] LatestSortedSummarizedExecutionResults => latestResultsSorted ?? Array.Empty<SummarizedExecutionResult>();
-
-    // Notify.
-    public event Action<int>? OnConnectingCountChanged;
-    public event Action<ExecuteResult>? OnExecuteProgress;
-    public event Action? OnWorkerExecuteCompleted = null;
-    public event Action<bool>? RunningStateChanged = null;
 
     public IWorkerReceiver GlobalBroadcaster { get; internal set; } = default!;
 
@@ -47,7 +46,7 @@ public class WorkerConnectionGroupContext
 
             RunningState = new RunningState(this, executeCount, connections);
             GlobalBroadcaster.CreateWorkloadAndSetup(CurrentExecutionId.Value, createWorkloadCount, workloadName);
-            RunningStateChanged?.Invoke(true);
+            StateChanged?.Invoke();
         }
     }
 
@@ -57,7 +56,7 @@ public class WorkerConnectionGroupContext
         {
             connections.Add(workerId);
             CurrentConnectingCount++;
-            OnConnectingCountChanged?.Invoke(CurrentConnectingCount);
+            StateChanged?.Invoke();
         }
     }
 
@@ -80,7 +79,7 @@ public class WorkerConnectionGroupContext
                 }
             }
 
-            OnConnectingCountChanged?.Invoke(CurrentConnectingCount);
+            StateChanged?.Invoke();
         }
     }
 
@@ -97,6 +96,7 @@ public class WorkerConnectionGroupContext
             }
 
             OnExecuteProgress?.Invoke(result); // send latest info
+            StateChanged?.Invoke();
         }
     }
 
@@ -111,7 +111,7 @@ public class WorkerConnectionGroupContext
                     latestResultsSorted![i].TrySetStatus(ExecutionStatus.Succeed);
                 }
             }
-            OnWorkerExecuteCompleted?.Invoke();
+            StateChanged?.Invoke();
         }
     }
 
@@ -123,7 +123,7 @@ public class WorkerConnectionGroupContext
 
             RunningState = null; // complete.
             CurrentExecutionId = null;
-            RunningStateChanged?.Invoke(false);
+            StateChanged?.Invoke();
         }
     }
 }

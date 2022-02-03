@@ -15,43 +15,24 @@ public partial class Index : IDisposable
 
     protected override void OnInitialized()
     {
-        ConnectionGroupContext.OnConnectingCountChanged += ConnectionGroupContext_OnConnectingCountChanged;
+        ConnectionGroupContext.StateChanged += ConnectionGroupContext_StateChanged;
         ConnectionGroupContext.OnExecuteProgress += ConnectionGroupContext_OnExecuteProgress;
-        ConnectionGroupContext.OnWorkerExecuteCompleted += ConnectionGroupContext_OnWorkerExecuteCompleted;
-        ConnectionGroupContext.RunningStateChanged += ConnectionGroupContext_RunningStateChanged;
     }
 
     public void Dispose()
     {
-        ConnectionGroupContext.OnConnectingCountChanged -= ConnectionGroupContext_OnConnectingCountChanged;
+        ConnectionGroupContext.StateChanged -= ConnectionGroupContext_StateChanged;
         ConnectionGroupContext.OnExecuteProgress -= ConnectionGroupContext_OnExecuteProgress;
-        ConnectionGroupContext.OnWorkerExecuteCompleted -= ConnectionGroupContext_OnWorkerExecuteCompleted;
-        ConnectionGroupContext.RunningStateChanged -= ConnectionGroupContext_RunningStateChanged;
     }
 
-    async void ConnectionGroupContext_RunningStateChanged(bool obj)
+    async void ConnectionGroupContext_StateChanged()
     {
         await InvokeAsync(StateHasChanged);
     }
 
-    async void ConnectionGroupContext_OnWorkerExecuteCompleted()
+    void ConnectionGroupContext_OnExecuteProgress(ExecuteResult obj)
     {
-        await InvokeAsync(StateHasChanged);
-    }
-
-    async void ConnectionGroupContext_OnConnectingCountChanged(int count)
-    {
-        await InvokeAsync(StateHasChanged);
-    }
-
-
-    async void ConnectionGroupContext_OnExecuteProgress(ExecuteResult obj)
-    {
-        // store logs?
-        await InvokeAsync(() =>
-        {
-            StateHasChanged();
-        });
+        // TODO:store logs?
     }
 
     void HandleSubmit()
@@ -70,6 +51,9 @@ public partial class Index : IDisposable
         ConnectionGroupContext.StartWorkerFlow(inputFormModel.WorkloadName, inputFormModel.WorkloadPerWorker, inputFormModel.ExecutePerWorkload);
     }
 
+    // TODO: rename?
+    // concurrency(workload-per-worker)
+    // totalrequestcount
     public class InputFormModel
     {
         public string? WorkloadName { get; set; }
