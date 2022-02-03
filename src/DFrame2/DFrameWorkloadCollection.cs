@@ -63,15 +63,77 @@ namespace DFrame
 
     internal class DFrameWorkloadTypeInfo
     {
+        readonly IServiceProviderIsService isService;
+
         public Type WorkloadType { get; }
         public string Name { get; }
         public WorkloadInfo WorkloadInfo { get; }
 
+
         public DFrameWorkloadTypeInfo(Type workloadType, string name, IServiceProviderIsService isService)
         {
-            WorkloadType = workloadType;
-            Name = name;
-            WorkloadInfo = CreateWorkloadInfo(workloadType, name, isService);
+            this.isService = isService;
+            this.WorkloadType = workloadType;
+            this.Name = name;
+            this.WorkloadInfo = CreateWorkloadInfo(workloadType, name, isService);
+        }
+
+        public object?[] CrateArgument((string name, string value)[] arguments)
+        {
+            var ctors = WorkloadType.GetConstructors();
+            if (ctors.Length == 0) return Array.Empty<object>();
+
+            var ctor = ctors[0];
+
+            var dict = arguments.ToDictionary(x => x.name, x => x.value);
+
+            var result = ctor.GetParameters()
+                .Where(x => !isService.IsService(x.ParameterType))
+                .Select(p =>
+                {
+                    if (!dict.TryGetValue(p.Name!, out string? parameterValue))
+                    {
+                        parameterValue = null;
+                    }
+
+                    var elementType = p.ParameterType;
+                    var parameterType = ConvertToAllowParameterType(ref elementType, out var isNullable, out var isArray)!.Value;
+
+                    // case of T[]
+                    if (isArray)
+                    {
+                        if (string.IsNullOrEmpty(parameterValue)) return Array.CreateInstance(elementType, 0);
+
+                        var values = parameterValue.Split(',');
+                        return values.Select(x => Parse(x)).ToArray();
+                    }
+                    else
+                    {
+                        return Parse(parameterValue);
+                    }
+
+                    object? Parse(string? v)
+                    {
+                        if (v == null)
+                        {
+                            if (p.HasDefaultValue)
+                            {
+                                return p.DefaultValue;
+                            }
+                            else if (isNullable || parameterType == AllowParameterType.String)
+                            {
+                                return null;
+                            }
+
+                            throw new InvalidOperationException($"Required parameter is not exist, Type: {p.ParameterType.FullName} ParameterName: {p.Name}");
+                        }
+
+                        return ParseAllowParameterType(parameterType, p, v);
+                    }
+                })
+                .ToArray();
+
+            return result;
         }
 
         static WorkloadInfo CreateWorkloadInfo(Type type, string name, IServiceProviderIsService isService)
@@ -105,20 +167,21 @@ namespace DFrame
                         enumNames = Enum.GetNames(p.ParameterType);
                     }
 
-                    var parameterType = ConvertToAllowParameterType(p.ParameterType, out var isNullable, out var isArray);
+                    var elementType = p.ParameterType;
+                    var parameterType = ConvertToAllowParameterType(ref elementType, out var isNullable, out var isArray);
                     if (parameterType == null)
                     {
                         throw new InvalidOperationException($"Not allowed parameter type. Type:{ctor.DeclaringType!.FullName} Parameter:{type.FullName}");
                     }
 
-                    return new WorkloadParameterInfo(parameterType.Value, isNullable, isArray, p.DefaultValue, name!, enumNames);
+                    return new WorkloadParameterInfo(parameterType.Value, isNullable, isArray, p.HasDefaultValue ? p.DefaultValue : null, name!, enumNames);
                 })
                 .ToArray();
 
             return new WorkloadInfo(name, arguments);
         }
 
-        static AllowParameterType? ConvertToAllowParameterType(Type type, out bool isNullable, out bool isArray)
+        static AllowParameterType? ConvertToAllowParameterType(ref Type type, out bool isNullable, out bool isArray)
         {
             if (type.IsArray)
             {
@@ -176,7 +239,51 @@ namespace DFrame
                 default:
                     // others...
                     if (type.IsEnum) return AllowParameterType.Enum;
+                    if (type == typeof(Guid)) return AllowParameterType.Guid;
                     return null;
+            }
+        }
+
+        static object ParseAllowParameterType(AllowParameterType allowParameterType, ParameterInfo parameterInfo, string value)
+        {
+            switch (allowParameterType)
+            {
+                case AllowParameterType.Enum:
+                    return Enum.Parse(parameterInfo.ParameterType, value);
+                case AllowParameterType.Boolean:
+                    return bool.Parse(value);
+                case AllowParameterType.Char:
+                    return char.Parse(value);
+                case AllowParameterType.SByte:
+                    return sbyte.Parse(value);
+                case AllowParameterType.Byte:
+                    return byte.Parse(value);
+                case AllowParameterType.Int16:
+                    return short.Parse(value);
+                case AllowParameterType.UInt16:
+                    return ushort.Parse(value);
+                case AllowParameterType.Guid:
+                    return Guid.Parse(value);
+                case AllowParameterType.Int32:
+                    return int.Parse(value);
+                case AllowParameterType.UInt32:
+                    return uint.Parse(value);
+                case AllowParameterType.Int64:
+                    return long.Parse(value);
+                case AllowParameterType.UInt64:
+                    return ulong.Parse(value);
+                case AllowParameterType.Single:
+                    return float.Parse(value);
+                case AllowParameterType.Double:
+                    return double.Parse(value);
+                case AllowParameterType.Decimal:
+                    return decimal.Parse(value);
+                case AllowParameterType.DateTime:
+                    return DateTime.Parse(value);
+                case AllowParameterType.String:
+                    return value;
+                default:
+                    throw new InvalidOperationException($"Target parameter value can not parse, Type: {parameterInfo.ParameterType.FullName} Value: {value}");
             }
         }
     }

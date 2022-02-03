@@ -39,6 +39,12 @@ public sealed class ControllerHub : StreamingHubBase<IControllerHub, IWorkerRece
         return default;
     }
 
+    public Task InitializeMetadataAsync(WorkloadInfo[] workloads, Dictionary<string, string> metadata)
+    {
+        workerConnectionContext.AddMetadata(workerId, workloads, metadata);
+        return Task.CompletedTask;
+    }
+
     public Task CreateWorkloadCompleteAsync(ExecutionId executionId)
     {
         lock (workerConnectionContext.ConnectionLock)

@@ -9,8 +9,7 @@ namespace DFrame;
 
 public interface IControllerHub : IStreamingHub<IControllerHub, IWorkerReceiver>
 {
-    // TODO:initialize metadata.
-    // Task InitializeMetadataAsync(WorkloadInfo[] workloads, Dictionary<string, string> metadata);
+    Task InitializeMetadataAsync(WorkloadInfo[] workloads, Dictionary<string, string> metadata);
     Task CreateWorkloadCompleteAsync(ExecutionId executionId);
     Task ReportProgressAsync(ExecuteResult result);
     Task ExecuteCompleteAsync();
@@ -19,7 +18,7 @@ public interface IControllerHub : IStreamingHub<IControllerHub, IWorkerReceiver>
 
 public interface IWorkerReceiver
 {
-    void CreateWorkloadAndSetup(ExecutionId executionId, int createCount, string workloadName);
+    void CreateWorkloadAndSetup(ExecutionId executionId, int createCount, string workloadName, (string name, string value)[] parameters);
     void Execute(int executeCount);
     void ExecuteUntilReceiveStop();
     void Stop();
@@ -110,15 +109,15 @@ public class WorkloadParameterInfo
 
 public enum AllowParameterType
 {
-    // Primitives + Enum
+    // Primitives + Guid + DateTime + Enum
     Enum,
+    Guid,
     Boolean,
     Char,
     SByte,
     Byte,
     Int16,
     UInt16,
-    Guid,
     Int32,
     UInt32,
     Int64,

@@ -1,7 +1,9 @@
-﻿namespace DFrame.Controller;
+﻿using System.Runtime.InteropServices;
+
+namespace DFrame.Controller;
 
 // Singleton Global State.
-public class WorkerConnectionGroupContext: INotifyStateChanged
+public class WorkerConnectionGroupContext : INotifyStateChanged
 {
     // Notify.
     public event Action? StateChanged;
@@ -9,7 +11,11 @@ public class WorkerConnectionGroupContext: INotifyStateChanged
 
     // lock share with RunningState
     internal readonly object ConnectionLock = new object();
-    readonly HashSet<WorkerId> connections = new HashSet<WorkerId>();
+
+    readonly Dictionary<WorkerId, Dictionary<string, string>?> connections = new();
+    WorkloadInfo[] workloadInfos = Array.Empty<WorkloadInfo>();
+
+    public WorkloadInfo[] WorkloadInfos => workloadInfos;
 
     public int CurrentConnectingCount { get; private set; }
     public bool IsRunning => RunningState != null;
@@ -31,7 +37,7 @@ public class WorkerConnectionGroupContext: INotifyStateChanged
 
             CurrentExecutionId = ExecutionId.NewExecutionId();
 
-            var sorted = connections.Select(x => new SummarizedExecutionResult(x, createWorkloadCount))
+            var sorted = connections.Select(x => new SummarizedExecutionResult(x.Key, createWorkloadCount))
                 .OrderBy(x => x.WorkerId)
                 .ToArray();
 
@@ -44,17 +50,18 @@ public class WorkerConnectionGroupContext: INotifyStateChanged
             latestResults = dict;
             latestResultsSorted = sorted;
 
-            RunningState = new RunningState(this, executeCount, connections);
-            GlobalBroadcaster.CreateWorkloadAndSetup(CurrentExecutionId.Value, createWorkloadCount, workloadName);
+            RunningState = new RunningState(this, executeCount, connections.Select(x => x.Key));
+            // TODO: pass parameters
+            GlobalBroadcaster.CreateWorkloadAndSetup(CurrentExecutionId.Value, createWorkloadCount, workloadName, Array.Empty<(string, string)>());
             StateChanged?.Invoke();
         }
     }
 
     public void AddConnection(WorkerId workerId)
     {
-        lock (connections)
+        lock (ConnectionLock)
         {
-            connections.Add(workerId);
+            connections.Add(workerId, null);
             CurrentConnectingCount++;
             StateChanged?.Invoke();
         }
@@ -62,7 +69,7 @@ public class WorkerConnectionGroupContext: INotifyStateChanged
 
     public void RemoveConnection(WorkerId workerId)
     {
-        lock (connections)
+        lock (ConnectionLock)
         {
             if (connections.Remove(workerId))
             {
@@ -83,9 +90,27 @@ public class WorkerConnectionGroupContext: INotifyStateChanged
         }
     }
 
+    public void AddMetadata(WorkerId workerId, WorkloadInfo[] workloads, Dictionary<string, string> metadata)
+    {
+        lock (ConnectionLock)
+        {
+            if (connections.ContainsKey(workerId))
+            {
+                connections[workerId] = metadata;
+            }
+
+            // use latest one.
+            if (this.workloadInfos.Length != workloads.Length)
+            {
+                this.workloadInfos = workloads;
+            }
+            StateChanged?.Invoke();
+        }
+    }
+
     public void ReportExecuteResult(WorkerId workerId, ExecuteResult result)
     {
-        lock (connections)
+        lock (ConnectionLock)
         {
             if (latestResults != null)
             {
@@ -102,7 +127,7 @@ public class WorkerConnectionGroupContext: INotifyStateChanged
 
     public void ExecuteComplete(WorkerId workerId)
     {
-        lock (connections)
+        lock (ConnectionLock)
         {
             if (latestResults != null)
             {
@@ -117,7 +142,7 @@ public class WorkerConnectionGroupContext: INotifyStateChanged
 
     public void WorkflowCompleted()
     {
-        lock (connections)
+        lock (ConnectionLock)
         {
             // TODO: store log to inmemory history.
 

@@ -32,3 +32,26 @@ public class TrialWorkload : Workload
         logger.LogInformation("End:" + context.WorkloadId);
     }
 }
+
+[Workload("myworkload2")]
+public class TrialWorkload2 : Workload
+{
+    readonly ILogger<TrialWorkload2> logger;
+    readonly int x;
+    readonly int y;
+
+    public TrialWorkload2(ILogger<TrialWorkload2> logger, int x, int y)
+    {
+        this.logger = logger;
+        this.x = x;
+        this.y = y;
+    }
+
+    public override async Task ExecuteAsync(WorkloadContext context)
+    {
+        logger.LogInformation("Begin:" + context.WorkloadId);
+        await Task.Yield();
+        await Task.Delay(TimeSpan.FromSeconds(1));
+        logger.LogInformation("End:" + context.WorkloadId);
+    }
+}

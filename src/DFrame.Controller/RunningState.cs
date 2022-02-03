@@ -13,7 +13,7 @@ public class RunningState
 
     public IWorkerReceiver Broadcaster { get; set; } = default!;
 
-    public RunningState(WorkerConnectionGroupContext context, int executeCount, HashSet<WorkerId> connections)
+    public RunningState(WorkerConnectionGroupContext context, int executeCount, IEnumerable<WorkerId> connections)
     {
         this.executeCount = executeCount;
         this.runningConnections = connections.ToHashSet(); // create copy

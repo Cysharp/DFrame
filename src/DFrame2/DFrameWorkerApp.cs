@@ -119,10 +119,13 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
         var connectTask = StreamingHubClient.ConnectAsync<IControllerHub, IWorkerReceiver>(callInvoker, this, option: callOption, serializerOptions: options.SerializerOptions);
         client = await connectTask.WaitAsync(connectTimeout);
 
+        // TODO: Get Metadata from options.
+        await client.InitializeMetadataAsync(workloadCollection.All.Select(x => x.WorkloadInfo).ToArray(), new Dictionary<string, string>());
+
         logger.LogInformation($"Connect completed.");
     }
 
-    async void IWorkerReceiver.CreateWorkloadAndSetup(ExecutionId executionId, int createCount, string workloadName)
+    async void IWorkerReceiver.CreateWorkloadAndSetup(ExecutionId executionId, int createCount, string workloadName, (string name, string value)[] parameters)
     {
         try
         {
@@ -137,8 +140,8 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
             workloads.Clear();
             for (int i = 0; i < createCount; i++)
             {
-                // TODO: pass parameters.
-                var workload = ActivatorUtilities.CreateInstance(serviceProvider, description.WorkloadType, Array.Empty<object>());
+                // TODO: ActivatorUtilities.CreateInstance can not accept null value???
+                var workload = ActivatorUtilities.CreateInstance(serviceProvider, description.WorkloadType, description.CrateArgument(parameters)!);
                 var t = (new WorkloadContext(channel!, options), (Workload)workload);
                 workloads.Add(t);
             }

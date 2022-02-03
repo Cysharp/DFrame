@@ -1,4 +1,7 @@
 using DFrame.Controller;
+using Grpc.Core;
+using MagicOnion.Server;
+using MagicOnion.Server.Hubs;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -8,7 +11,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 // gRPC and MagicOnion
 builder.Services.AddGrpc();
-builder.Services.AddMagicOnion();
+builder.Services.AddMagicOnion(x =>
+{
+    x.IsReturnExceptionStackTraceInErrorDetail = true;
+});
+builder.Services.AddSingleton<IMagicOnionLogger, MagicOnionLogToLogger>();
 
 // Blazor
 builder.Services.AddRazorPages();
@@ -19,6 +26,7 @@ builder.Logging.ClearProviders();
 builder.Logging.SetMinimumLevel(LogLevel.Trace);
 builder.Logging.AddZLoggerConsole(options =>
 {
+
 });
 
 // Setup Dframe options
@@ -43,3 +51,26 @@ app.MapFallbackToPage("/_Host");
 app.MapMagicOnionService();
 
 app.Run();
+
+public class ErrorLoggingFilter : MagicOnionFilterAttribute
+{
+    readonly ILogger<ErrorLoggingFilter> logger;
+
+    public ErrorLoggingFilter(ILogger<ErrorLoggingFilter> logger)
+    {
+        this.logger = logger;
+    }
+
+    public override ValueTask Invoke(ServiceContext context, Func<ServiceContext, ValueTask> next)
+    {
+        try
+        {
+            return next(context);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(exception: ex, "Error occured in MagicOnion");
+            throw;
+        }
+    }
+}
