@@ -1,10 +1,6 @@
 using DFrame.Controller;
-using Grpc.Core;
 using MagicOnion.Server;
-using MagicOnion.Server.Hubs;
 using MessagePack;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using ZLogger;
 
@@ -14,8 +10,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddGrpc();
 builder.Services.AddMagicOnion(x =>
 {
-    x.IsReturnExceptionStackTraceInErrorDetail = true;
-
     // Should use same options between DFrame.Controller(this) and DFrame.Worker
     x.SerializerOptions = MessagePackSerializerOptions.Standard;
 });
@@ -54,27 +48,24 @@ app.MapFallbackToPage("/_Host");
 // MagicOnion Routing
 app.MapMagicOnionService();
 
+DisplayConfiguration(app);
+
 app.Run();
 
-public class ErrorLoggingFilter : MagicOnionFilterAttribute
-{
-    readonly ILogger<ErrorLoggingFilter> logger;
 
-    public ErrorLoggingFilter(ILogger<ErrorLoggingFilter> logger)
+static void DisplayConfiguration(WebApplication app)
+{
+    var config = app.Services.GetRequiredService<IConfiguration>();
+
+    var http1Endpoint = config.GetSection("Kestrel:Endpoints:Http:Url");
+    if (http1Endpoint != null)
     {
-        this.logger = logger;
+        app.Logger.ZLogInformation("Hosting DFrame.Controller on {0}. You can open this address by browser.", http1Endpoint.Value);
     }
 
-    public override ValueTask Invoke(ServiceContext context, Func<ServiceContext, ValueTask> next)
+    var gprcEndpoint = config.GetSection("Kestrel:Endpoints:Grpc:Url");
+    if (gprcEndpoint != null)
     {
-        try
-        {
-            return next(context);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(exception: ex, "Error occured in MagicOnion");
-            throw;
-        }
+        app.Logger.ZLogInformation("Hosting MagicOnion(gRPC) address on {0}. Setup this address to DFrameWorkerOptions.ControllerAddress.", gprcEndpoint.Value);
     }
 }

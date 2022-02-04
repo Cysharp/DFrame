@@ -79,6 +79,12 @@ public class RunningState
 
     void SignalState()
     {
+        if (Broadcaster == null)
+        {
+            // force complete
+            context.WorkflowCompleted();
+            return;
+        }
         if (createWorkloadAndSetupCompletes != null && createWorkloadAndSetupCompletes.Count == runningConnections.Count)
         {
             createWorkloadAndSetupCompletes = null;

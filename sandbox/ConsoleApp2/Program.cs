@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Text.RegularExpressions;
 using ZLogger;
+using Microsoft.Extensions.DependencyInjection;
 
 await Host.CreateDefaultBuilder()
     .ConfigureLogging(x =>
@@ -11,7 +12,7 @@ await Host.CreateDefaultBuilder()
         x.ClearProviders();
         x.AddZLoggerConsole();
     })
-    .RunDFrameAsync(args, new DFrameOptions("localhost", 7313));
+    .RunDFrameAsync(args, new DFrameOptions("http://localhost:7313"));
 
 [Workload("myworkload")]
 public class TrialWorkload : Workload

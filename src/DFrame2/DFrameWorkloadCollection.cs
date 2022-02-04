@@ -160,8 +160,8 @@ namespace DFrame
                 return new WorkloadInfo(name, Array.Empty<WorkloadParameterInfo>());
             }
 
-            var arguments = parameters
-                .Where(x => !isService.IsService(x.ParameterType))
+            var parameterTypes = parameters.Where(x => !isService.IsService(x.ParameterType));
+            var arguments = parameterTypes
                 .Select(p =>
                 {
                     var name = p.Name;
@@ -182,8 +182,7 @@ namespace DFrame
                 })
                 .ToArray();
 
-            var parameterTypes = parameters.Select(x => x.ParameterType).ToArray();
-            activator = new Lazy<ObjectFactory>(() => ActivatorUtilities.CreateFactory(type, parameterTypes));
+            activator = new Lazy<ObjectFactory>(() => ActivatorUtilities.CreateFactory(type, parameterTypes.Select(x=>x.ParameterType).ToArray()));
 
             return new WorkloadInfo(name, arguments);
         }

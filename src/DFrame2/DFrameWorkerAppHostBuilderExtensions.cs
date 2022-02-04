@@ -31,6 +31,7 @@ public static class DFrameAppHostBuilderExtensions
 
         var app = ConsoleApp.CreateFromHostBuilder(hostBuilder, args, x =>
         {
+            // this affects indesirable result so disable auto replace.
             x.ReplaceToUseSimpleConsoleLogger = false;
         });
         app.AddCommands<DFrameWorkerApp>();
