@@ -2,6 +2,7 @@ using DFrame.Controller;
 using MagicOnion.Server;
 using MessagePack;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using ObservableCollections;
 using ZLogger;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,7 +31,13 @@ builder.Logging.AddZLoggerConsole(options =>
 // Setup Dframe options
 builder.Services.TryAddSingleton<WorkerConnectionGroupContext>();
 
+// to monitor global logging
+builder.Services.TryAddSingleton<LogRouter>();
+builder.Services.AddSingleton<ILoggerProvider, RoutingLoggerProvider>();
+
 var app = builder.Build();
+
+GlobalServiceProvider.Instance = app.Services;
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

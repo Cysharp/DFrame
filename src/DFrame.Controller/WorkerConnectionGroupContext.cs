@@ -1,13 +1,14 @@
-﻿using System.Runtime.InteropServices;
+﻿namespace DFrame.Controller;
 
-namespace DFrame.Controller;
+// Note: this class is too complex, need refactoring.
 
 // Singleton Global State.
 public class WorkerConnectionGroupContext : INotifyStateChanged
 {
+    static readonly IReadOnlyDictionary<string, string> EmptyMetadata = new Dictionary<string, string>();
+
     // Notify.
     public event Action? StateChanged;
-    public event Action<ExecuteResult>? OnExecuteProgress;
 
     // lock share with RunningState
     internal readonly object ConnectionLock = new object();
@@ -108,6 +109,15 @@ public class WorkerConnectionGroupContext : INotifyStateChanged
         }
     }
 
+    public IReadOnlyDictionary<string, string> GetMetadata(WorkerId workerId)
+    {
+        if (connections.TryGetValue(workerId, out var dict))
+        {
+            return dict ?? EmptyMetadata;
+        }
+        return EmptyMetadata;
+    }
+
     public void ReportExecuteResult(WorkerId workerId, ExecuteResult result)
     {
         lock (ConnectionLock)
@@ -120,7 +130,6 @@ public class WorkerConnectionGroupContext : INotifyStateChanged
                 }
             }
 
-            OnExecuteProgress?.Invoke(result); // send latest info
             StateChanged?.Invoke();
         }
     }
@@ -136,6 +145,7 @@ public class WorkerConnectionGroupContext : INotifyStateChanged
                     latestResultsSorted![i].TrySetStatus(ExecutionStatus.Succeed);
                 }
             }
+
             StateChanged?.Invoke();
         }
     }

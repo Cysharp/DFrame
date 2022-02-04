@@ -5,6 +5,7 @@ public class RunningState
     readonly WorkerConnectionGroupContext context;
     readonly int executeCount;
     readonly HashSet<WorkerId> runningConnections;
+    readonly ILogger<RunningState> logger;
 
     // State
     HashSet<WorkerId>? createWorkloadAndSetupCompletes;
@@ -19,12 +20,15 @@ public class RunningState
         this.runningConnections = connections.ToHashSet(); // create copy
         this.createWorkloadAndSetupCompletes = new HashSet<WorkerId>();
         this.context = context;
+        this.logger = GlobalServiceProvider.GetLogger<RunningState>();
     }
 
     public void RemoveConnection(WorkerId workerId)
     {
         lock (context.ConnectionLock)
         {
+            logger.LogInformation($"Connection removing: {workerId}");
+
             runningConnections.Remove(workerId);
             if (createWorkloadAndSetupCompletes != null)
             {
@@ -81,12 +85,13 @@ public class RunningState
     {
         if (Broadcaster == null)
         {
-            // force complete
+            logger.LogInformation($"Detect invalid workflow, force complete.");
             context.WorkflowCompleted();
             return;
         }
         if (createWorkloadAndSetupCompletes != null && createWorkloadAndSetupCompletes.Count == runningConnections.Count)
         {
+            logger.LogInformation($"All workers workload setup complete.");
             createWorkloadAndSetupCompletes = null;
             executeCompletes = new HashSet<WorkerId>(); // setup next state.
             Broadcaster.Execute(executeCount);
@@ -94,6 +99,7 @@ public class RunningState
         }
         if (executeCompletes != null && executeCompletes.Count == runningConnections.Count)
         {
+            logger.LogInformation($"All workers execute complete.");
             executeCompletes = null;
             teardownCompletes = new HashSet<WorkerId>(); // setup next state.
             Broadcaster.Teardown();
@@ -101,6 +107,7 @@ public class RunningState
         }
         if (teardownCompletes != null && teardownCompletes.Count == runningConnections.Count)
         {
+            logger.LogInformation($"All workers teardown complete.");
             teardownCompletes = null;
             context.WorkflowCompleted();
             return;

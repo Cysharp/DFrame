@@ -1,5 +1,6 @@
 ﻿using MessagePipe;
 using Microsoft.AspNetCore.Components;
+using ObservableCollections;
 
 namespace DFrame.Controller.Pages;
 
@@ -8,6 +9,10 @@ public partial class Index : IDisposable
     [Inject]
     public WorkerConnectionGroupContext ConnectionGroupContext { get; set; } = default!;
 
+    [Inject]
+    public LogRouter LogRouter { get; set; } = default!;
+
+    ISynchronizedView<string, string> logView = default!;
     InputFormModel inputFormModel = new InputFormModel();
 
     int GetCurrentConnectingCount() => ConnectionGroupContext.CurrentConnectingCount;
@@ -16,13 +21,15 @@ public partial class Index : IDisposable
     protected override void OnInitialized()
     {
         ConnectionGroupContext.StateChanged += ConnectionGroupContext_StateChanged;
-        ConnectionGroupContext.OnExecuteProgress += ConnectionGroupContext_OnExecuteProgress;
+
+        logView = LogRouter.GetView();
+        logView.CollectionStateChanged += View_CollectionStateChanged;
     }
 
     public void Dispose()
     {
         ConnectionGroupContext.StateChanged -= ConnectionGroupContext_StateChanged;
-        ConnectionGroupContext.OnExecuteProgress -= ConnectionGroupContext_OnExecuteProgress;
+        logView.CollectionStateChanged -= View_CollectionStateChanged;
     }
 
     async void ConnectionGroupContext_StateChanged()
@@ -30,9 +37,9 @@ public partial class Index : IDisposable
         await InvokeAsync(StateHasChanged);
     }
 
-    void ConnectionGroupContext_OnExecuteProgress(ExecuteResult obj)
+    private async void View_CollectionStateChanged(System.Collections.Specialized.NotifyCollectionChangedAction obj)
     {
-        // TODO:store logs?
+        await InvokeAsync(StateHasChanged);
     }
 
     void HandleSubmit()
@@ -60,9 +67,42 @@ public partial class Index : IDisposable
         public int WorkloadPerWorker { get; set; } = 1;
         public int ExecutePerWorkload { get; set; } = 1;
     }
-}
 
-public record RunnningStatus
-{
-    public WorkerId WorkerId { get; set; }
+
+    public enum CommandMode
+    {
+        Request,
+        InfiniteLoop
+    }
+
+    public class IndexViewModel
+    {
+        readonly WorkerConnectionGroupContext connectionGroupContext;
+
+        public IndexViewModel(WorkerConnectionGroupContext connectionGroupContext)
+        {
+            this.connectionGroupContext = connectionGroupContext;
+        }
+
+        public int CurrentConnections => connectionGroupContext.CurrentConnectingCount;
+        public bool IsRunning => connectionGroupContext.IsRunning;
+        public WorkloadInfo[] WorkloadInfos => connectionGroupContext.WorkloadInfos;
+        public SummarizedExecutionResult[] ExecutionResults => connectionGroupContext.LatestSortedSummarizedExecutionResults;
+
+        // Button change
+        public CommandMode CommandMode { get; set; }
+
+        // Form Models...
+        public int Concurrency { get; set; }
+        public int TotalRequest { get; set; }
+        public int? RequestWorkers { get; set; } // null is all
+
+        // from logger
+        public RingBuffer<string> Logs { get; set; } = new RingBuffer<string>(100);
+
+        public IReadOnlyDictionary<string, string> GetMetadataOfWorker(WorkerId id)
+        {
+            return connectionGroupContext.GetMetadata(id);
+        }
+    }
 }
