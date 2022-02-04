@@ -68,14 +68,15 @@ namespace DFrame
         public Type WorkloadType { get; }
         public string Name { get; }
         public WorkloadInfo WorkloadInfo { get; }
-
+        public Lazy<ObjectFactory> Activator { get; }
 
         public DFrameWorkloadTypeInfo(Type workloadType, string name, IServiceProviderIsService isService)
         {
             this.isService = isService;
             this.WorkloadType = workloadType;
             this.Name = name;
-            this.WorkloadInfo = CreateWorkloadInfo(workloadType, name, isService);
+            this.WorkloadInfo = CreateWorkloadInfo(workloadType, name, isService, out var activator);
+            this.Activator = activator;
         }
 
         public object?[] CrateArgument((string name, string value)[] arguments)
@@ -87,7 +88,8 @@ namespace DFrame
 
             var dict = arguments.ToDictionary(x => x.name, x => x.value);
 
-            var result = ctor.GetParameters()
+            var parameters = ctor.GetParameters();
+            var result = parameters
                 .Where(x => !isService.IsService(x.ParameterType))
                 .Select(p =>
                 {
@@ -136,12 +138,13 @@ namespace DFrame
             return result;
         }
 
-        static WorkloadInfo CreateWorkloadInfo(Type type, string name, IServiceProviderIsService isService)
+        static WorkloadInfo CreateWorkloadInfo(Type type, string name, IServiceProviderIsService isService, out Lazy<ObjectFactory> activator)
         {
             var ctors = type.GetConstructors();
 
             if (ctors.Length == 0)
             {
+                activator = new Lazy<ObjectFactory>(() => ActivatorUtilities.CreateFactory(type, Array.Empty<Type>()));
                 return new WorkloadInfo(name, Array.Empty<WorkloadParameterInfo>());
             }
             if (ctors.Length != 1)
@@ -153,6 +156,7 @@ namespace DFrame
             var parameters = ctor.GetParameters();
             if (parameters.Length == 0)
             {
+                activator = new Lazy<ObjectFactory>(() => ActivatorUtilities.CreateFactory(type, Array.Empty<Type>()));
                 return new WorkloadInfo(name, Array.Empty<WorkloadParameterInfo>());
             }
 
@@ -177,6 +181,9 @@ namespace DFrame
                     return new WorkloadParameterInfo(parameterType.Value, isNullable, isArray, p.HasDefaultValue ? p.DefaultValue : null, name!, enumNames);
                 })
                 .ToArray();
+
+            var parameterTypes = parameters.Select(x => x.ParameterType).ToArray();
+            activator = new Lazy<ObjectFactory>(() => ActivatorUtilities.CreateFactory(type, parameterTypes));
 
             return new WorkloadInfo(name, arguments);
         }

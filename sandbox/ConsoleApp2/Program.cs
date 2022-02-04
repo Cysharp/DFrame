@@ -2,9 +2,8 @@
 using DFrame;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Text.RegularExpressions;
 using ZLogger;
-
-// args = new[] { "myworkload" };
 
 await Host.CreateDefaultBuilder()
     .ConfigureLogging(x =>

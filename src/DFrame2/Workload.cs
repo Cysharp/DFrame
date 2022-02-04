@@ -2,6 +2,8 @@
 
 public abstract class Workload
 {
+    int isDisposed = 0;
+
     public abstract Task ExecuteAsync(WorkloadContext context);
 
     public virtual Task SetupAsync(WorkloadContext context)
@@ -12,6 +14,14 @@ public abstract class Workload
     public virtual Task TeardownAsync(WorkloadContext context)
     {
         return Task.CompletedTask;
+    }
+
+    internal async Task InternalTeardownAsync(WorkloadContext context)
+    {
+        if (Interlocked.Increment(ref isDisposed) == 0)
+        {
+            await TeardownAsync(context);
+        }
     }
 }
 

@@ -21,6 +21,7 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
     List<(WorkloadContext context, Workload workload)> workloads;
     GrpcChannel? channel;
     IControllerHub? client;
+    CancellationTokenSource? cancellationTokenSource;
     TaskCompletionSource<ExecutionId> completeWorkloadSetup;
     TaskCompletionSource completeExecute;
     TaskCompletionSource completeTearDown;
@@ -49,9 +50,13 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
             try
             {
                 await ConnectAsync();
-                var waitFor = CancellationTokenSource.CreateLinkedTokenSource(client!.WaitForDisconnect().ToCancellationToken(), Context.CancellationToken);
+
+                using var waitFor = CancellationTokenSource.CreateLinkedTokenSource(client!.WaitForDisconnect().ToCancellationToken(), Context.CancellationToken);
                 while (!Context.CancellationToken.IsCancellationRequested)
                 {
+                    // This token is used in WorkloadContext and Execute Task.Run.
+                    this.cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(waitFor.Token);
+
                     logger.LogInformation($"Waiting command start.");
                     var executionId = await completeWorkloadSetup.Task.WaitAsync(waitFor.Token);
 
@@ -61,9 +66,13 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
                     logger.LogInformation($"Complete execute, wait for teardown start.");
                     await completeTearDown.Task.WaitAsync(waitFor.Token);
 
+                    cancellationTokenSource.Cancel();
+                    cancellationTokenSource.Dispose();
+                    cancellationTokenSource = null;
                     this.completeWorkloadSetup = new TaskCompletionSource<ExecutionId>();
                     this.completeExecute = new TaskCompletionSource();
                     this.completeTearDown = new TaskCompletionSource();
+                    workloads.Clear();
                 }
             }
             catch (Exception ex)
@@ -71,11 +80,28 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
                 logger.LogError(ex, "Failed on worker executing.");
                 try
                 {
+                    logger.LogInformation($"Teardown {workloads.Count} workload(s).");
+                    await Task.WhenAll(workloads.Select(x => x.workload.InternalTeardownAsync(x.context)));
+                    workloads.Clear();
+                }
+                catch (Exception ex2)
+                {
+                    logger.LogError(ex2, "Error when workloads teardown.");
+                }
+
+                try
+                {
+                    logger.LogInformation($"Shutdown connection.");
                     if (client != null) await client.DisposeAsync().WaitAsync(connectTimeout, Context.CancellationToken);
                     if (channel != null)
                     {
                         await channel.ShutdownAsync();
                         channel.Dispose();
+                    }
+                    if (cancellationTokenSource != null)
+                    {
+                        cancellationTokenSource.Cancel();
+                        cancellationTokenSource.Dispose();
                     }
                 }
                 catch (Exception ex2)
@@ -84,6 +110,7 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
                 }
                 client = null;
                 channel = null;
+                cancellationTokenSource = null;
                 this.completeWorkloadSetup = new TaskCompletionSource<ExecutionId>();
                 this.completeExecute = new TaskCompletionSource();
                 this.completeTearDown = new TaskCompletionSource();
@@ -140,9 +167,8 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
             workloads.Clear();
             for (int i = 0; i < createCount; i++)
             {
-                // TODO: ActivatorUtilities.CreateInstance can not accept null value???
-                var workload = ActivatorUtilities.CreateInstance(serviceProvider, description.WorkloadType, description.CrateArgument(parameters)!);
-                var t = (new WorkloadContext(channel!, options), (Workload)workload);
+                var workload = description.Activator.Value.Invoke(serviceProvider, description.CrateArgument(parameters));
+                var t = (new WorkloadContext(cancellationTokenSource!.Token), (Workload)workload);
                 workloads.Add(t);
             }
 
@@ -162,30 +188,43 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
         try
         {
             logger.LogInformation($"Executing {workloads.Count} workload(s). (ExecutePerWorkload={executeCount})");
-
-            var result = await Task.WhenAll(workloads.Select(x => Task.Run(async () =>
+            var token = cancellationTokenSource?.Token;
+            if (token == null)
             {
-                var list = new List<ExecuteResult>(executeCount);
-                for (int i = 0; i < executeCount; i++)
+                throw new InvalidOperationException("Token is lost before invoke Execute.");
+            }
+
+            try
+            {
+                await Task.WhenAll(workloads.Select(x => Task.Run(async () =>
                 {
-                    string? errorMsg = null;
-                    var sw = ValueStopwatch.StartNew();
-                    try
+                    for (int i = 0; i < executeCount; i++)
                     {
-                        await x.workload.ExecuteAsync(x.context);
-                    }
-                    catch (Exception ex)
-                    {
-                        errorMsg = ex.ToString();
-                    }
+                        x.context.CancellationToken.ThrowIfCancellationRequested();
 
-                    var executeResult = new ExecuteResult(x.context.WorkloadId, sw.Elapsed, i, (errorMsg != null), errorMsg);
-                    list.Add(executeResult);
+                        string? errorMsg = null;
+                        var sw = ValueStopwatch.StartNew();
+                        try
+                        {
+                            await x.workload.ExecuteAsync(x.context);
+                        }
+                        catch (OperationCanceledException e) when (e.CancellationToken == token.Value)
+                        {
+                            return;
+                        }
+                        catch (Exception ex)
+                        {
+                            errorMsg = ex.ToString();
+                        }
 
-                    await client!.ReportProgressAsync(executeResult);
-                }
-                return list;
-            })));
+                        var executeResult = new ExecuteResult(x.context.WorkloadId, sw.Elapsed, i, (errorMsg != null), errorMsg);
+                        await client!.ReportProgressAsync(executeResult);
+                    }
+                }, token.Value)));
+            }
+            catch (OperationCanceledException e) when (e.CancellationToken == token.Value)
+            {
+            }
 
             await client!.ExecuteCompleteAsync();
             completeExecute.TrySetResult();
@@ -196,45 +235,75 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
         }
     }
 
-    // for RampUp - Execute
-    void IWorkerReceiver.ExecuteUntilReceiveStop()
+    async void IWorkerReceiver.ExecuteUntilReceiveStop()
     {
-        //    logger.LogInformation($"Executing workload(s) until a stop request is received.");
-        //    while (!receiveStopped)
-        //    {
-        //        await Task.WhenAll(workloads.Select(x => Task.Run(async () =>
-        //        {
-        //            string? errorMsg = null;
-        //            var sw = ValueStopwatch.StartNew();
-        //            try
-        //            {
-        //                await x.workload.ExecuteAsync(x.context);
-        //            }
-        //            catch (Exception ex)
-        //            {
-        //                errorMsg = ex.ToString();
-        //            }
+        try
+        {
+            logger.LogInformation($"Executing {workloads.Count} workload(s).");
+            var token = cancellationTokenSource?.Token;
+            if (token == null)
+            {
+                throw new InvalidOperationException("Token is lost before invoke ExecuteUntilReceiveStop.");
+            }
 
-        //            var executeResult = new ExecuteResult(x.context.WorkloadId, sw.Elapsed, 0, (errorMsg != null), errorMsg);
-        //            // TODO:toriaezu
-        //            _ = Task.Run(() => Client.ReportProgressAsync(executeResult));
-        //        })));
-        //    }
+            try
+            {
+                await Task.WhenAll(workloads.Select(x => Task.Run(async () =>
+                {
+                    var i = 0;
+                    while (!token.Value.IsCancellationRequested)
+                    {
+                        string? errorMsg = null;
+                        var sw = ValueStopwatch.StartNew();
+                        try
+                        {
+                            await x.workload.ExecuteAsync(x.context);
+                        }
+                        catch (OperationCanceledException e) when (e.CancellationToken == token)
+                        {
+                            // complete.
+                            return;
+                        }
+                        catch (Exception ex)
+                        {
+                            errorMsg = ex.ToString();
+                        }
 
-        //    await Client.ExecuteCompleteAsync(new ExecuteResult[0]); // TODO:use others.
+                        var executeResult = new ExecuteResult(x.context.WorkloadId, sw.Elapsed, i, (errorMsg != null), errorMsg);
+                        await client!.ReportProgressAsync(executeResult);
+                        i++;
+                    }
+                }, token.Value)));
+            }
+            catch (OperationCanceledException e) when (e.CancellationToken == token)
+            {
+            }
+
+            await client!.ExecuteCompleteAsync();
+            completeExecute.TrySetResult();
+        }
+        catch (Exception ex)
+        {
+            completeExecute.TrySetException(ex);
+        }
     }
 
-    // for RampUp - Stop / Cancel of Executing? Only Teardown???
     void IWorkerReceiver.Stop()
     {
-        throw new NotImplementedException();
+        logger.LogInformation($"Received stop request.");
+        var tokenSource = this.cancellationTokenSource;
+        if (tokenSource != null)
+        {
+            tokenSource.Cancel();
+        }
     }
 
     async void IWorkerReceiver.Teardown()
     {
         try
         {
-            await Task.WhenAll(workloads.Select(x => x.workload.TeardownAsync(x.context)));
+            logger.LogInformation($"Teardown {workloads.Count} workload(s).");
+            await Task.WhenAll(workloads.Select(x => x.workload.InternalTeardownAsync(x.context)));
             await client!.TeardownCompleteAsync();
             completeTearDown.TrySetResult();
         }

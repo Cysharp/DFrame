@@ -8,16 +8,12 @@ namespace DFrame;
 
 public class WorkloadContext
 {
-    // TODO:remove options?
-    readonly GrpcChannel masterChannel;
-    readonly MessagePackSerializerOptions serializerOptions;
-
     public WorkloadId WorkloadId { get; }
+    public CancellationToken CancellationToken { get; }
 
-    public WorkloadContext(GrpcChannel masterChannel, DFrameOptions options)
+    public WorkloadContext(CancellationToken cancellationToken)
     {
-        this.masterChannel = masterChannel;
         this.WorkloadId = WorkloadId.NewWorkloadId();
-        this.serializerOptions = options.SerializerOptions;
+        this.CancellationToken = cancellationToken;
     }
 }
