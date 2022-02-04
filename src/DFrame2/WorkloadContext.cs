@@ -1,10 +1,4 @@
-﻿using Grpc.Core;
-using Grpc.Net.Client;
-using MagicOnion;
-using MagicOnion.Client;
-using MessagePack;
-
-namespace DFrame;
+﻿namespace DFrame;
 
 public class WorkloadContext
 {

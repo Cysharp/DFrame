@@ -2,6 +2,7 @@
 using Grpc.Core;
 using Grpc.Net.Client;
 using MagicOnion.Client;
+using MessagePack;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -30,7 +31,7 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
     {
         this.logger = logger;
         this.options = options;
-        this.workloadCollection = DFrameWorkloadCollection.FromCurrentAssemblies(isService); // TODO:options.Assemblies.
+        this.workloadCollection = DFrameWorkloadCollection.FromAssemblies(options.WorkloadAssemblies, isService);
         this.serviceProvider = serviceProvider;
         this.workerId = new WorkerId(Guid.NewGuid());
         this.workloads = new List<(WorkloadContext context, Workload workload)>();
@@ -44,7 +45,7 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
     {
         logger.LogInformation($"Starting DFrame worker (WorkerId:{workerId})");
 
-        var connectTimeout = TimeSpan.FromSeconds(30); // TODO:options.ConnectTimeout,
+        var connectTimeout = options.ConnectTimeout;
         while (!Context.CancellationToken.IsCancellationRequested)
         {
             try
@@ -115,39 +116,38 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
                 this.completeExecute = new TaskCompletionSource();
                 this.completeTearDown = new TaskCompletionSource();
 
-                logger.LogInformation("Wait 5 seconds to reconnect.");
-                await Task.Delay(TimeSpan.FromSeconds(5), Context.CancellationToken); // TODO:options.ReconnectTime
+                var reconnectTime = options.ReconnectTime;
+                logger.LogInformation($"Wait {reconnectTime} to reconnect.");
+                await Task.Delay(reconnectTime, Context.CancellationToken);
             }
         }
     }
 
     async Task ConnectAsync()
     {
-        var connectTimeout = TimeSpan.FromSeconds(30); // TODO:options.Timeout,
-        var address = "http://" + options.WorkerConnectToHost + ":" + options.WorkerConnectToPort;
-        logger.LogInformation($"Start to connect Worker -> Controller. Address: {address}");
+        var connectTimeout = options.ConnectTimeout;
+        logger.LogInformation($"Start to connect Worker -> Controller. Address: {options.ControllerAddress}");
 
-        channel = GrpcChannel.ForAddress("http://" + options.WorkerConnectToHost + ":" + options.WorkerConnectToPort, new GrpcChannelOptions
+        channel = GrpcChannel.ForAddress(options.ControllerAddress, new GrpcChannelOptions
         {
             HttpHandler = new SocketsHttpHandler
             {
-                PooledConnectionIdleTimeout = Timeout.InfiniteTimeSpan,
-                KeepAlivePingDelay = TimeSpan.FromSeconds(60),
-                KeepAlivePingTimeout = TimeSpan.FromSeconds(30),
+                PooledConnectionIdleTimeout = options.SocketsHttpHandlerOptions.PooledConnectionIdleTimeout,
+                PooledConnectionLifetime = options.SocketsHttpHandlerOptions.PooledConnectionLifetime,
+                KeepAlivePingDelay = options.SocketsHttpHandlerOptions.KeepAlivePingDelay,
+                KeepAlivePingTimeout = options.SocketsHttpHandlerOptions.KeepAlivePingTimeout,
                 EnableMultipleHttp2Connections = true,
                 ConnectTimeout = connectTimeout,
             },
-
             LoggerFactory = this.serviceProvider.GetService<ILoggerFactory>()
         });
 
         var callInvoker = channel.CreateCallInvoker();
         var callOption = new CallOptions(new Metadata { { "worker-id", workerId.ToString() } });
-        var connectTask = StreamingHubClient.ConnectAsync<IControllerHub, IWorkerReceiver>(callInvoker, this, option: callOption, serializerOptions: options.SerializerOptions);
+        var connectTask = StreamingHubClient.ConnectAsync<IControllerHub, IWorkerReceiver>(callInvoker, this, option: callOption, serializerOptions: MessagePackSerializerOptions.Standard);
         client = await connectTask.WaitAsync(connectTimeout);
 
-        // TODO: Get Metadata from options.
-        await client.InitializeMetadataAsync(workloadCollection.All.Select(x => x.WorkloadInfo).ToArray(), new Dictionary<string, string>());
+        await client.InitializeMetadataAsync(workloadCollection.All.Select(x => x.WorkloadInfo).ToArray(), options.Metadata);
 
         logger.LogInformation($"Connect completed.");
     }
@@ -160,7 +160,6 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
             ThreadPoolUtility.SetMinThread(createCount);
             if (!workloadCollection.TryGetWorkload(workloadName, out var description))
             {
-                // TODO:send error log to master.
                 throw new InvalidOperationException($"Workload:{workloadName} does not found in assembly.");
             }
 

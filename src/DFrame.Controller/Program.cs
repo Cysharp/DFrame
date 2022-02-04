@@ -2,6 +2,7 @@ using DFrame.Controller;
 using Grpc.Core;
 using MagicOnion.Server;
 using MagicOnion.Server.Hubs;
+using MessagePack;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -14,6 +15,9 @@ builder.Services.AddGrpc();
 builder.Services.AddMagicOnion(x =>
 {
     x.IsReturnExceptionStackTraceInErrorDetail = true;
+
+    // Should use same options between DFrame.Controller(this) and DFrame.Worker
+    x.SerializerOptions = MessagePackSerializerOptions.Standard;
 });
 builder.Services.AddSingleton<IMagicOnionLogger, MagicOnionLogToLogger>();
 

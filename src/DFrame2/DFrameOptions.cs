@@ -1,71 +1,31 @@
-﻿using MessagePack;
-using MessagePack.Formatters;
-using MessagePack.Resolvers;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
+﻿using System.Reflection;
 
 namespace DFrame
 {
-    // TODO: Fix Options.
-
     public class DFrameOptions
     {
-        public string MasterListenHost { get; }
-        public int MasterListenPort { get; }
-        // TODO:Address
-        public string WorkerConnectToHost { get; }
-        public int WorkerConnectToPort { get; }
+        public string ControllerAddress { get; set; } = default!;
+        public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromMinutes(1);
+        public TimeSpan ReconnectTime { get; set; } = TimeSpan.FromSeconds(5);
+        public SocketsHttpHandlerOptions SocketsHttpHandlerOptions { get; set; } = new SocketsHttpHandlerOptions();
+        public Assembly[] WorkloadAssemblies { get; set; } = AppDomain.CurrentDomain.GetAssemblies();
+        public Dictionary<string, string> Metadata { get; set; } = new Dictionary<string, string>();
 
-        public TimeSpan Timeout { get; set; }
-        public WorkerDisconnectedBehaviour WorkerDisconnectedBehaviour { get; set; }
-        public MessagePackSerializerOptions SerializerOptions { get; set; }
-        public Func<string?[], IHostBuilder> HostBuilderFactory { get; set; }
-
-        public Action<ILoggingBuilder>? ConfigureInnerHostLogging { get; set; }
-
-        public Action<ExecuteResult[], DFrameOptions, ExecutedWorkloadInfo>? OnExecuteResult { get; set; } // TODO: If failed, automatically show logs?
-
-        public DFrameOptions(string masterListenHost, int masterListenPort)
-            : this(masterListenHost, masterListenPort, masterListenHost, masterListenPort)
+        public DFrameOptions()
         {
         }
 
-        public DFrameOptions(string masterListenHost, int masterListenPort, string workerConnectToHost, int workerConnectToPort)
+        public DFrameOptions(string controllerAddress)
         {
-            if (masterListenHost == "localhost") masterListenHost = "127.0.0.1";
-            if (workerConnectToHost == "localhost") workerConnectToHost = "127.0.0.1";
-            MasterListenHost = masterListenHost;
-            MasterListenPort = masterListenPort;
-            WorkerConnectToHost = workerConnectToHost;
-            WorkerConnectToPort = workerConnectToPort;
-            Timeout = TimeSpan.FromMinutes(10);
-            WorkerDisconnectedBehaviour = WorkerDisconnectedBehaviour.Stop;
-            SerializerOptions = TypelessContractlessStandardResolver.Options;
-            HostBuilderFactory = args => Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder(args);
+            this.ControllerAddress = controllerAddress;
         }
     }
 
-    public enum WorkerDisconnectedBehaviour
+    public struct SocketsHttpHandlerOptions
     {
-        Stop,
-        Continue
-    }
-
-    public struct ExecutedWorkloadInfo
-    {
-        public string WorkloadName { get; }
-        public int WorkerCount { get; }
-        public int WorkloadPerWorker { get; }
-        public int ExecutePerWorkload { get; }
-
-        public ExecutedWorkloadInfo(string workloadName, int workerCount, int workloadPerWorker, int executePerWorkload)
-        {
-            WorkloadName = workloadName;
-            WorkerCount = workerCount;
-            WorkloadPerWorker = workloadPerWorker;
-            ExecutePerWorkload = executePerWorkload;
-        }
+        public TimeSpan PooledConnectionIdleTimeout { get; set; } = Timeout.InfiniteTimeSpan;
+        public TimeSpan PooledConnectionLifetime { get; set; } = Timeout.InfiniteTimeSpan;
+        public TimeSpan KeepAlivePingDelay { get; set; } = TimeSpan.FromSeconds(60);
+        public TimeSpan KeepAlivePingTimeout { get; set; } = TimeSpan.FromSeconds(30);
     }
 }
