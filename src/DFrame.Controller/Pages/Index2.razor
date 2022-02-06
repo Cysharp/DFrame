@@ -1,0 +1,136 @@
+﻿@page "/index2"
+
+<PageTitle>DFrame Controller</PageTitle>
+
+@{
+    // Check selected workload on every state changed.
+    if (vm.SelectedWorkload == null)
+    {
+        vm.SelectedWorkload = vm.WorkloadInfos.FirstOrDefault()?.Name;
+    }
+}
+
+<div class="container mx-auto px-4">
+
+    <div class="flex py-4">
+        <div class="h-80 w-80 mr-8 bg-slate-600 p-4 font-bold rounded-md">
+            <div class="text-white text-[96px]">@vm.CurrentConnections</div>
+            <div class="text-slate-400">Worker connections</div>
+        </div>
+
+        <div class="h-80 w-full bg-slate-200 rounded-md">
+            <div class="tabs p-4">
+                <a class="tab tab-bordered @(vm.TabActive(CommandMode.Request))" @onclick="() => ChangeCommandMode(CommandMode.Request)">Request</a>
+                <a class="tab tab-bordered @(vm.TabActive(CommandMode.Repeat))" @onclick="() => ChangeCommandMode(CommandMode.Repeat)">Repeat</a>
+                <a class="tab tab-bordered @(vm.TabActive(CommandMode.InfiniteLoop))" @onclick="() => ChangeCommandMode(CommandMode.InfiniteLoop)">Infinite</a>
+            </div>
+
+            <div class="p-4">
+
+                <EditForm Model="@vm" OnSubmit=@HandleSubmit>
+                    @if (vm.CommandMode == CommandMode.Request)
+                    {
+                        <div class="input-group input-group-sm my-2">
+                            <span>Workload</span>
+                            <select class="select select-bordered input-sm w-60" @bind=vm.SelectedWorkload>
+                                @foreach (var item in vm.WorkloadInfos)
+                                {
+                                    <option>@item.Name</option>
+                                }
+                            </select>
+
+                            <div>
+                                @foreach (var item in vm.GetSelectedWorkloadParameters())
+                                {
+                                    @*TODO:Handling Default EnumValue, DefaultValue, Placeholder for IsArray, bind-value*@
+                                    <label class="input-group input-group-sm my-2">
+                                        <span>@item.GetTypeLabel() @item.ParameterName</span>
+                                        @if (item.ParameterType == AllowParameterType.Enum)
+                                        {
+                                            <select class="select select-bordered input-sm w-60">
+                                                @foreach (var name in item.EnumNames)
+                                                {
+                                                    <option>@name</option>
+                                                }
+                                            </select>
+                                        }
+                                        else
+                                        {
+                                            <input type="text" class="input input-bordered input-sm" />
+                                        }
+                                    </label>
+                                }
+                            </div>
+                        </div>
+
+                        <label class="input-group input-group-sm my-2">
+                            <span>Concurrency</span>
+                            <input type="text" placeholder="Concurrent per worker." class="input input-bordered input-sm" @bind-value=vm.Concurrency />
+                        </label>
+
+                        <label class="input-group input-group-sm my-2">
+                            <span>Total Reuest</span>
+                            <input type="text" placeholder="Total request count." class="input input-bordered input-sm" @bind-value=vm.TotalRequest />
+                        </label>
+
+                        <div>
+                            <button class="btn">Cancel</button>
+                            <button type="submit" class="btn">Execute</button>
+                        </div>
+                    }
+
+                    @if (vm.CommandMode == CommandMode.Repeat)
+                    {
+                        <div>
+                            <button class="btn">Cancel</button>
+                            <button type="submit" class="btn">Execute</button>
+                        </div>
+                    }
+
+                    @if (vm.CommandMode == CommandMode.InfiniteLoop)
+                    {
+
+                        <div>
+                            <button class="btn">Stop</button>
+                            <button type="submit" class="btn">Execute</button>
+                        </div>
+                    }
+
+                </EditForm>
+            </div>
+
+        </div>
+    </div>
+
+    @*TODO: Show results count => Executing results(@Number)*@
+    <h2>Executing Results. IsRunning: @ConnectionGroupContext.IsRunning</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Status</th>
+                <th>Count</th>
+                <th>Error</th>
+                <th>Max</th>
+                <th>Min</th>
+                <th>Avg</th>
+                <th>Rps</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in GetRunnningResults())
+            {
+                <tr>
+                    <td>@item.ExecutionStatus</td>
+                    <td>@item.SucceedCount</td>
+                    <td>@item.Error</td>
+                    <td>@item.Max</td>
+                    <td>@item.Min</td>
+                    <td>@item.Avg</td>
+                    <td>@item.CurrentRps</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+</div>

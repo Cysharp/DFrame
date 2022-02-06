@@ -3,6 +3,7 @@
 
 using MagicOnion;
 using MessagePack;
+using System.Text;
 using UnitGenerator;
 
 namespace DFrame;
@@ -105,6 +106,16 @@ public class WorkloadParameterInfo
     public string ParameterName { get; }
     [Key(5)]
     public string[] EnumNames { get; }
+
+
+    public string GetTypeLabel()
+    {
+        if (!IsArray && !IsNullable) return ParameterType.ToString();
+        if (IsArray && !IsNullable) return $"{ParameterType}[]";
+        if (IsArray && IsNullable) return $"{ParameterType}[]?";
+        if (IsNullable) return $"{ParameterType}?";
+        return ParameterType.ToString();
+    }
 }
 
 public enum AllowParameterType
