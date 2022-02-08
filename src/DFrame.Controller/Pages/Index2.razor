@@ -32,8 +32,8 @@
                     @if (vm.CommandMode == CommandMode.Request)
                     {
                         <label class="input-group">
-                            <span class="text-slate-300">Workload</span>
-                            <select class="select select-bordered select-sm w-full max-w-xs leading-4 text-slate-200" @bind=vm.SelectedWorkload>
+                            <span class="text-slate-300 min-w-[115px]">Workload</span>
+                            <select class="select select-bordered select-sm w-full max-w-xs leading-4" @bind=vm.SelectedWorkload>
                                 @foreach (var item in vm.WorkloadInfos)
                                 {
                                     <option>@item.Name</option>
@@ -44,11 +44,11 @@
                         @foreach (var item in vm.GetSelectedWorkloadParameters())
                         {
                             @*TODO:Handling Default EnumValue, DefaultValue, Placeholder for IsArray, bind-value*@
-                            <label class="input-group input-group-sm my-2">
+                            <label class="input-group input-group-sm my-2 ml-10">
                                 <span class="text-slate-300">@item.GetTypeLabel() @item.ParameterName</span>
                                 @if (item.ParameterType == AllowParameterType.Enum)
                                 {
-                                    <select class="select select-bordered select-sm w-full max-w-xs leading-4 text-slate-200">
+                                    <select class="select select-bordered select-sm w-full max-w-xs leading-4">
                                         @foreach (var name in item.EnumNames)
                                         {
                                             <option>@name</option>
@@ -63,18 +63,18 @@
                         }
 
                         <label class="input-group input-group-sm my-2">
-                            <span class="text-slate-300">Concurrency</span>
+                            <span class="text-slate-300 min-w-[115px]">Concurrency</span>
                             <input type="text" placeholder="Concurrent per worker." class="input input-bordered input-sm text-slate-700" @bind-value=vm.Concurrency />
                         </label>
 
                         <label class="input-group input-group-sm my-2">
-                            <span class="text-slate-300">Total Reuest</span>
+                            <span class="text-slate-300 min-w-[115px]">Total Reuest</span>
                             <input type="text" placeholder="Total request count." class="input input-bordered input-sm text-slate-700" @bind-value=vm.TotalRequest />
                         </label>
                         
                         <div>
                             <button class="btn btn-secondary btn-active" type="submit">Execute</button>
-                            <button class="btn btn-ghost text-slate-200">Cancel</button>
+                            <button class="btn btn-ghost">Cancel</button>
                         </div>
                     }
 
@@ -82,7 +82,7 @@
                     {
                         <div>
                             <button class="btn btn-secondary btn-active" type="submit">Execute</button>
-                            <button class="btn btn-ghost text-slate-200">Cancel</button>
+                            <button class="btn btn-ghost">Cancel</button>
                         </div>
                     }
 
@@ -91,7 +91,7 @@
                         
                         <div>
                             <button class="btn btn-secondary btn-active" type="submit">Execute</button>
-                            <button class="btn btn-ghost text-slate-200">Cancel</button>
+                            <button class="btn btn-ghost">Cancel</button>
                         </div>
                     }
 
@@ -105,7 +105,7 @@
     @*TODO: Show results count => Executing results(@Number)*@
     <h2>Executing Results. IsRunning: @ConnectionGroupContext.IsRunning</h2>
 
-    <table>
+    <table class="table w-full">
         <thead>
             <tr>
                 <th>Status</th>
@@ -120,7 +120,7 @@
         <tbody>
             @foreach (var item in GetRunnningResults())
             {
-                <tr>
+                <tr class="hover">
                     <td>@item.ExecutionStatus</td>
                     <td>@item.SucceedCount</td>
                     <td>@item.Error</td>
