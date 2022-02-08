@@ -101,7 +101,6 @@ public class WorkersRunningStateMachine
             return true;
         }
 
-        // maybe invalid state.
-        return true;
+        return false; // keep running
     }
 }

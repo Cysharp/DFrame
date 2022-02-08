@@ -149,7 +149,6 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
         }
     }
 
-
     public void CreateWorkloadAndSetupComplete(WorkerId workerId, IWorkerReceiver broadcaster)
     {
         lock (EngineSync)
