@@ -12,13 +12,16 @@
 
 <div class="w-full">
 
-    <div class="flex p-4 mx-4">
-        <div class="w-80 bg-base-200 p-4 font-bold rounded-md">
+    <div class="flex">
+        <div class="w-80 bg-base-200 p-4 font-bold rounded text-center">
             <div class="text-white text-[96px]">@vm.CurrentConnections</div>
             <div class="text-slate-400">Worker connections</div>
+            <div>
+                <button aria-label="loading button" class="btn btn-ghost btn-sm btn-circle loading"></button>
+            </div>
         </div>
 
-        <div class="ml-2 w-full bg-base-200 rounded-md">
+        <div class="ml-2 w-full bg-base-200 rounded">
             <div class="tabs p-4">
                 <a class="tab tab-bordered @(vm.TabActive(CommandMode.Request))" @onclick="() => ChangeCommandMode(CommandMode.Request)">Request</a>
                 <a class="tab tab-bordered @(vm.TabActive(CommandMode.Repeat))" @onclick="() => ChangeCommandMode(CommandMode.Repeat)">Repeat</a>
@@ -102,8 +105,12 @@
         </div>
     </div>
 
-    @*TODO: Show results count => Executing results(@Number)*@
-    <h2>Executing Results. IsRunning: @ConnectionGroupContext.IsRunning</h2>
+    <div class="card shadow-lg rounded m-2">
+        <div class="card-body p-4">
+            @*TODO: Show results count => Executing results(@Number)*@
+            <h2>Executing Results. IsRunning: @ConnectionGroupContext.IsRunning</h2>
+        </div>
+    </div>
 
     <table class="table w-full">
         <thead>
@@ -121,9 +128,17 @@
             @foreach (var item in GetRunnningResults())
             {
                 <tr class="hover">
-                    <td>@item.ExecutionStatus</td>
+                    <td>
+                        <div class="badge badge-success">
+                            @item.ExecutionStatus
+                        </div>
+                    </td>
                     <td>@item.SucceedCount</td>
-                    <td>@item.Error</td>
+                    <td>
+                        <div class="badge badge-error">
+                            @item.Error
+                        </div>
+                    </td>
                     <td>@item.Max</td>
                     <td>@item.Min</td>
                     <td>@item.Avg</td>
