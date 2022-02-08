@@ -5,22 +5,22 @@ namespace DFrame;
 
 public static class DFrameAppHostBuilderExtensions
 {
-    public static Task RunDFrameAsync(this IHostBuilder hostBuilder, string[] args, DFrameOptions options)
+    public static Task RunDFrameAsync(this IHostBuilder hostBuilder, string[] args, DFrameWorkerOptions options)
     {
         return RunDFrameAsyncCore(hostBuilder, args, options, (_, __) => { });
     }
 
-    public static Task RunDFrameAsync(this IHostBuilder hostBuilder, string[] args, Action<DFrameOptions> configureOptions)
+    public static Task RunDFrameAsync(this IHostBuilder hostBuilder, string[] args, Action<DFrameWorkerOptions> configureOptions)
     {
-        return RunDFrameAsyncCore(hostBuilder, args, new DFrameOptions(), (_, x) => configureOptions(x));
+        return RunDFrameAsyncCore(hostBuilder, args, new DFrameWorkerOptions(), (_, x) => configureOptions(x));
     }
 
-    public static Task RunDFrameAsync(this IHostBuilder hostBuilder, string[] args, Action<HostBuilderContext, DFrameOptions> configureOptions)
+    public static Task RunDFrameAsync(this IHostBuilder hostBuilder, string[] args, Action<HostBuilderContext, DFrameWorkerOptions> configureOptions)
     {
-        return RunDFrameAsyncCore(hostBuilder, args, new DFrameOptions(), configureOptions);
+        return RunDFrameAsyncCore(hostBuilder, args, new DFrameWorkerOptions(), configureOptions);
     }
 
-    static async Task RunDFrameAsyncCore(IHostBuilder hostBuilder, string[] args, DFrameOptions options, Action<HostBuilderContext, DFrameOptions> configureOptions)
+    static async Task RunDFrameAsyncCore(IHostBuilder hostBuilder, string[] args, DFrameWorkerOptions options, Action<HostBuilderContext, DFrameWorkerOptions> configureOptions)
     {
         hostBuilder = hostBuilder
             .ConfigureServices((hostContext, services) =>

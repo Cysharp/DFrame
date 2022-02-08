@@ -2,7 +2,7 @@
 
 namespace DFrame
 {
-    public class DFrameOptions
+    public class DFrameWorkerOptions
     {
         public string ControllerAddress { get; set; } = default!;
         public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromMinutes(1);
@@ -11,11 +11,11 @@ namespace DFrame
         public Assembly[] WorkloadAssemblies { get; set; } = AppDomain.CurrentDomain.GetAssemblies();
         public Dictionary<string, string> Metadata { get; set; } = new Dictionary<string, string>();
 
-        public DFrameOptions()
+        public DFrameWorkerOptions()
         {
         }
 
-        public DFrameOptions(string controllerAddress)
+        public DFrameWorkerOptions(string controllerAddress)
         {
             this.ControllerAddress = controllerAddress;
         }

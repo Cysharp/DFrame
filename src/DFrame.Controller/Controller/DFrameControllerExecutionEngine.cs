@@ -3,15 +3,17 @@
 // Note: this class is too complex, need refactoring.
 
 // Singleton Global State.
-public class WorkerConnectionGroupContext : INotifyStateChanged
+public class DFrameControllerExecutionEngine : INotifyStateChanged
 {
     static readonly IReadOnlyDictionary<string, string> EmptyMetadata = new Dictionary<string, string>();
 
     // Notify.
     public event Action? StateChanged;
 
-    // lock share with RunningState
-    internal readonly object ConnectionLock = new object();
+    // TODO: lock to private.
+    internal readonly object EngineSync = new object();
+
+    readonly ILoggerFactory loggerFactory;
 
     readonly Dictionary<WorkerId, Dictionary<string, string>?> connections = new();
     WorkloadInfo[] workloadInfos = Array.Empty<WorkloadInfo>();
@@ -20,7 +22,10 @@ public class WorkerConnectionGroupContext : INotifyStateChanged
 
     public int CurrentConnectingCount { get; private set; }
     public bool IsRunning => RunningState != null;
-    public RunningState? RunningState { get; private set; }
+
+
+    WorkersRunningStateMachine? RunningState;
+
     public ExecutionId? CurrentExecutionId { get; private set; }
 
     Dictionary<WorkerId, int>? latestResults; // index of latestResultsSorted
@@ -30,9 +35,14 @@ public class WorkerConnectionGroupContext : INotifyStateChanged
 
     public IWorkerReceiver GlobalBroadcaster { get; internal set; } = default!;
 
+    public DFrameControllerExecutionEngine(ILoggerFactory loggerFactory)
+    {
+        this.loggerFactory = loggerFactory;
+    }
+
     public void StartWorkerFlow(string workloadName, int createWorkloadCount, int executeCount)
     {
-        lock (ConnectionLock)
+        lock (EngineSync)
         {
             if (connections.Count == 0) return; // can not start.
 
@@ -51,7 +61,7 @@ public class WorkerConnectionGroupContext : INotifyStateChanged
             latestResults = dict;
             latestResultsSorted = sorted;
 
-            RunningState = new RunningState(this, executeCount, connections.Select(x => x.Key));
+            RunningState = new WorkersRunningStateMachine(executeCount, connections.Select(x => x.Key), loggerFactory);
             // TODO: pass parameters
             GlobalBroadcaster.CreateWorkloadAndSetup(CurrentExecutionId.Value, createWorkloadCount, workloadName, Array.Empty<(string, string)>());
             StateChanged?.Invoke();
@@ -60,7 +70,7 @@ public class WorkerConnectionGroupContext : INotifyStateChanged
 
     public void AddConnection(WorkerId workerId)
     {
-        lock (ConnectionLock)
+        lock (EngineSync)
         {
             connections.Add(workerId, null);
             CurrentConnectingCount++;
@@ -70,20 +80,25 @@ public class WorkerConnectionGroupContext : INotifyStateChanged
 
     public void RemoveConnection(WorkerId workerId)
     {
-        lock (ConnectionLock)
+        lock (EngineSync)
         {
             if (connections.Remove(workerId))
             {
                 CurrentConnectingCount--;
             }
 
+            if (latestResults!.TryGetValue(workerId, out var i))
+            {
+                // disconnected before complete is failed.
+                latestResultsSorted![i].TrySetStatus(ExecutionStatus.Failed);
+            }
+
             if (RunningState != null)
             {
-                RunningState.RemoveConnection(workerId);
-                if (latestResults!.TryGetValue(workerId, out var i))
+                if (RunningState.RemoveConnection(workerId))
                 {
-                    // disconnected before complete is failed.
-                    latestResultsSorted![i].TrySetStatus(ExecutionStatus.Failed);
+                    WorkflowCompleted();
+                    return;
                 }
             }
 
@@ -93,7 +108,7 @@ public class WorkerConnectionGroupContext : INotifyStateChanged
 
     public void AddMetadata(WorkerId workerId, WorkloadInfo[] workloads, Dictionary<string, string> metadata)
     {
-        lock (ConnectionLock)
+        lock (EngineSync)
         {
             if (connections.ContainsKey(workerId))
             {
@@ -120,7 +135,7 @@ public class WorkerConnectionGroupContext : INotifyStateChanged
 
     public void ReportExecuteResult(WorkerId workerId, ExecuteResult result)
     {
-        lock (ConnectionLock)
+        lock (EngineSync)
         {
             if (latestResults != null)
             {
@@ -134,9 +149,32 @@ public class WorkerConnectionGroupContext : INotifyStateChanged
         }
     }
 
+
+    public void CreateWorkloadAndSetupComplete(WorkerId workerId, IWorkerReceiver broadcaster)
+    {
+        lock (EngineSync)
+        {
+            if (RunningState?.CreateWorkloadAndSetupComplete(workerId, broadcaster) ?? true)
+            {
+                WorkflowCompleted();
+            }
+        }
+    }
+
+    public void TeardownComplete(WorkerId workerId)
+    {
+        lock (EngineSync)
+        {
+            if (RunningState?.TeardownComplete(workerId) ?? true)
+            {
+                WorkflowCompleted();
+            }
+        }
+    }
+
     public void ExecuteComplete(WorkerId workerId)
     {
-        lock (ConnectionLock)
+        lock (EngineSync)
         {
             if (latestResults != null)
             {
@@ -146,13 +184,19 @@ public class WorkerConnectionGroupContext : INotifyStateChanged
                 }
             }
 
+            if (RunningState?.ExecuteComplete(workerId) ?? true)
+            {
+                WorkflowCompleted();
+                return;
+            }
+
             StateChanged?.Invoke();
         }
     }
 
     public void WorkflowCompleted()
     {
-        lock (ConnectionLock)
+        lock (EngineSync)
         {
             // TODO: store log to inmemory history.
 

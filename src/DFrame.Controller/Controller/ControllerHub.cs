@@ -10,24 +10,24 @@ namespace DFrame.Controller;
 
 public sealed class ControllerHub : StreamingHubBase<IControllerHub, IWorkerReceiver>, IControllerHub
 {
-    readonly WorkerConnectionGroupContext workerConnectionContext;
+    readonly DFrameControllerExecutionEngine engine;
     WorkerId workerId;
 
-    public ControllerHub(WorkerConnectionGroupContext connectionContext)
+    public ControllerHub(DFrameControllerExecutionEngine engine)
     {
-        this.workerConnectionContext = connectionContext;
+        this.engine = engine;
     }
 
     protected override ValueTask OnConnecting()
     {
         workerId = WorkerId.Parse(Context.CallContext.RequestHeaders.GetValue("worker-id"));
 
-        lock (workerConnectionContext.ConnectionLock)
+        lock (engine.EngineSync)
         {
             var group = Group.AddAsync("global-masterhub-group").GetAwaiter().GetResult(); // always sync.
             var broadcaster = group.CreateBroadcaster<IWorkerReceiver>();
-            workerConnectionContext.GlobalBroadcaster = broadcaster; // using new one:)
-            workerConnectionContext.AddConnection(workerId);
+            engine.GlobalBroadcaster = broadcaster; // using new one:)
+            engine.AddConnection(workerId);
         }
 
         return default;
@@ -35,43 +35,42 @@ public sealed class ControllerHub : StreamingHubBase<IControllerHub, IWorkerRece
 
     protected override ValueTask OnDisconnected()
     {
-        workerConnectionContext.RemoveConnection(workerId);
+        engine.RemoveConnection(workerId);
         return default;
     }
 
     public Task InitializeMetadataAsync(WorkloadInfo[] workloads, Dictionary<string, string> metadata)
     {
-        workerConnectionContext.AddMetadata(workerId, workloads, metadata);
+        engine.AddMetadata(workerId, workloads, metadata);
         return Task.CompletedTask;
     }
 
     public Task CreateWorkloadCompleteAsync(ExecutionId executionId)
     {
-        lock (workerConnectionContext.ConnectionLock)
+        lock (engine.EngineSync)
         {
             var group = Group.AddAsync("running-group-" + executionId.ToString()).GetAwaiter().GetResult();
-            workerConnectionContext.RunningState!.Broadcaster = group.CreateBroadcaster<IWorkerReceiver>();
-            workerConnectionContext.RunningState.CreateWorkloadAndSetupComplete(workerId);
+            var broadcaster = group.CreateBroadcaster<IWorkerReceiver>();
+            engine.CreateWorkloadAndSetupComplete(workerId, broadcaster);
         }
         return Task.CompletedTask;
     }
 
     public Task ReportProgressAsync(ExecuteResult result)
     {
-        workerConnectionContext.ReportExecuteResult(workerId, result);
+        engine.ReportExecuteResult(workerId, result);
         return Task.CompletedTask;
     }
 
     public Task ExecuteCompleteAsync()
     {
-        workerConnectionContext.ExecuteComplete(workerId);
-        workerConnectionContext.RunningState!.ExecuteComplete(workerId);
+        engine.ExecuteComplete(workerId);
         return Task.CompletedTask;
     }
 
     public Task TeardownCompleteAsync()
     {
-        workerConnectionContext.RunningState!.TeardownComplete(workerId);
+        engine.TeardownComplete(workerId);
         return Task.CompletedTask;
     }
 }

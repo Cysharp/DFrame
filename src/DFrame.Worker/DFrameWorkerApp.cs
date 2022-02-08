@@ -13,7 +13,7 @@ namespace DFrame;
 internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
 {
     readonly ILogger<DFrameWorkerApp> logger;
-    readonly DFrameOptions options;
+    readonly DFrameWorkerOptions options;
     readonly DFrameWorkloadCollection workloadCollection;
     readonly IServiceProvider serviceProvider;
 
@@ -27,7 +27,7 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
     TaskCompletionSource completeExecute;
     TaskCompletionSource completeTearDown;
 
-    public DFrameWorkerApp(ILogger<DFrameWorkerApp> logger, DFrameOptions options, IServiceProviderIsService isService, IServiceProvider serviceProvider)
+    public DFrameWorkerApp(ILogger<DFrameWorkerApp> logger, DFrameWorkerOptions options, IServiceProviderIsService isService, IServiceProvider serviceProvider)
     {
         this.logger = logger;
         this.options = options;

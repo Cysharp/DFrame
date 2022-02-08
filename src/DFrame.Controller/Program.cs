@@ -29,9 +29,7 @@ builder.Logging.AddZLoggerConsole(options =>
 });
 
 // Setup Dframe options
-builder.Services.TryAddSingleton<WorkerConnectionGroupContext>();
-
-// to monitor global logging
+builder.Services.TryAddSingleton<DFrameControllerExecutionEngine>();
 builder.Services.TryAddSingleton<LogRouter>();
 builder.Services.AddSingleton<ILoggerProvider, RoutingLoggerProvider>();
 

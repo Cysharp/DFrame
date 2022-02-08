@@ -8,7 +8,7 @@ namespace DFrame.Pages;
 public partial class Index : IDisposable
 {
     [Inject]
-    public WorkerConnectionGroupContext ConnectionGroupContext { get; set; } = default!;
+    public DFrameControllerExecutionEngine ConnectionGroupContext { get; set; } = default!;
 
     [Inject]
     public LogRouter LogRouter { get; set; } = default!;
@@ -78,9 +78,9 @@ public partial class Index : IDisposable
 
     public class IndexViewModel
     {
-        readonly WorkerConnectionGroupContext connectionGroupContext;
+        readonly DFrameControllerExecutionEngine connectionGroupContext;
 
-        public IndexViewModel(WorkerConnectionGroupContext connectionGroupContext)
+        public IndexViewModel(DFrameControllerExecutionEngine connectionGroupContext)
         {
             this.connectionGroupContext = connectionGroupContext;
         }

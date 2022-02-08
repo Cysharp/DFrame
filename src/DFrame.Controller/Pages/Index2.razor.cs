@@ -7,8 +7,9 @@ namespace DFrame.Pages;
 
 public partial class Index2 : IDisposable
 {
+    // TODO:rename this name.
     [Inject]
-    public WorkerConnectionGroupContext ConnectionGroupContext { get; set; } = default!;
+    public DFrameControllerExecutionEngine ConnectionGroupContext { get; set; } = default!;
 
     [Inject]
     public LogRouter LogRouter { get; set; } = default!;
@@ -92,17 +93,17 @@ public enum CommandMode
 
 public class IndexViewModel
 {
-    readonly WorkerConnectionGroupContext connectionGroupContext;
+    readonly DFrameControllerExecutionEngine engine;
 
-    public IndexViewModel(WorkerConnectionGroupContext connectionGroupContext)
+    public IndexViewModel(DFrameControllerExecutionEngine engine)
     {
-        this.connectionGroupContext = connectionGroupContext;
+        this.engine = engine;
     }
 
-    public int CurrentConnections => connectionGroupContext.CurrentConnectingCount;
-    public bool IsRunning => connectionGroupContext.IsRunning;
-    public WorkloadInfo[] WorkloadInfos => connectionGroupContext.WorkloadInfos;
-    public SummarizedExecutionResult[] ExecutionResults => connectionGroupContext.LatestSortedSummarizedExecutionResults;
+    public int CurrentConnections => engine.CurrentConnectingCount;
+    public bool IsRunning => engine.IsRunning;
+    public WorkloadInfo[] WorkloadInfos => engine.WorkloadInfos;
+    public SummarizedExecutionResult[] ExecutionResults => engine.LatestSortedSummarizedExecutionResults;
 
     // Button change
     public CommandMode CommandMode { get; set; }
@@ -120,7 +121,7 @@ public class IndexViewModel
     // TODO:remove this
     public IReadOnlyDictionary<string, string> GetMetadataOfWorker(WorkerId id)
     {
-        return connectionGroupContext.GetMetadata(id);
+        return engine.GetMetadata(id);
     }
 
     public string TabActive(CommandMode mode)

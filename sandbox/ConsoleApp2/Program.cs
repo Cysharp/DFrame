@@ -12,7 +12,7 @@ await Host.CreateDefaultBuilder()
         x.ClearProviders();
         x.AddZLoggerConsole();
     })
-    .RunDFrameAsync(args, new DFrameOptions("http://localhost:7313"));
+    .RunDFrameAsync(args, new DFrameWorkerOptions("http://localhost:7313"));
 
 [Workload("myworkload")]
 public class TrialWorkload : Workload
