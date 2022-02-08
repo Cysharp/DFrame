@@ -16,9 +16,6 @@
         <div class="w-80 bg-base-200 p-4 font-bold rounded text-center">
             <div class="text-white text-[96px]">@vm.CurrentConnections</div>
             <div class="text-slate-400">Worker connections</div>
-            <div>
-                <button aria-label="loading button" class="btn btn-ghost btn-sm btn-circle loading"></button>
-            </div>
         </div>
 
         <div class="ml-2 w-full bg-base-200 rounded">
@@ -129,6 +126,20 @@
             {
                 <tr class="hover">
                     <td>
+                        <button aria-label="loading button" class="btn btn-ghost btn-sm btn-circle loading"></button>
+
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 mr-2 stroke-current text-red-500">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 mr-2 stroke-current text-green-500">
+                            <path stroke="none" d="M0 0h24v24H0z"/><path stroke-width="3" d="M5 12l5 5l10 -10" />
+                        </svg>
+
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 mr-2 stroke-current text-gray-200">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+
                         <div class="badge badge-success">
                             @item.ExecutionStatus
                         </div>
