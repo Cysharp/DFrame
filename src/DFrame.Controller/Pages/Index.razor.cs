@@ -7,6 +7,7 @@ namespace DFrame.Pages;
 
 public partial class Index : IDisposable
 {
+    // TODO:rename this name.
     [Inject]
     public DFrameControllerExecutionEngine ConnectionGroupContext { get; set; } = default!;
 
@@ -16,11 +17,16 @@ public partial class Index : IDisposable
     ISynchronizedView<string, string> logView = default!;
     InputFormModel inputFormModel = new InputFormModel();
 
-    int GetCurrentConnectingCount() => ConnectionGroupContext.CurrentConnectingCount;
+    int GetCurrentConnectingCount() => 99999; // ConnectionGroupContext.CurrentConnectingCount;
     SummarizedExecutionResult[] GetRunnningResults() => ConnectionGroupContext.LatestSortedSummarizedExecutionResults;
+
+    IndexViewModel vm = default!;
+
 
     protected override void OnInitialized()
     {
+        vm = new IndexViewModel(ConnectionGroupContext);
+
         ConnectionGroupContext.StateChanged += ConnectionGroupContext_StateChanged;
 
         logView = LogRouter.GetView();
@@ -45,18 +51,25 @@ public partial class Index : IDisposable
 
     void HandleSubmit()
     {
-        if (inputFormModel.WorkloadName == null)
-        {
-            // Invalid...
-            return;
-        }
+        //if (inputFormModel.WorkloadName == null)
+        //{
+        //    // Invalid...
+        //    return;
+        //}
 
-        if (ConnectionGroupContext.IsRunning) // can not invoke
-        {
-            return;
-        }
+        //if (ConnectionGroupContext.IsRunning) // can not invoke
+        //{
+        //    return;
+        //}
 
-        ConnectionGroupContext.StartWorkerFlow(inputFormModel.WorkloadName, inputFormModel.WorkloadPerWorker, inputFormModel.ExecutePerWorkload);
+        // TODO: use from input
+        ConnectionGroupContext.StartWorkerFlow("myworkload", 10, 10);
+        //ConnectionGroupContext.StartWorkerFlow(inputFormModel.WorkloadName, inputFormModel.WorkloadPerWorker, inputFormModel.ExecutePerWorkload);
+    }
+
+    void ChangeCommandMode(CommandMode mode)
+    {
+        vm.CommandMode = mode;
     }
 
     // TODO: rename?
@@ -68,42 +81,60 @@ public partial class Index : IDisposable
         public int WorkloadPerWorker { get; set; } = 1;
         public int ExecutePerWorkload { get; set; } = 1;
     }
+}
 
+public enum CommandMode
+{
+    Request,
+    Repeat,
+    InfiniteLoop
+}
 
-    public enum CommandMode
+public class IndexViewModel
+{
+    readonly DFrameControllerExecutionEngine engine;
+
+    public IndexViewModel(DFrameControllerExecutionEngine engine)
     {
-        Request,
-        InfiniteLoop
+        this.engine = engine;
     }
 
-    public class IndexViewModel
+    public int CurrentConnections => engine.CurrentConnectingCount;
+    public bool IsRunning => engine.IsRunning;
+    public WorkloadInfo[] WorkloadInfos => engine.WorkloadInfos;
+    public SummarizedExecutionResult[] ExecutionResults => engine.LatestSortedSummarizedExecutionResults;
+
+    // Button change
+    public CommandMode CommandMode { get; set; }
+
+    // Form Models...
+    public int Concurrency { get; set; }
+    public int? TotalRequest { get; set; }
+    public int? RequestWorkers { get; set; } // null is all
+
+    public string? SelectedWorkload { get; set; }
+
+    // from logger
+    public RingBuffer<string> Logs { get; set; } = new RingBuffer<string>(100);
+
+    // TODO:remove this
+    public IReadOnlyDictionary<string, string> GetMetadataOfWorker(WorkerId id)
     {
-        readonly DFrameControllerExecutionEngine connectionGroupContext;
+        return engine.GetMetadata(id);
+    }
 
-        public IndexViewModel(DFrameControllerExecutionEngine connectionGroupContext)
-        {
-            this.connectionGroupContext = connectionGroupContext;
-        }
+    public string TabActive(CommandMode mode)
+    {
+        return (CommandMode == mode) ? "tab-active" : "";
+    }
 
-        public int CurrentConnections => connectionGroupContext.CurrentConnectingCount;
-        public bool IsRunning => connectionGroupContext.IsRunning;
-        public WorkloadInfo[] WorkloadInfos => connectionGroupContext.WorkloadInfos;
-        public SummarizedExecutionResult[] ExecutionResults => connectionGroupContext.LatestSortedSummarizedExecutionResults;
+    public IEnumerable<WorkloadParameterInfo> GetSelectedWorkloadParameters()
+    {
+        if (SelectedWorkload == null) return Enumerable.Empty<WorkloadParameterInfo>();
 
-        // Button change
-        public CommandMode CommandMode { get; set; }
+        var workload = WorkloadInfos.FirstOrDefault(x => x.Name == SelectedWorkload);
+        if(workload == null) return Enumerable.Empty<WorkloadParameterInfo>();
 
-        // Form Models...
-        public int Concurrency { get; set; }
-        public int TotalRequest { get; set; }
-        public int? RequestWorkers { get; set; } // null is all
-
-        // from logger
-        public RingBuffer<string> Logs { get; set; } = new RingBuffer<string>(100);
-
-        public IReadOnlyDictionary<string, string> GetMetadataOfWorker(WorkerId id)
-        {
-            return connectionGroupContext.GetMetadata(id);
-        }
+        return workload.Arguments;
     }
 }
