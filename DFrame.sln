@@ -33,9 +33,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DFrame.Controller", "src\DF
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp2", "sandbox\ConsoleApp2\ConsoleApp2.csproj", "{E74D802D-1FD9-458D-9870-EFED1FE1F38C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DFrame2", "src\DFrame2\DFrame2.csproj", "{A4C29523-D8A0-4924-BE62-3C65F8CCA431}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DFrame", "src\DFrame\DFrame.csproj", "{A4C29523-D8A0-4924-BE62-3C65F8CCA431}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XProcessor", "sandbox\XProcessor\XProcessor.csproj", "{AC1E3A0E-E522-4DB3-888E-7224D6DC4526}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DFrame.Worker", "src\DFrame.Worker\DFrame.Worker.csproj", "{59AD93D4-9CE0-4914-AF28-3B4718CA9562}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -75,6 +77,10 @@ Global
 		{AC1E3A0E-E522-4DB3-888E-7224D6DC4526}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AC1E3A0E-E522-4DB3-888E-7224D6DC4526}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC1E3A0E-E522-4DB3-888E-7224D6DC4526}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59AD93D4-9CE0-4914-AF28-3B4718CA9562}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59AD93D4-9CE0-4914-AF28-3B4718CA9562}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59AD93D4-9CE0-4914-AF28-3B4718CA9562}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59AD93D4-9CE0-4914-AF28-3B4718CA9562}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

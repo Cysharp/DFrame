@@ -1,6 +1,6 @@
 ﻿namespace DFrame.Controller;
 
-public interface INotifyStateChanged
+internal interface INotifyStateChanged
 {
     event Action? StateChanged;
 }

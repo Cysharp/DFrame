@@ -1,8 +1,9 @@
 ﻿using MessagePipe;
 using Microsoft.AspNetCore.Components;
 using ObservableCollections;
+using DFrame.Controller;
 
-namespace DFrame.Controller.Pages;
+namespace DFrame.Pages;
 
 public partial class Index : IDisposable
 {

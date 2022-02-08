@@ -7,9 +7,6 @@
 		<RootNamespace>DFrame</RootNamespace>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<Compile Include="..\DFrame.Controller\HubDefinitions.cs" Link="HubDefinitions.cs" />
-	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="ConsoleAppFramework" Version="4.0.6" />
@@ -19,6 +16,11 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\DFrame.Controller\DFrame.Controller.csproj" />
+	  <ProjectReference Include="..\DFrame.Worker\DFrame.Worker.csproj" />
 	</ItemGroup>
 
 </Project>
