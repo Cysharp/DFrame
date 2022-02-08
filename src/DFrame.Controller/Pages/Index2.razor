@@ -10,15 +10,15 @@
     }
 }
 
-<div class="container mx-auto px-4">
+<div class="w-full">
 
-    <div class="flex py-4">
-        <div class="h-80 w-80 mr-8 bg-slate-600 p-4 font-bold rounded-md">
+    <div class="flex p-4 mx-4">
+        <div class="w-80 bg-base-200 p-4 font-bold rounded-md">
             <div class="text-white text-[96px]">@vm.CurrentConnections</div>
             <div class="text-slate-400">Worker connections</div>
         </div>
 
-        <div class="h-80 w-full bg-slate-200 rounded-md">
+        <div class="ml-2 w-full bg-base-200 rounded-md">
             <div class="tabs p-4">
                 <a class="tab tab-bordered @(vm.TabActive(CommandMode.Request))" @onclick="() => ChangeCommandMode(CommandMode.Request)">Request</a>
                 <a class="tab tab-bordered @(vm.TabActive(CommandMode.Repeat))" @onclick="() => ChangeCommandMode(CommandMode.Repeat)">Repeat</a>
@@ -26,77 +26,77 @@
             </div>
 
             <div class="p-4">
-
+                
+                <div class="form-control">
                 <EditForm Model="@vm" OnSubmit=@HandleSubmit>
                     @if (vm.CommandMode == CommandMode.Request)
                     {
-                        <div class="input-group input-group-sm my-2">
-                            <span>Workload</span>
-                            <select class="select select-bordered input-sm w-60" @bind=vm.SelectedWorkload>
+                        <label class="input-group">
+                            <span class="text-slate-300">Workload</span>
+                            <select class="select select-bordered select-sm w-full max-w-xs leading-4 text-slate-200" @bind=vm.SelectedWorkload>
                                 @foreach (var item in vm.WorkloadInfos)
                                 {
                                     <option>@item.Name</option>
                                 }
                             </select>
+                        </label>
 
-                            <div>
-                                @foreach (var item in vm.GetSelectedWorkloadParameters())
+                        @foreach (var item in vm.GetSelectedWorkloadParameters())
+                        {
+                            @*TODO:Handling Default EnumValue, DefaultValue, Placeholder for IsArray, bind-value*@
+                            <label class="input-group input-group-sm my-2">
+                                <span class="text-slate-300">@item.GetTypeLabel() @item.ParameterName</span>
+                                @if (item.ParameterType == AllowParameterType.Enum)
                                 {
-                                    @*TODO:Handling Default EnumValue, DefaultValue, Placeholder for IsArray, bind-value*@
-                                    <label class="input-group input-group-sm my-2">
-                                        <span>@item.GetTypeLabel() @item.ParameterName</span>
-                                        @if (item.ParameterType == AllowParameterType.Enum)
+                                    <select class="select select-bordered select-sm w-full max-w-xs leading-4 text-slate-200">
+                                        @foreach (var name in item.EnumNames)
                                         {
-                                            <select class="select select-bordered input-sm w-60">
-                                                @foreach (var name in item.EnumNames)
-                                                {
-                                                    <option>@name</option>
-                                                }
-                                            </select>
+                                            <option>@name</option>
                                         }
-                                        else
-                                        {
-                                            <input type="text" class="input input-bordered input-sm" />
-                                        }
-                                    </label>
+                                    </select>
                                 }
-                            </div>
-                        </div>
+                                else
+                                {
+                                    <input type="text" class="input input-bordered input-sm text-slate-700" />
+                                }
+                            </label>
+                        }
 
                         <label class="input-group input-group-sm my-2">
-                            <span>Concurrency</span>
-                            <input type="text" placeholder="Concurrent per worker." class="input input-bordered input-sm" @bind-value=vm.Concurrency />
+                            <span class="text-slate-300">Concurrency</span>
+                            <input type="text" placeholder="Concurrent per worker." class="input input-bordered input-sm text-slate-700" @bind-value=vm.Concurrency />
                         </label>
 
                         <label class="input-group input-group-sm my-2">
-                            <span>Total Reuest</span>
-                            <input type="text" placeholder="Total request count." class="input input-bordered input-sm" @bind-value=vm.TotalRequest />
+                            <span class="text-slate-300">Total Reuest</span>
+                            <input type="text" placeholder="Total request count." class="input input-bordered input-sm text-slate-700" @bind-value=vm.TotalRequest />
                         </label>
-
+                        
                         <div>
-                            <button class="btn">Cancel</button>
-                            <button type="submit" class="btn">Execute</button>
+                            <button class="btn btn-secondary btn-active" type="submit">Execute</button>
+                            <button class="btn btn-ghost text-slate-200">Cancel</button>
                         </div>
                     }
 
                     @if (vm.CommandMode == CommandMode.Repeat)
                     {
                         <div>
-                            <button class="btn">Cancel</button>
-                            <button type="submit" class="btn">Execute</button>
+                            <button class="btn btn-secondary btn-active" type="submit">Execute</button>
+                            <button class="btn btn-ghost text-slate-200">Cancel</button>
                         </div>
                     }
 
                     @if (vm.CommandMode == CommandMode.InfiniteLoop)
                     {
-
+                        
                         <div>
-                            <button class="btn">Stop</button>
-                            <button type="submit" class="btn">Execute</button>
+                            <button class="btn btn-secondary btn-active" type="submit">Execute</button>
+                            <button class="btn btn-ghost text-slate-200">Cancel</button>
                         </div>
                     }
 
                 </EditForm>
+                 </div>
             </div>
 
         </div>
