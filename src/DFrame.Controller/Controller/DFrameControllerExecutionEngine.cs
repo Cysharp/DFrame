@@ -40,11 +40,15 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
         this.loggerFactory = loggerFactory;
     }
 
-    public void StartWorkerFlow(string workloadName, int createWorkloadCount, int executeCount)
+    public void StartWorkerFlow(string workloadName, int concurrency, int totalRequestCount, (string name, string value)[] parameters)
     {
         lock (EngineSync)
         {
             if (connections.Count == 0) return; // can not start.
+
+            var createWorkloadCount = concurrency;
+            int executeCount = totalRequestCount / connections.Count; // TODO:limit
+            var rest = totalRequestCount % connections.Count; // TODO:add rest worker
 
             CurrentExecutionId = ExecutionId.NewExecutionId();
 
@@ -63,7 +67,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
 
             RunningState = new WorkersRunningStateMachine(executeCount, connections.Select(x => x.Key), loggerFactory);
             // TODO: pass parameters
-            GlobalBroadcaster.CreateWorkloadAndSetup(CurrentExecutionId.Value, createWorkloadCount, workloadName, Array.Empty<(string, string)>());
+            GlobalBroadcaster.CreateWorkloadAndSetup(CurrentExecutionId.Value, createWorkloadCount, workloadName, parameters);
             StateChanged?.Invoke();
         }
     }

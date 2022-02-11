@@ -2,84 +2,73 @@
 using Microsoft.AspNetCore.Components;
 using ObservableCollections;
 using DFrame.Controller;
+using System.Diagnostics.CodeAnalysis;
 
 namespace DFrame.Pages;
 
 public partial class Index : IDisposable
 {
     // TODO:rename this name.
-    [Inject]
-    public DFrameControllerExecutionEngine ConnectionGroupContext { get; set; } = default!;
+    [Inject] DFrameControllerExecutionEngine engine { get; set; } = default!;
+    [Inject] LogRouter logRouter { get; set; } = default!;
+    [Inject] ILogger<Index> logger { get; set; } = default!;
 
-    [Inject]
-    public LogRouter LogRouter { get; set; } = default!;
-
+    // TODO:to vm?
     ISynchronizedView<string, string> logView = default!;
-    InputFormModel inputFormModel = new InputFormModel();
-
-    int GetCurrentConnectingCount() => 99999; // ConnectionGroupContext.CurrentConnectingCount;
-    SummarizedExecutionResult[] GetRunnningResults() => ConnectionGroupContext.LatestSortedSummarizedExecutionResults;
 
     IndexViewModel vm = default!;
 
 
     protected override void OnInitialized()
     {
-        vm = new IndexViewModel(ConnectionGroupContext);
+        vm = new IndexViewModel(engine);
 
-        ConnectionGroupContext.StateChanged += ConnectionGroupContext_StateChanged;
+        engine.StateChanged += Engine_StateChanged;
 
-        logView = LogRouter.GetView();
-        logView.CollectionStateChanged += View_CollectionStateChanged;
+        logView = logRouter.GetView();
+        logView.CollectionStateChanged += LogView_CollectionStateChanged;
     }
 
     public void Dispose()
     {
-        ConnectionGroupContext.StateChanged -= ConnectionGroupContext_StateChanged;
-        logView.CollectionStateChanged -= View_CollectionStateChanged;
+        engine.StateChanged -= Engine_StateChanged;
+        logView.CollectionStateChanged -= LogView_CollectionStateChanged;
     }
 
-    async void ConnectionGroupContext_StateChanged()
+    async void Engine_StateChanged()
+    {
+        await InvokeAsync(() =>
+        {
+            vm.RefreshEngineProperties(engine);
+            StateHasChanged();
+        });
+    }
+
+    private async void LogView_CollectionStateChanged(System.Collections.Specialized.NotifyCollectionChangedAction obj)
     {
         await InvokeAsync(StateHasChanged);
     }
 
-    private async void View_CollectionStateChanged(System.Collections.Specialized.NotifyCollectionChangedAction obj)
+    void HandleExecute()
     {
-        await InvokeAsync(StateHasChanged);
+        if (vm.SelectedWorkload == null)
+        {
+            logger.LogDebug("SelectedWorkload is null, does not run workflow.");
+            return;
+        }
+        if (vm.IsRunning)
+        {
+            logger.LogDebug("Already running, does not run workflow.");
+            return;
+        }
+
+        var parameters = vm.SelectedWorkloadParametes.Select(x => (x.ParameterName, x.Value)).ToArray();
+        engine.StartWorkerFlow(vm.SelectedWorkload, vm.Concurrency, vm.TotalRequest, parameters!);
     }
 
-    void HandleSubmit()
+    // TODO:cancel
+    void HandleCancel()
     {
-        //if (inputFormModel.WorkloadName == null)
-        //{
-        //    // Invalid...
-        //    return;
-        //}
-
-        //if (ConnectionGroupContext.IsRunning) // can not invoke
-        //{
-        //    return;
-        //}
-
-        // TODO: use from input
-        ConnectionGroupContext.StartWorkerFlow("myworkload", 10, 10);
-        //ConnectionGroupContext.StartWorkerFlow(inputFormModel.WorkloadName, inputFormModel.WorkloadPerWorker, inputFormModel.ExecutePerWorkload);
-    }
-
-    void ChangeCommandMode(CommandMode mode)
-    {
-        vm.CommandMode = mode;
-    }
-
-    // TODO: rename?
-    // concurrency(workload-per-worker)
-    // totalrequestcount
-    public class InputFormModel
-    {
-        public string? WorkloadName { get; set; }
-        public int WorkloadPerWorker { get; set; } = 1;
-        public int ExecutePerWorkload { get; set; } = 1;
     }
 }
 
@@ -92,35 +81,61 @@ public enum CommandMode
 
 public class IndexViewModel
 {
-    readonly DFrameControllerExecutionEngine engine;
+    // From Engine
+    public int CurrentConnections { get; private set; }
+    public bool IsRunning { get; private set; }
+    public WorkloadInfo[] WorkloadInfos { get; private set; }
+    public SummarizedExecutionResult[] ExecutionResults { get; private set; }
+
+    // Tab
+    public CommandMode CommandMode { get; set; }
+
+    // Input Forms
+    public string? SelectedWorkload { get; set; }
+    public WorkloadParameterInfoViewModel[] SelectedWorkloadParametes { get; private set; }
+
+    public int Concurrency { get; set; } = 1;
+    public int TotalRequest { get; set; } = 1;
+    public int? RequestWorkerCount { get; set; } // null is all
 
     public IndexViewModel(DFrameControllerExecutionEngine engine)
     {
-        this.engine = engine;
+        SelectedWorkloadParametes = Array.Empty<WorkloadParameterInfoViewModel>();
+        RefreshEngineProperties(engine);
     }
 
-    public int CurrentConnections => engine.CurrentConnectingCount;
-    public bool IsRunning => engine.IsRunning;
-    public WorkloadInfo[] WorkloadInfos => engine.WorkloadInfos;
-    public SummarizedExecutionResult[] ExecutionResults => engine.LatestSortedSummarizedExecutionResults;
+    [MemberNotNull(nameof(WorkloadInfos), nameof(ExecutionResults), nameof(WorkloadInfos))]
+    public void RefreshEngineProperties(DFrameControllerExecutionEngine engine)
+    {
+        this.CurrentConnections = engine.CurrentConnectingCount;
+        this.IsRunning = engine.IsRunning;
+        this.WorkloadInfos = engine.WorkloadInfos;
+        if (this.SelectedWorkload == null)
+        {
+            this.SelectedWorkload = WorkloadInfos.FirstOrDefault()?.Name;
+        }
+        this.ExecutionResults = engine.LatestSortedSummarizedExecutionResults;
+    }
 
-    // Button change
-    public CommandMode CommandMode { get; set; }
-
-    // Form Models...
-    public int Concurrency { get; set; }
-    public int? TotalRequest { get; set; }
-    public int? RequestWorkers { get; set; } // null is all
-
-    public string? SelectedWorkload { get; set; }
-
-    // from logger
-    public RingBuffer<string> Logs { get; set; } = new RingBuffer<string>(100);
+    // TODO:log view.
 
     // TODO:remove this
-    public IReadOnlyDictionary<string, string> GetMetadataOfWorker(WorkerId id)
+    //public IReadOnlyDictionary<string, string> GetMetadataOfWorker(WorkerId id)
+    //{
+    //    return engine.GetMetadata(id);
+    //}
+
+    public void ChangeSelectedWorkload(ChangeEventArgs e)
     {
-        return engine.GetMetadata(id);
+        this.SelectedWorkload = e.Value as string;
+        if (this.SelectedWorkload != null)
+        {
+            var p = WorkloadInfos.FirstOrDefault(x => x.Name == this.SelectedWorkload);
+            if (p != null)
+            {
+                this.SelectedWorkloadParametes = p.Arguments.Select(x => new WorkloadParameterInfoViewModel(x)).ToArray();
+            }
+        }
     }
 
     public string TabActive(CommandMode mode)
@@ -128,13 +143,72 @@ public class IndexViewModel
         return (CommandMode == mode) ? "tab-active" : "";
     }
 
-    public IEnumerable<WorkloadParameterInfo> GetSelectedWorkloadParameters()
+    public void ChangeCommandMode(CommandMode mode)
     {
-        if (SelectedWorkload == null) return Enumerable.Empty<WorkloadParameterInfo>();
+        CommandMode = mode;
+    }
 
-        var workload = WorkloadInfos.FirstOrDefault(x => x.Name == SelectedWorkload);
-        if(workload == null) return Enumerable.Empty<WorkloadParameterInfo>();
+    public class WorkloadParameterInfoViewModel
+    {
+        static readonly string[] BoolSelectableValues = new[] { true.ToString(), false.ToString() };
+        static readonly string[] NullableBoolSelectableValues = new[] { true.ToString(), false.ToString(), "null" };
 
-        return workload.Arguments;
+        // Modifiable Form
+        public string? Value { get; set; }
+
+        public string TypeLabel { get; }
+        public string ParameterName { get; }
+
+        public string[] SelectableValues { get; }
+        public string Hint { get; }
+
+        public WorkloadParameterInfoViewModel(WorkloadParameterInfo parameterInfo)
+        {
+            TypeLabel = parameterInfo.GetTypeLabel();
+            ParameterName = parameterInfo.ParameterName;
+
+            SelectableValues = Array.Empty<string>();
+            if (parameterInfo.ParameterType == AllowParameterType.Boolean)
+            {
+                if (parameterInfo.IsNullable)
+                {
+                    Value = "null";
+                    SelectableValues = NullableBoolSelectableValues;
+                }
+                else
+                {
+                    Value = false.ToString();
+                    SelectableValues = BoolSelectableValues;
+                }
+            }
+
+            if (parameterInfo.ParameterType == AllowParameterType.Enum)
+            {
+                if (parameterInfo.IsNullable)
+                {
+                    Value = "null";
+                    SelectableValues = parameterInfo.EnumNames.Prepend("null").ToArray();
+                }
+                else
+                {
+                    Value = parameterInfo.EnumNames.FirstOrDefault();
+                    SelectableValues = parameterInfo.EnumNames;
+                }
+            }
+
+            if (parameterInfo.DefaultValue != null)
+            {
+                Value = parameterInfo.DefaultValue?.ToString();
+            }
+
+            if (parameterInfo.IsArray)
+            {
+                Hint = "array value is separated with ','";
+            }
+            else
+            {
+                Hint = "";
+            }
+        }
     }
 }

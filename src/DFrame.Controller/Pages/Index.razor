@@ -1,14 +1,10 @@
 ﻿@page "/"
 
-<PageTitle>DFrame Controller</PageTitle>
-
 @{
-    // Check selected workload on every state changed.
-    if (vm.SelectedWorkload == null)
-    {
-        vm.SelectedWorkload = vm.WorkloadInfos.FirstOrDefault()?.Name;
-    }
+    // Console.WriteLine("Render Index");
 }
+
+<PageTitle>DFrame Controller</PageTitle>
 
 <div class="w-full">
 
@@ -20,83 +16,83 @@
 
         <div class="ml-2 w-full bg-base-200 rounded">
             <div class="tabs p-4">
-                <a class="tab tab-bordered @(vm.TabActive(CommandMode.Request))" @onclick="() => ChangeCommandMode(CommandMode.Request)">Request</a>
-                <a class="tab tab-bordered @(vm.TabActive(CommandMode.Repeat))" @onclick="() => ChangeCommandMode(CommandMode.Repeat)">Repeat</a>
-                <a class="tab tab-bordered @(vm.TabActive(CommandMode.InfiniteLoop))" @onclick="() => ChangeCommandMode(CommandMode.InfiniteLoop)">Infinite</a>
+                <a class="tab tab-bordered @(vm.TabActive(CommandMode.Request))" @onclick="() => vm.ChangeCommandMode(CommandMode.Request)">Request</a>
+                <a class="tab tab-bordered @(vm.TabActive(CommandMode.Repeat))" @onclick="() => vm.ChangeCommandMode(CommandMode.Repeat)">Repeat</a>
+                <a class="tab tab-bordered @(vm.TabActive(CommandMode.InfiniteLoop))" @onclick="() => vm.ChangeCommandMode(CommandMode.InfiniteLoop)">Infinite</a>
             </div>
 
             <div class="p-4">
-                
-                <div class="form-control overflow-hidden">
-                <EditForm Model="@vm" OnSubmit=@HandleSubmit>
-                    @if (vm.CommandMode == CommandMode.Request)
-                    {
-                        <label class="input-group">
-                            <span class="text-slate-300 min-w-[115px]">Workload</span>
-                            <select class="select select-bordered select-sm w-full max-w-xs leading-4" @bind=vm.SelectedWorkload>
-                                @foreach (var item in vm.WorkloadInfos)
-                                {
-                                    <option>@item.Name</option>
-                                }
-                            </select>
-                        </label>
 
-                        @foreach (var item in vm.GetSelectedWorkloadParameters())
+                <div class="form-control overflow-hidden">
+                    <EditForm Model="@vm" OnSubmit=@HandleExecute>
+                        @if (vm.CommandMode == CommandMode.Request)
                         {
-                            @*TODO:Handling Default EnumValue, DefaultValue, Placeholder for IsArray, bind-value*@
-                            <label class="input-group input-group-sm my-2 ml-10">
-                                <span class="text-slate-300">@item.GetTypeLabel() @item.ParameterName</span>
-                                @if (item.ParameterType == AllowParameterType.Enum)
-                                {
-                                    <select class="select select-bordered select-sm w-full max-w-xs leading-4">
-                                        @foreach (var name in item.EnumNames)
-                                        {
-                                            <option>@name</option>
-                                        }
-                                    </select>
-                                }
-                                else
-                                {
-                                    <input type="text" class="input input-bordered input-sm text-slate-700" />
-                                }
+                            <label class="input-group">
+                                <span class="text-slate-300 min-w-[115px]">Workload</span>
+                                <select class="select select-bordered select-sm w-full max-w-xs leading-4" @onchange=vm.ChangeSelectedWorkload>
+                                    @foreach (var item in vm.WorkloadInfos)
+                                    {
+                                        <option>@item.Name</option>
+                                    }
+                                </select>
                             </label>
+
+                            @foreach (var item in vm.SelectedWorkloadParametes)
+                            {
+                                @*TODO:Handling Default EnumValue, DefaultValue, Placeholder for IsArray, bind-value*@
+                                <label class="input-group input-group-sm my-2 ml-10">
+                                    <span class="text-slate-300">@item.TypeLabel @item.ParameterName</span>
+                                    @if (item.SelectableValues.Length != 0)
+                                    {
+                                        <select class="select select-bordered select-sm w-full max-w-xs leading-4" @bind=item.Value>
+                                            @foreach (var name in item.SelectableValues)
+                                            {
+                                                <option>@name</option>
+                                            }
+                                        </select>
+                                    }
+                                    else
+                                    {
+                                        <input type="text" class="input input-bordered input-sm text-slate-700" @bind-value=item.Value />
+                                    }
+                                </label>
+                            }
+
+                            <label class="input-group input-group-sm my-2">
+                                <span class="text-slate-300 min-w-[115px]">Concurrency</span>
+                                <input type="text" placeholder="Concurrent per worker." class="input input-bordered input-sm text-slate-700" @bind-value=vm.Concurrency />
+                            </label>
+
+                            <label class="input-group input-group-sm my-2">
+                                <span class="text-slate-300 min-w-[115px]">Total Reuest</span>
+                                <input type="text" placeholder="Total request count." class="input input-bordered input-sm text-slate-700" @bind-value=vm.TotalRequest />
+                            </label>
+
+                            <div>
+                                <button class="btn btn-secondary btn-active" type="submit">Execute</button>
+                                <button class="btn btn-ghost">Cancel</button>
+                            </div>
                         }
 
-                        <label class="input-group input-group-sm my-2">
-                            <span class="text-slate-300 min-w-[115px]">Concurrency</span>
-                            <input type="text" placeholder="Concurrent per worker." class="input input-bordered input-sm text-slate-700" @bind-value=vm.Concurrency />
-                        </label>
+                        @if (vm.CommandMode == CommandMode.Repeat)
+                        {
+                            <div>
+                                <button class="btn btn-secondary btn-active" type="submit">Execute</button>
+                                <button class="btn btn-ghost">Cancel</button>
+                            </div>
+                        }
 
-                        <label class="input-group input-group-sm my-2">
-                            <span class="text-slate-300 min-w-[115px]">Total Reuest</span>
-                            <input type="text" placeholder="Total request count." class="input input-bordered input-sm text-slate-700" @bind-value=vm.TotalRequest />
-                        </label>
-                        
-                        <div>
-                            <button class="btn btn-secondary btn-active" type="submit">Execute</button>
-                            <button class="btn btn-ghost">Cancel</button>
-                        </div>
-                    }
+                        @if (vm.CommandMode == CommandMode.InfiniteLoop)
+                        {
 
-                    @if (vm.CommandMode == CommandMode.Repeat)
-                    {
-                        <div>
-                            <button class="btn btn-secondary btn-active" type="submit">Execute</button>
-                            <button class="btn btn-ghost">Cancel</button>
-                        </div>
-                    }
+                            <div>
+                                <button class="btn btn-secondary btn-active" type="submit">Execute</button>
+                                <button class="btn btn-ghost">Cancel</button>
+                            </div>
+                        }
 
-                    @if (vm.CommandMode == CommandMode.InfiniteLoop)
-                    {
-                        
-                        <div>
-                            <button class="btn btn-secondary btn-active" type="submit">Execute</button>
-                            <button class="btn btn-ghost">Cancel</button>
-                        </div>
-                    }
-
-                </EditForm>
-                 </div>
+                    </EditForm>
+                </div>
             </div>
 
         </div>
@@ -105,7 +101,7 @@
     <div class="card shadow-lg rounded m-2">
         <div class="card-body p-4">
             @*TODO: Show results count => Executing results(@Number)*@
-            <h2>Executing Results. IsRunning: @ConnectionGroupContext.IsRunning</h2>
+            <h2>Executing Results. IsRunning: @engine.IsRunning</h2>
         </div>
     </div>
 
@@ -122,7 +118,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var item in GetRunnningResults())
+            @foreach (var item in vm.ExecutionResults)
             {
                 <tr class="hover">
                     <td>
@@ -133,7 +129,8 @@
                         </svg>
 
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 mr-2 stroke-current text-green-500">
-                            <path stroke="none" d="M0 0h24v24H0z"/><path stroke-width="3" d="M5 12l5 5l10 -10" />
+                            <path stroke="none" d="M0 0h24v24H0z" />
+                            <path stroke-width="3" d="M5 12l5 5l10 -10" />
                         </svg>
 
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 mr-2 stroke-current text-gray-200">

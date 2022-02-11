@@ -8,6 +8,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Include="..\ConsoleApp2\Workloads.cs" Link="Workloads.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="ConsoleAppFramework" Version="4.0.6" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
 		<PackageReference Include="ZLogger" Version="1.6.1" />

@@ -84,7 +84,7 @@ public class WorkloadInfo
 [MessagePackObject]
 public class WorkloadParameterInfo
 {
-    public WorkloadParameterInfo(AllowParameterType parameterType, bool isNullable, bool isArray, object? defaultValue, string parameterName, string[] enumNames)
+    public WorkloadParameterInfo(AllowParameterType parameterType, bool isNullable, bool isArray, object? defaultValue, string parameterName, string[] enumNames, string? enumTypeName)
     {
         ParameterType = parameterType;
         IsNullable = isNullable;
@@ -92,6 +92,7 @@ public class WorkloadParameterInfo
         DefaultValue = defaultValue;
         ParameterName = parameterName;
         EnumNames = enumNames;
+        EnumTypeName = enumTypeName;
     }
 
     [Key(0)]
@@ -106,15 +107,18 @@ public class WorkloadParameterInfo
     public string ParameterName { get; }
     [Key(5)]
     public string[] EnumNames { get; }
-
+    [Key(6)]
+    public string? EnumTypeName { get; }
 
     public string GetTypeLabel()
     {
-        if (!IsArray && !IsNullable) return ParameterType.ToString();
-        if (IsArray && !IsNullable) return $"{ParameterType}[]";
-        if (IsArray && IsNullable) return $"{ParameterType}[]?";
-        if (IsNullable) return $"{ParameterType}?";
-        return ParameterType.ToString();
+        var typeName = (EnumTypeName != null) ? EnumTypeName : ParameterType.ToString();
+
+        if (!IsArray && !IsNullable) return typeName;
+        if (IsArray && !IsNullable) return $"{typeName}[]";
+        if (IsArray && IsNullable) return $"{typeName}[]?";
+        if (IsNullable) return $"{typeName}?";
+        return typeName.ToString();
     }
 }
 

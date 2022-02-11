@@ -107,7 +107,12 @@ namespace DFrame
                         if (string.IsNullOrEmpty(parameterValue)) return Array.CreateInstance(elementType, 0);
 
                         var values = parameterValue.Split(',');
-                        return values.Select(x => Parse(x)).ToArray();
+                        var array = Array.CreateInstance(elementType, values.Length);
+                        for (int i = 0; i < array.Length; i++)
+                        {
+                            array.SetValue(Parse(values[i]), i);
+                        }
+                        return array;
                     }
                     else
                     {
@@ -116,7 +121,7 @@ namespace DFrame
 
                     object? Parse(string? v)
                     {
-                        if (v == null)
+                        if (v == null || (elementType != typeof(string) && (v == "null") || v == ""))
                         {
                             if (p.HasDefaultValue)
                             {
@@ -130,7 +135,7 @@ namespace DFrame
                             throw new InvalidOperationException($"Required parameter is not exist, Type: {p.ParameterType.FullName} ParameterName: {p.Name}");
                         }
 
-                        return ParseAllowParameterType(parameterType, p, v);
+                        return ParseAllowParameterType(parameterType, elementType, p, v);
                     }
                 })
                 .ToArray();
@@ -178,11 +183,18 @@ namespace DFrame
                         throw new InvalidOperationException($"Not allowed parameter type. Type:{ctor.DeclaringType!.FullName} Parameter:{type.FullName}");
                     }
 
-                    return new WorkloadParameterInfo(parameterType.Value, isNullable, isArray, p.HasDefaultValue ? p.DefaultValue : null, name!, enumNames);
+                    var enumTypeName = (parameterType == AllowParameterType.Enum) ? elementType.Name : null;
+                    var defaultValue = p.HasDefaultValue ? p.DefaultValue : null;
+                    if (parameterType == AllowParameterType.Enum && p.HasDefaultValue)
+                    {
+                        defaultValue = Enum.GetName(elementType, defaultValue!);
+                    }
+
+                    return new WorkloadParameterInfo(parameterType.Value, isNullable, isArray, defaultValue, name!, enumNames, enumTypeName);
                 })
                 .ToArray();
 
-            activator = new Lazy<ObjectFactory>(() => ActivatorUtilities.CreateFactory(type, parameterTypes.Select(x=>x.ParameterType).ToArray()));
+            activator = new Lazy<ObjectFactory>(() => ActivatorUtilities.CreateFactory(type, parameterTypes.Select(x => x.ParameterType).ToArray()));
 
             return new WorkloadInfo(name, arguments);
         }
@@ -209,6 +221,10 @@ namespace DFrame
             {
                 isNullable = false;
             }
+
+            // others...
+            if (type.IsEnum) return AllowParameterType.Enum;
+            if (type == typeof(Guid)) return AllowParameterType.Guid;
 
             switch (Type.GetTypeCode(type))
             {
@@ -243,19 +259,16 @@ namespace DFrame
                 case TypeCode.String:
                     return AllowParameterType.String;
                 default:
-                    // others...
-                    if (type.IsEnum) return AllowParameterType.Enum;
-                    if (type == typeof(Guid)) return AllowParameterType.Guid;
                     return null;
             }
         }
 
-        static object ParseAllowParameterType(AllowParameterType allowParameterType, ParameterInfo parameterInfo, string value)
+        static object ParseAllowParameterType(AllowParameterType allowParameterType, Type elementType, ParameterInfo parameterInfo, string value)
         {
             switch (allowParameterType)
             {
                 case AllowParameterType.Enum:
-                    return Enum.Parse(parameterInfo.ParameterType, value);
+                    return Enum.Parse(elementType, value);
                 case AllowParameterType.Boolean:
                     return bool.Parse(value);
                 case AllowParameterType.Char:
