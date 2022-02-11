@@ -18,7 +18,6 @@ public partial class Index : IDisposable
 
     IndexViewModel vm = default!;
 
-
     protected override void OnInitialized()
     {
         vm = new IndexViewModel(engine);
@@ -63,7 +62,7 @@ public partial class Index : IDisposable
         }
 
         var parameters = vm.SelectedWorkloadParametes.Select(x => (x.ParameterName, x.Value)).ToArray();
-        engine.StartWorkerFlow(vm.SelectedWorkload, vm.Concurrency, vm.TotalRequest, parameters!);
+        engine.StartWorkerFlow(vm.SelectedWorkload, vm.Concurrency, vm.TotalRequest,vm.RequestWorkerLimit, parameters!);
     }
 
     // TODO:cancel
@@ -94,9 +93,16 @@ public class IndexViewModel
     public string? SelectedWorkload { get; set; }
     public WorkloadParameterInfoViewModel[] SelectedWorkloadParametes { get; private set; }
 
+    // Request/Repeat
+
     public int Concurrency { get; set; } = 1;
     public int TotalRequest { get; set; } = 1;
-    public int? RequestWorkerCount { get; set; } // null is all
+    public int RequestWorkerLimit { get; set; }
+
+    // Repeat
+    public int IncreaseWorkerCount { get; set; } = 0;
+    public int IncreaseTotalReqeustCount { get; set; } = 0;
+    public int RepeatCount { get; set; } = 1;
 
     public IndexViewModel(DFrameControllerExecutionEngine engine)
     {
@@ -107,7 +113,17 @@ public class IndexViewModel
     [MemberNotNull(nameof(WorkloadInfos), nameof(ExecutionResults), nameof(WorkloadInfos))]
     public void RefreshEngineProperties(DFrameControllerExecutionEngine engine)
     {
+        if (CurrentConnections == RequestWorkerLimit)
+        {
+            // auto extend
+            this.RequestWorkerLimit = engine.CurrentConnectingCount;
+        }
         this.CurrentConnections = engine.CurrentConnectingCount;
+        if (CurrentConnections < this.RequestWorkerLimit)
+        {
+            this.RequestWorkerLimit = CurrentConnections;
+        }
+
         this.IsRunning = engine.IsRunning;
         this.WorkloadInfos = engine.WorkloadInfos;
         if (this.SelectedWorkload == null)
@@ -136,6 +152,11 @@ public class IndexViewModel
                 this.SelectedWorkloadParametes = p.Arguments.Select(x => new WorkloadParameterInfoViewModel(x)).ToArray();
             }
         }
+    }
+
+    public void ChangeWorkerLimitRange(ChangeEventArgs e)
+    {
+        RequestWorkerLimit = int.Parse((string)e.Value!);
     }
 
     public string TabActive(CommandMode mode)

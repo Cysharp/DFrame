@@ -1,4 +1,6 @@
-﻿namespace DFrame.Controller;
+﻿using MagicOnion.Server.Hubs;
+
+namespace DFrame.Controller;
 
 // Note: this class is too complex, need refactoring.
 
@@ -9,13 +11,11 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
 
     // Notify.
     public event Action? StateChanged;
-
-    // TODO: lock to private.
-    internal readonly object EngineSync = new object();
+    readonly object EngineSync = new object();
 
     readonly ILoggerFactory loggerFactory;
 
-    readonly Dictionary<WorkerId, Dictionary<string, string>?> connections = new();
+    readonly Dictionary<WorkerId, (Guid ConnectionId, Dictionary<string, string>? metaData)> connections = new();
     WorkloadInfo[] workloadInfos = Array.Empty<WorkloadInfo>();
 
     public WorkloadInfo[] WorkloadInfos => workloadInfos;
@@ -23,37 +23,38 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
     public int CurrentConnectingCount { get; private set; }
     public bool IsRunning => RunningState != null;
 
-
+    IGroup? globalGroup;
     WorkersRunningStateMachine? RunningState;
 
     public ExecutionId? CurrentExecutionId { get; private set; }
+    public int? CurrentExecutingWorkerCount { get; set; }
 
     Dictionary<WorkerId, int>? latestResults; // index of latestResultsSorted
     SummarizedExecutionResult[]? latestResultsSorted; // for performance reason, store stored array.
 
     public SummarizedExecutionResult[] LatestSortedSummarizedExecutionResults => latestResultsSorted ?? Array.Empty<SummarizedExecutionResult>();
 
-    public IWorkerReceiver GlobalBroadcaster { get; internal set; } = default!;
-
     public DFrameControllerExecutionEngine(ILoggerFactory loggerFactory)
     {
         this.loggerFactory = loggerFactory;
     }
 
-    public void StartWorkerFlow(string workloadName, int concurrency, int totalRequestCount, (string name, string value)[] parameters)
+    public void StartWorkerFlow(string workloadName, int concurrency, int totalRequestCount, int workerLimit, (string name, string value)[] parameters)
     {
         lock (EngineSync)
         {
             if (connections.Count == 0) return; // can not start.
+            if (globalGroup == null) throw new InvalidOperationException("GlobalGroup does not exists.");
 
             var createWorkloadCount = concurrency;
-            int executeCount = totalRequestCount / connections.Count; // TODO:limit
-            var rest = totalRequestCount % connections.Count; // TODO:add rest worker
+            int executeCountPerWorker = totalRequestCount / workerLimit;
 
             CurrentExecutionId = ExecutionId.NewExecutionId();
+            CurrentExecutingWorkerCount = executeCountPerWorker * totalRequestCount;
 
-            var sorted = connections.Select(x => new SummarizedExecutionResult(x.Key, createWorkloadCount))
+            var sorted = connections.Select(x => new SummarizedExecutionResult(x.Key, x.Value.ConnectionId, createWorkloadCount))
                 .OrderBy(x => x.WorkerId)
+                .Take(workerLimit)
                 .ToArray();
 
             var dict = new Dictionary<WorkerId, int>();
@@ -65,18 +66,29 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
             latestResults = dict;
             latestResultsSorted = sorted;
 
-            RunningState = new WorkersRunningStateMachine(executeCount, connections.Select(x => x.Key), loggerFactory);
-            // TODO: pass parameters
-            GlobalBroadcaster.CreateWorkloadAndSetup(CurrentExecutionId.Value, createWorkloadCount, workloadName, parameters);
+            RunningState = new WorkersRunningStateMachine(executeCountPerWorker, sorted.Select(x => x.WorkerId), loggerFactory);
+
+            IWorkerReceiver broadcaster;
+            if (connections.Count == workerLimit)
+            {
+                broadcaster = globalGroup.CreateBroadcaster<IWorkerReceiver>();
+            }
+            else
+            {
+                broadcaster = globalGroup.CreateBroadcasterTo<IWorkerReceiver>(sorted.Select(x => x.ConnectionId).ToArray());
+            }
+
+            broadcaster.CreateWorkloadAndSetup(CurrentExecutionId.Value, createWorkloadCount, workloadName, parameters);
             StateChanged?.Invoke();
         }
     }
 
-    public void AddConnection(WorkerId workerId)
+    public void AddConnection(WorkerId workerId, Guid connectionId, IGroup globalGroup)
     {
         lock (EngineSync)
         {
-            connections.Add(workerId, null);
+            this.globalGroup = globalGroup;
+            connections.Add(workerId, (connectionId, null));
             CurrentConnectingCount++;
             StateChanged?.Invoke();
         }
@@ -91,10 +103,13 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
                 CurrentConnectingCount--;
             }
 
-            if (latestResults!.TryGetValue(workerId, out var i))
+            if (latestResults != null)
             {
-                // disconnected before complete is failed.
-                latestResultsSorted![i].TrySetStatus(ExecutionStatus.Failed);
+                if (latestResults.TryGetValue(workerId, out var i))
+                {
+                    // disconnected before complete is failed.
+                    latestResultsSorted![i].TrySetStatus(ExecutionStatus.Failed);
+                }
             }
 
             if (RunningState != null)
@@ -116,7 +131,8 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
         {
             if (connections.ContainsKey(workerId))
             {
-                connections[workerId] = metadata;
+                var (id, _) = connections[workerId];
+                connections[workerId] = (id, metadata);
             }
 
             // use latest one.
@@ -132,7 +148,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
     {
         if (connections.TryGetValue(workerId, out var dict))
         {
-            return dict ?? EmptyMetadata;
+            return dict.metaData ?? EmptyMetadata;
         }
         return EmptyMetadata;
     }
@@ -205,6 +221,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
 
             RunningState = null; // complete.
             CurrentExecutionId = null;
+            CurrentExecutingWorkerCount = null;
             StateChanged?.Invoke();
         }
     }

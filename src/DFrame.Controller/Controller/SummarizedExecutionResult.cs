@@ -11,6 +11,7 @@ public enum ExecutionStatus
 public class SummarizedExecutionResult
 {
     public WorkerId WorkerId { get; }
+    internal Guid ConnectionId { get; }
     public int WorkloadCount { get; }
     public ExecutionStatus ExecutionStatus { get; private set; }
 
@@ -28,9 +29,10 @@ public class SummarizedExecutionResult
 
     // NOTE: Require Median, Percentile?
 
-    public SummarizedExecutionResult(WorkerId workerId, int workloadCount)
+    public SummarizedExecutionResult(WorkerId workerId, Guid connectionId, int workloadCount)
     {
         this.WorkerId = workerId;
+        this.ConnectionId = connectionId;
         this.WorkloadCount = workloadCount;
         this.ExecutionStatus = ExecutionStatus.Running;
     }

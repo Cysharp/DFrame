@@ -39,7 +39,6 @@
 
                             @foreach (var item in vm.SelectedWorkloadParametes)
                             {
-                                @*TODO:Handling Default EnumValue, DefaultValue, Placeholder for IsArray, bind-value*@
                                 <label class="input-group input-group-sm my-2 ml-10">
                                     <span class="text-slate-300">@item.TypeLabel @item.ParameterName</span>
                                     @if (item.SelectableValues.Length != 0)
@@ -64,8 +63,15 @@
                             </label>
 
                             <label class="input-group input-group-sm my-2">
-                                <span class="text-slate-300 min-w-[115px]">Total Reuest</span>
+                                <span class="text-slate-300 min-w-[115px]">TotalReuest</span>
                                 <input type="text" placeholder="Total request count." class="input input-bordered input-sm text-slate-700" @bind-value=vm.TotalRequest />
+                            </label>
+
+
+                            <label class="input-group input-group-sm my-2">
+                                <span class="text-slate-300 min-w-[115px]">WorkerLimit</span>
+                                <input type="range" min="1" max="@vm.CurrentConnections" step=1 class="range" value=@vm.RequestWorkerLimit @oninput=vm.ChangeWorkerLimitRange>
+                                <span>@vm.RequestWorkerLimit</span>
                             </label>
 
                             <div>
@@ -122,24 +128,29 @@
             {
                 <tr class="hover">
                     <td>
-                        <button aria-label="loading button" class="btn btn-ghost btn-sm btn-circle loading"></button>
+                        @switch (item.ExecutionStatus)
+                        {
+                            case ExecutionStatus.Running:
+                                <button aria-label="loading button" class="btn btn-ghost btn-sm btn-circle loading"></button>
+                                break;
+                            case ExecutionStatus.Failed:
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 mr-2 stroke-current text-red-500">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                                break;
+                            case ExecutionStatus.Succeed:
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 mr-2 stroke-current text-green-500">
+                                    <path stroke="none" d="M0 0h24v24H0z" />
+                                    <path stroke-width="3" d="M5 12l5 5l10 -10" />
+                                </svg>
+                                break;
+                            case ExecutionStatus.Canceled:
 
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 mr-2 stroke-current text-red-500">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 mr-2 stroke-current text-green-500">
-                            <path stroke="none" d="M0 0h24v24H0z" />
-                            <path stroke-width="3" d="M5 12l5 5l10 -10" />
-                        </svg>
-
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 mr-2 stroke-current text-gray-200">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-
-                        <div class="badge badge-success">
-                            @item.ExecutionStatus
-                        </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 mr-2 stroke-current text-gray-200">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                                break;
+                        }
                     </td>
                     <td>@item.SucceedCount</td>
                     <td>

@@ -22,13 +22,8 @@ public sealed class ControllerHub : StreamingHubBase<IControllerHub, IWorkerRece
     {
         workerId = WorkerId.Parse(Context.CallContext.RequestHeaders.GetValue("worker-id"));
 
-        lock (engine.EngineSync)
-        {
-            var group = Group.AddAsync("global-masterhub-group").GetAwaiter().GetResult(); // always sync.
-            var broadcaster = group.CreateBroadcaster<IWorkerReceiver>();
-            engine.GlobalBroadcaster = broadcaster; // using new one:)
-            engine.AddConnection(workerId);
-        }
+        var group = Group.AddAsync("global-masterhub-group").GetAwaiter().GetResult(); // always sync.
+        engine.AddConnection(workerId, this.ConnectionId, group); // using new one:)
 
         return default;
     }
@@ -47,12 +42,10 @@ public sealed class ControllerHub : StreamingHubBase<IControllerHub, IWorkerRece
 
     public Task CreateWorkloadCompleteAsync(ExecutionId executionId)
     {
-        lock (engine.EngineSync)
-        {
-            var group = Group.AddAsync("running-group-" + executionId.ToString()).GetAwaiter().GetResult();
-            var broadcaster = group.CreateBroadcaster<IWorkerReceiver>();
-            engine.CreateWorkloadAndSetupComplete(workerId, broadcaster);
-        }
+        var group = Group.AddAsync("running-group-" + executionId.ToString()).GetAwaiter().GetResult();
+        var broadcaster = group.CreateBroadcaster<IWorkerReceiver>();
+        engine.CreateWorkloadAndSetupComplete(workerId, broadcaster);
+
         return Task.CompletedTask;
     }
 
