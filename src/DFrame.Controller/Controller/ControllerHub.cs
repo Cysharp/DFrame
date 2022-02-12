@@ -1,5 +1,4 @@
 ﻿using MagicOnion.Server.Hubs;
-using MessagePipe;
 
 namespace DFrame.Controller;
 
@@ -12,6 +11,7 @@ public sealed class ControllerHub : StreamingHubBase<IControllerHub, IWorkerRece
 {
     readonly DFrameControllerExecutionEngine engine;
     WorkerId workerId;
+    IGroup? executingGroup;
 
     public ControllerHub(DFrameControllerExecutionEngine engine)
     {
@@ -42,8 +42,8 @@ public sealed class ControllerHub : StreamingHubBase<IControllerHub, IWorkerRece
 
     public Task CreateWorkloadCompleteAsync(ExecutionId executionId)
     {
-        var group = Group.AddAsync("running-group-" + executionId.ToString()).GetAwaiter().GetResult();
-        var broadcaster = group.CreateBroadcaster<IWorkerReceiver>();
+        executingGroup = Group.AddAsync("running-group-" + executionId.ToString()).GetAwaiter().GetResult();
+        var broadcaster = executingGroup.CreateBroadcaster<IWorkerReceiver>();
         engine.CreateWorkloadAndSetupComplete(workerId, broadcaster);
 
         return Task.CompletedTask;
@@ -63,6 +63,8 @@ public sealed class ControllerHub : StreamingHubBase<IControllerHub, IWorkerRece
 
     public Task TeardownCompleteAsync()
     {
+        executingGroup?.RemoveAsync(Context);
+        executingGroup = null;
         engine.TeardownComplete(workerId);
         return Task.CompletedTask;
     }

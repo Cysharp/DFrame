@@ -81,11 +81,12 @@ public partial class Index : IDisposable
         if (!engine.IsRunning)
         {
             // try repeat.
-            if (repeatModeState != null)
+            var state = repeatModeState;
+            if (state != null)
             {
-                if (repeatModeState.TryMoveNextRepeat())
+                if (state.TryMoveNextRepeat())
                 {
-                    engine.StartWorkerFlow(repeatModeState.Workload, repeatModeState.Concurrency, repeatModeState.TotalRequest, repeatModeState.WorkerLimit, repeatModeState.Parameters!);
+                    engine.StartWorkerFlow(state.Workload, state.Concurrency, state.TotalRequest, state.WorkerLimit, state.Parameters!);
                 }
                 else
                 {
@@ -96,9 +97,15 @@ public partial class Index : IDisposable
         }
     }
 
-    // TODO:cancel
     void HandleCancel()
     {
+        if (repeatModeState != null)
+        {
+            repeatModeState = null;
+            engine.StateChanged -= WatchStateChangedForRepeat;
+        }
+
+        engine.Cancel();
     }
 }
 

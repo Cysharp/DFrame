@@ -103,7 +103,7 @@
                         @if (vm.CommandMode == CommandMode.Request || vm.CommandMode == CommandMode.Repeat)
                         {
                             <div>
-                                <button class="btn btn-ghost">Cancel</button>
+                                <button class="btn btn-ghost" type="button" @onclick="HandleCancel">Cancel</button>
                                 <button class="btn btn-secondary btn-active" type="submit">Execute</button>
                             </div>
                         }

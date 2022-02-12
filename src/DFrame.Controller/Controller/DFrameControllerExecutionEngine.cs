@@ -44,6 +44,8 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
         lock (EngineSync)
         {
             if (connections.Count == 0) return; // can not start.
+            if (workerLimit == 0) return;
+
             if (globalGroup == null) throw new InvalidOperationException("GlobalGroup does not exists.");
 
             if (connections.Count < workerLimit)
@@ -124,6 +126,12 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
                     WorkflowCompleted();
                     return;
                 }
+
+                if (CurrentConnectingCount == 0)
+                {
+                    WorkflowCompleted();
+                    return;
+                }
             }
 
             StateChanged?.Invoke();
@@ -171,7 +179,6 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
             }
 
             // TODO:result has error message, write error to log.
-
             StateChanged?.Invoke();
         }
     }
@@ -230,6 +237,17 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
             CurrentExecutionId = null;
             CurrentExecutingWorkloadCount = null;
             StateChanged?.Invoke();
+        }
+    }
+
+    public void Cancel()
+    {
+        lock (EngineSync)
+        {
+            if (RunningState != null)
+            {
+                RunningState.CancelAll();
+            }
         }
     }
 }

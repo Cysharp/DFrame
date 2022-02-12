@@ -70,6 +70,11 @@ public class WorkersRunningStateMachine
         return SignalState();
     }
 
+    public void CancelAll()
+    {
+        broadcaster?.Stop();
+    }
+
     bool SignalState()
     {
         if (broadcaster == null)
