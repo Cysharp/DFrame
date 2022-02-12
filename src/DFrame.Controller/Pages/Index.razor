@@ -71,7 +71,7 @@
                         <label class="input-group input-group-sm my-2">
                             <span class="text-slate-300 min-w-[115px]">WorkerLimit</span>
                             <input type="range" min="0" max="@vm.CurrentConnections" step=1 class="range" value=@vm.RequestWorkerLimit @oninput=vm.ChangeWorkerLimitRange>
-                            @if(vm.CurrentConnections == vm.RequestWorkerLimit)
+                            @if (vm.CurrentConnections == vm.RequestWorkerLimit)
                             {
                                 <span>No Limit</span>
                             }
@@ -81,7 +81,7 @@
                             }
                         </label>
 
-              
+
                         @if (vm.CommandMode == CommandMode.Repeat)
                         {
                             <label class="input-group input-group-sm my-2">
@@ -103,6 +103,7 @@
                         @if (vm.CommandMode == CommandMode.Request || vm.CommandMode == CommandMode.Repeat)
                         {
                             <div>
+                                @*TODO:IsRunningの状態に合わせてbuttonのstyleを変える*@
                                 <button class="btn btn-ghost" type="button" @onclick="HandleCancel">Cancel</button>
                                 <button class="btn btn-secondary btn-active" type="submit">Execute</button>
                             </div>
@@ -111,7 +112,8 @@
                         @if (vm.CommandMode == CommandMode.InfiniteLoop)
                         {
                             <div>
-                                <button class="btn btn-ghost">Stop</button>
+                                @*TODO:IsRunningの状態に合わせてbuttonのstyleを変える*@
+                                <button class="btn btn-ghost" type="button" @onclick="HandleCancel">Stop</button>
                                 <button class="btn btn-secondary btn-active" type="submit">Execute</button>
                             </div>
                         }
@@ -160,12 +162,6 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 mr-2 stroke-current text-green-500">
                                     <path stroke="none" d="M0 0h24v24H0z" />
                                     <path stroke-width="3" d="M5 12l5 5l10 -10" />
-                                </svg>
-                                break;
-                            case ExecutionStatus.Canceled:
-
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 mr-2 stroke-current text-gray-200">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
                                 </svg>
                                 break;
                         }

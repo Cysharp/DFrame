@@ -5,7 +5,7 @@ public enum ExecutionStatus
     Running,
     Succeed,
     Failed,
-    Canceled
+    // Canceled
 }
 
 public class SummarizedExecutionResult
