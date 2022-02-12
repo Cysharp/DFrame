@@ -21,7 +21,6 @@ public interface IWorkerReceiver
 {
     void CreateWorkloadAndSetup(ExecutionId executionId, int createCount, string workloadName, (string name, string value)[] parameters);
     void Execute(int executeCount);
-    void ExecuteUntilReceiveStop();
     void Stop();
     void Teardown();
 }

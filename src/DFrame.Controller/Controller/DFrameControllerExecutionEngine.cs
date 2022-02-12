@@ -27,7 +27,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
     WorkersRunningStateMachine? RunningState;
 
     public ExecutionId? CurrentExecutionId { get; private set; }
-    public int? CurrentExecutingWorkerCount { get; set; }
+    public int? CurrentExecutingWorkloadCount { get; set; }
 
     Dictionary<WorkerId, int>? latestResults; // index of latestResultsSorted
     SummarizedExecutionResult[]? latestResultsSorted; // for performance reason, store stored array.
@@ -46,11 +46,16 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
             if (connections.Count == 0) return; // can not start.
             if (globalGroup == null) throw new InvalidOperationException("GlobalGroup does not exists.");
 
+            if (connections.Count < workerLimit)
+            {
+                workerLimit = connections.Count;
+            }
+
             var createWorkloadCount = concurrency;
             int executeCountPerWorker = totalRequestCount / workerLimit;
 
             CurrentExecutionId = ExecutionId.NewExecutionId();
-            CurrentExecutingWorkerCount = executeCountPerWorker * totalRequestCount;
+            CurrentExecutingWorkloadCount = executeCountPerWorker * workerLimit * concurrency;
 
             var sorted = connections.Select(x => new SummarizedExecutionResult(x.Key, x.Value.ConnectionId, createWorkloadCount))
                 .OrderBy(x => x.WorkerId)
@@ -165,6 +170,8 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
                 }
             }
 
+            // TODO:result has error message, write error to log.
+
             StateChanged?.Invoke();
         }
     }
@@ -221,7 +228,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
 
             RunningState = null; // complete.
             CurrentExecutionId = null;
-            CurrentExecutingWorkerCount = null;
+            CurrentExecutingWorkloadCount = null;
             StateChanged?.Invoke();
         }
     }

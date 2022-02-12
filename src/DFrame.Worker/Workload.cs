@@ -18,7 +18,7 @@ public abstract class Workload
 
     internal async Task InternalTeardownAsync(WorkloadContext context)
     {
-        if (Interlocked.Increment(ref isDisposed) == 0)
+        if (Interlocked.Increment(ref isDisposed) == 1)
         {
             await TeardownAsync(context);
         }

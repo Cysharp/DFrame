@@ -18,6 +18,9 @@ public partial class Index : IDisposable
 
     IndexViewModel vm = default!;
 
+    // repeat management.
+    RepeatModeState? repeatModeState;
+
     protected override void OnInitialized()
     {
         vm = new IndexViewModel(engine);
@@ -52,22 +55,84 @@ public partial class Index : IDisposable
     {
         if (vm.SelectedWorkload == null)
         {
-            logger.LogDebug("SelectedWorkload is null, does not run workflow.");
+            logger.LogInformation("SelectedWorkload is null, does not run workflow.");
             return;
         }
         if (vm.IsRunning)
         {
-            logger.LogDebug("Already running, does not run workflow.");
+            logger.LogInformation("Already running, does not run workflow.");
             return;
         }
 
         var parameters = vm.SelectedWorkloadParametes.Select(x => (x.ParameterName, x.Value)).ToArray();
-        engine.StartWorkerFlow(vm.SelectedWorkload, vm.Concurrency, vm.TotalRequest,vm.RequestWorkerLimit, parameters!);
+
+        var totalRequest = (vm.CommandMode == CommandMode.InfiniteLoop) ? int.MaxValue : vm.TotalRequest;
+        engine.StartWorkerFlow(vm.SelectedWorkload, vm.Concurrency, totalRequest, vm.RequestWorkerLimit, parameters!);
+
+        if (vm.CommandMode == CommandMode.Repeat)
+        {
+            repeatModeState = new RepeatModeState(vm.SelectedWorkload, vm.Concurrency, vm.TotalRequest, vm.IncreaseTotalReqeustCount, vm.RequestWorkerLimit, vm.IncreaseWorkerCount, vm.RepeatCount, parameters!);
+            engine.StateChanged += WatchStateChangedForRepeat;
+        }
+    }
+
+    private void WatchStateChangedForRepeat()
+    {
+        if (!engine.IsRunning)
+        {
+            // try repeat.
+            if (repeatModeState != null)
+            {
+                if (repeatModeState.TryMoveNextRepeat())
+                {
+                    engine.StartWorkerFlow(repeatModeState.Workload, repeatModeState.Concurrency, repeatModeState.TotalRequest, repeatModeState.WorkerLimit, repeatModeState.Parameters!);
+                }
+                else
+                {
+                    repeatModeState = null;
+                    engine.StateChanged -= WatchStateChangedForRepeat;
+                }
+            }
+        }
     }
 
     // TODO:cancel
     void HandleCancel()
     {
+    }
+}
+
+public class RepeatModeState
+{
+    public string Workload { get; set; }
+    public int Concurrency { get; set; }
+    public int RestRepeatCount { get; private set; }
+    public int TotalRequest { get; private set; }
+    public int WorkerLimit { get; private set; }
+    public int IncreaseWorkerLimit { get; }
+    public int IncreaseTotalRequest { get; }
+    public (string, string)[] Parameters { get; }
+
+    public RepeatModeState(string workload, int concurrency, int totalRequest, int increaseTotalRequest, int workerLimit, int increaseWorkerLimit, int repeatCount, (string, string)[] parameters)
+    {
+        Workload = workload;
+        Concurrency = concurrency;
+        TotalRequest = totalRequest;
+        IncreaseTotalRequest = increaseTotalRequest;
+        WorkerLimit = workerLimit;
+        IncreaseWorkerLimit = increaseWorkerLimit;
+        RestRepeatCount = repeatCount;
+        Parameters = parameters;
+    }
+
+    public bool TryMoveNextRepeat()
+    {
+        RestRepeatCount--;
+        if (RestRepeatCount <= 0) return false;
+
+        WorkerLimit += IncreaseWorkerLimit;
+        TotalRequest += IncreaseTotalRequest;
+        return true;
     }
 }
 
@@ -89,19 +154,18 @@ public class IndexViewModel
     // Tab
     public CommandMode CommandMode { get; set; }
 
-    // Input Forms
+    // Input Forms for All
     public string? SelectedWorkload { get; set; }
     public WorkloadParameterInfoViewModel[] SelectedWorkloadParametes { get; private set; }
+    public int Concurrency { get; set; } = 1;
 
     // Request/Repeat
-
-    public int Concurrency { get; set; } = 1;
     public int TotalRequest { get; set; } = 1;
     public int RequestWorkerLimit { get; set; }
 
     // Repeat
-    public int IncreaseWorkerCount { get; set; } = 0;
     public int IncreaseTotalReqeustCount { get; set; } = 0;
+    public int IncreaseWorkerCount { get; set; } = 0;
     public int RepeatCount { get; set; } = 1;
 
     public IndexViewModel(DFrameControllerExecutionEngine engine)

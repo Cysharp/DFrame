@@ -10,18 +10,29 @@ using System.Threading.Tasks;
 public class TrialWorkload : Workload
 {
     readonly ILogger<TrialWorkload> logger;
+    int execCount = 0;
 
     public TrialWorkload(ILogger<TrialWorkload> logger)
     {
         this.logger = logger;
     }
 
+    public override Task SetupAsync(WorkloadContext context)
+    {
+        logger.LogInformation("Called Setup");
+        return Task.CompletedTask;
+    }
+
     public override async Task ExecuteAsync(WorkloadContext context)
     {
-        logger.LogInformation("Begin:" + context.WorkloadId);
-        await Task.Yield();
+        logger.LogInformation("Execute:" + (++execCount));
         await Task.Delay(TimeSpan.FromSeconds(1));
-        logger.LogInformation("End:" + context.WorkloadId);
+    }
+
+    public override Task TeardownAsync(WorkloadContext context)
+    {
+        logger.LogInformation("Called Teardown");
+        return Task.CompletedTask;
     }
 }
 
@@ -37,6 +48,11 @@ public class TrialWorkload2 : Workload
         this.logger = logger;
         this.x = x;
         this.y = y;
+    }
+
+    public override Task SetupAsync(WorkloadContext context)
+    {
+        return base.SetupAsync(context);
     }
 
     public override async Task ExecuteAsync(WorkloadContext context)
@@ -83,7 +99,7 @@ public class checkarg : Workload
         )
     {
         this.logger = logger;
-        logger.LogInformation((nonDefaultString, string.Join(",", arrayInt),nullableEnum, string.Join(",", enumArray), myenum, enummSelected, defaultString, myLongLongWIthDefault, d, thenullableInt).ToString());
+        logger.LogInformation((nonDefaultString, string.Join(",", arrayInt), nullableEnum, string.Join(",", enumArray), myenum, enummSelected, defaultString, myLongLongWIthDefault, d, thenullableInt).ToString());
     }
 
     public override Task SetupAsync(WorkloadContext context)
