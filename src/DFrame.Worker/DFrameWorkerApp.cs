@@ -10,9 +10,32 @@ namespace DFrame;
 
 // worker-app work as a daemon, connect to controller at initialize and wait command.
 
-internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
+internal class DFrameWorkerApp : ConsoleAppBase
 {
-    readonly ILogger<DFrameWorkerApp> logger;
+    DFrameWorkerEngine[] engines;
+
+    public DFrameWorkerApp(DFrameWorkerOptions options, IServiceProviderIsService isService, IServiceProvider serviceProvider)
+    {
+        var workloadCollection = DFrameWorkloadCollection.FromAssemblies(options.WorkloadAssemblies, isService);
+        var logger = serviceProvider.GetRequiredService<ILogger<DFrameWorkerEngine>>();
+
+        this.engines = new DFrameWorkerEngine[Math.Max(1, options.VirtualProcess)];
+        for (int i = 0; i < engines.Length; i++)
+        {
+            engines[i] = new DFrameWorkerEngine(logger, workloadCollection, options, isService, serviceProvider);
+        }
+    }
+
+    [RootCommand]
+    public async Task Run()
+    {
+        await Task.WhenAll(engines.Select(x => x.RunAsync(this.Context.CancellationToken)));
+    }
+}
+
+internal class DFrameWorkerEngine : IWorkerReceiver
+{
+    readonly ILogger<DFrameWorkerEngine> logger;
     readonly DFrameWorkerOptions options;
     readonly DFrameWorkloadCollection workloadCollection;
     readonly IServiceProvider serviceProvider;
@@ -31,11 +54,11 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
     TaskCompletionSource completeExecute;
     TaskCompletionSource completeTearDown;
 
-    public DFrameWorkerApp(ILogger<DFrameWorkerApp> logger, DFrameWorkerOptions options, IServiceProviderIsService isService, IServiceProvider serviceProvider)
+    public DFrameWorkerEngine(ILogger<DFrameWorkerEngine> logger, DFrameWorkloadCollection workloads, DFrameWorkerOptions options, IServiceProviderIsService isService, IServiceProvider serviceProvider)
     {
         this.logger = logger;
         this.options = options;
-        this.workloadCollection = DFrameWorkloadCollection.FromAssemblies(options.WorkloadAssemblies, isService);
+        this.workloadCollection = workloads;
         this.serviceProvider = serviceProvider;
         this.workerId = new WorkerId(Guid.NewGuid());
         this.workloads = new List<(WorkloadContext context, Workload workload)>();
@@ -44,19 +67,18 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
         this.completeTearDown = new TaskCompletionSource();
     }
 
-    [RootCommand]
-    public async Task Run()
+    public async Task RunAsync(CancellationToken applicationLifeTime)
     {
         logger.LogInformation($"Starting DFrame worker (WorkerId:{workerId})");
 
         var connectTimeout = options.ConnectTimeout;
-        while (!Context.CancellationToken.IsCancellationRequested)
+        while (!applicationLifeTime.IsCancellationRequested)
         {
             try
             {
-                await ConnectAsync();
+                await ConnectAsync(applicationLifeTime);
 
-                while (!Context.CancellationToken.IsCancellationRequested)
+                while (!applicationLifeTime.IsCancellationRequested)
                 {
                     var waitFor = connectionLifeTime;
                     if (waitFor == null) throw new InvalidOperationException("ConnectionLifeTime cancellationToken is null");
@@ -88,7 +110,7 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
                 try
                 {
                     logger.LogInformation($"Shutdown connection.");
-                    if (client != null) await client.DisposeAsync().WaitAsync(connectTimeout, Context.CancellationToken);
+                    if (client != null) await client.DisposeAsync().WaitAsync(connectTimeout, applicationLifeTime);
                     if (channel != null)
                     {
                         await channel.ShutdownAsync();
@@ -116,7 +138,7 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
 
                 var reconnectTime = options.ReconnectTime;
                 logger.LogInformation($"Wait {reconnectTime} to reconnect.");
-                await Task.Delay(reconnectTime, Context.CancellationToken);
+                await Task.Delay(reconnectTime, applicationLifeTime);
             }
         }
     }
@@ -131,7 +153,7 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
         this.completeTearDown = new TaskCompletionSource();
     }
 
-    async Task ConnectAsync()
+    async Task ConnectAsync(CancellationToken applicationLifeTime)
     {
         var connectTimeout = options.ConnectTimeout;
         logger.LogInformation($"Start to connect Worker -> Controller. Address: {options.ControllerAddress}");
@@ -155,7 +177,7 @@ internal class DFrameWorkerApp : ConsoleAppBase, IWorkerReceiver
         var connectTask = StreamingHubClient.ConnectAsync<IControllerHub, IWorkerReceiver>(callInvoker, this, option: callOption, serializerOptions: MessagePackSerializerOptions.Standard);
         client = await connectTask.WaitAsync(connectTimeout);
 
-        this.connectionLifeTime = CancellationTokenSource.CreateLinkedTokenSource(client!.WaitForDisconnect().ToCancellationToken(), Context.CancellationToken);
+        this.connectionLifeTime = CancellationTokenSource.CreateLinkedTokenSource(client!.WaitForDisconnect().ToCancellationToken(), applicationLifeTime);
         ResetSources();
 
         await client.InitializeMetadataAsync(workloadCollection.All.Select(x => x.WorkloadInfo).ToArray(), options.Metadata);

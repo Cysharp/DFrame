@@ -54,7 +54,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
             }
 
             var createWorkloadCount = concurrency;
-            int executeCountPerWorker = totalRequestCount / workerLimit;
+            int executeCountPerWorker = totalRequestCount / workerLimit / concurrency;
 
             CurrentExecutionId = ExecutionId.NewExecutionId();
             CurrentExecutingWorkloadCount = executeCountPerWorker * workerLimit * concurrency;

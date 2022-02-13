@@ -52,8 +52,15 @@ public class SummarizedExecutionResult
         var elapsed = result.Elapsed;
 
         Latest = elapsed;
-        if (elapsed < Min) Min = elapsed;
-        if (Max < elapsed) Max = elapsed;
+        if (SucceedCount == 1)
+        {
+            Min = Max = elapsed;
+        }
+        else
+        {
+            if (elapsed < Min) Min = elapsed;
+            if (Max < elapsed) Max = elapsed;
+        }
 
         TotalElapsed += elapsed;
     }

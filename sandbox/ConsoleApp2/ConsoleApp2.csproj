@@ -10,6 +10,7 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
 		<PackageReference Include="ZLogger" Version="1.6.1" />
+		<PackageReference Include="MagicOnion.Client" Version="4.4.0" />
 	</ItemGroup>
 
 	<ItemGroup>

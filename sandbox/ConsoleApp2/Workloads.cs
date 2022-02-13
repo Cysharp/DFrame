@@ -1,4 +1,8 @@
 ﻿using DFrame;
+using Grpc.Net.Client;
+using MagicOnion;
+using MagicOnion.Client;
+using MessagePack;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -116,4 +120,57 @@ public class checkarg : Workload
 public enum IroIrrrrrrrrro
 {
     Hoge, Huga, Tako, Foo, Bar, BazBaz
+}
+
+
+public class Echo5000 : Workload
+{
+    HttpClient httpClient = default!;
+
+    public override Task SetupAsync(WorkloadContext context)
+    {
+        this.httpClient = new HttpClient();
+        return Task.CompletedTask;
+    }
+
+    public override async Task ExecuteAsync(WorkloadContext context)
+    {
+        await httpClient.GetAsync("http://localhost:5000");
+    }
+
+    public override Task TeardownAsync(WorkloadContext context)
+    {
+        httpClient.Dispose();
+        return base.TeardownAsync(context);
+    }
+}
+
+public class EchoMagicOnion : Workload
+{
+    GrpcChannel channel = default!;
+    IEchoService client = default!;
+
+    public override async Task SetupAsync(WorkloadContext context)
+    {
+        channel = Grpc.Net.Client.GrpcChannel.ForAddress("http://localhost:5059");
+        client = MagicOnionClient.Create<IEchoService>(channel);
+
+        await client.Echo(""); // test echo.
+    }
+
+    public override async Task ExecuteAsync(WorkloadContext context)
+    {
+        await client.Echo("");
+    }
+
+    public override async Task TeardownAsync(WorkloadContext context)
+    {
+        await channel.ShutdownAsync();
+        channel.Dispose();
+    }
+}
+
+public interface IEchoService : IService<IEchoService>
+{
+    UnaryResult<Nil> Echo(string message);
 }

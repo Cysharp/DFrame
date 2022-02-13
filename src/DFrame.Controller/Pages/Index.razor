@@ -103,7 +103,7 @@
                         @if (vm.CommandMode == CommandMode.Request || vm.CommandMode == CommandMode.Repeat)
                         {
                             <div>
-                                @*TODO:IsRunningの状態に合わせてbuttonのstyleを変える*@
+                                @*TODO:change the button style from IsRunning*@
                                 <button class="btn btn-ghost" type="button" @onclick="HandleCancel">Cancel</button>
                                 <button class="btn btn-secondary btn-active" type="submit">Execute</button>
                             </div>
@@ -112,7 +112,7 @@
                         @if (vm.CommandMode == CommandMode.InfiniteLoop)
                         {
                             <div>
-                                @*TODO:IsRunningの状態に合わせてbuttonのstyleを変える*@
+                                @*TODO:change the button style from IsRunning*@
                                 <button class="btn btn-ghost" type="button" @onclick="HandleCancel">Stop</button>
                                 <button class="btn btn-secondary btn-active" type="submit">Execute</button>
                             </div>
@@ -135,11 +135,13 @@
         <thead>
             <tr>
                 <th>Status</th>
-                <th>Succeed</th>
-                <th>Error</th>
-                <th>Max</th>
-                <th>Min</th>
-                <th>Avg</th>
+                <th>#Workloads</th>
+                <th>#Succeed</th>
+                <th>#Error</th>
+                <th>Max(ms)</th>
+                <th>Min(ms)</th>
+                <th>Avg(ms)</th>
+                <th>Elapsed(sec)</th>
                 <th>Rps</th>
             </tr>
         </thead>
@@ -166,12 +168,14 @@
                                 break;
                         }
                     </td>
+                    <td>@item.WorkloadCount</td>
                     <td>@item.SucceedCount</td>
                     <td>@item.ErrorCount</td>
-                    <td>@item.Max</td>
-                    <td>@item.Min</td>
-                    <td>@item.Avg</td>
-                    <td>@item.CurrentRps</td>
+                    <td>@item.Max.TotalMilliseconds.ToString("0.00")</td>
+                    <td>@item.Min.TotalMilliseconds.ToString("0.00")</td>
+                    <td>@item.Avg.TotalMilliseconds.ToString("0.00")</td>
+                    <td>@item.TotalElapsed.TotalSeconds.ToString("0.00")</td>
+                    <td>@item.CurrentRps.ToString("0.00")</td>
                 </tr>
             }
         </tbody>

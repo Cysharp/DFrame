@@ -10,6 +10,7 @@ namespace DFrame
         public SocketsHttpHandlerOptions SocketsHttpHandlerOptions { get; set; } = new SocketsHttpHandlerOptions();
         public Assembly[] WorkloadAssemblies { get; set; } = AppDomain.CurrentDomain.GetAssemblies();
         public Dictionary<string, string> Metadata { get; set; } = new Dictionary<string, string>();
+        public int VirtualProcess { get; set; } = 1;
 
         public DFrameWorkerOptions()
         {
