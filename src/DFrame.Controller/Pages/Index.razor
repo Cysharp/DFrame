@@ -200,34 +200,31 @@
     <footer class="footer bg-neutral">
         <div class="w-full stats bg-neutral">
             <div class="stat place-items-center place-content-center bg-neutral">
-                <div class="stat-title">COUNT SUM</div> 
-                <div class="stat-value">1000</div> 
-                <div class="stat-desc">description</div>
+                <div class="stat-value">@(vm.IsRunning ? "RUNNING" : (vm.ExecutionResults.Length == 0) ? "READY" : "COMPLETED")</div>
             </div>
             <div class="stat place-items-center place-content-center bg-neutral">
-                <div class="stat-title">ERROR SUM</div> 
-                <div class="stat-value">100</div> 
-                <div class="stat-desc">description</div>
+                <div class="stat-title">START TIME</div>
+                <div class="stat-value">@vm.ExecutionResults.FirstOrDefault()?.ExecuteBegin?.ToLocalTime().ToString("hh:mm:ss")</div>
             </div>
             <div class="stat place-items-center place-content-center bg-neutral">
-                <div class="stat-title">RPS SUM</div> 
-                <div class="stat-value">1000</div> 
-                <div class="stat-desc">description</div>
+                <div class="stat-title">RUNNING TIME</div>
+                <div class="stat-value">@vm.ExecutionResults.Max(x=>(TimeSpan?)x.RunningTime)?.ToString(@"hh\:mm\:ss")</div>
             </div>
             <div class="stat place-items-center place-content-center bg-neutral">
-                <div class="stat-title">RUNNING TIME</div> 
-                <div class="stat-value">22:22:22</div> 
-                <div class="stat-desc">description</div>
+                <div class="stat-title">SUCCEED(SUM)</div>
+                <div class="stat-value">@vm.ExecutionResults.Sum(x=>x.SucceedCount)</div>
             </div>
             <div class="stat place-items-center place-content-center bg-neutral">
-                <div class="stat-title">START TIME</div> 
-                <div class="stat-value">12:12:12</div> 
-                <div class="stat-desc">description</div>
+                <div class="stat-title">ERROR(SUM)</div>
+                <div class="stat-value">@vm.ExecutionResults.Sum(x=>x.ErrorCount)</div>
             </div>
             <div class="stat place-items-center place-content-center bg-neutral">
-                <div class="stat-title">STATUS</div> 
-                <div class="stat-value">COMPLETED</div> 
-                <div class="stat-desc">description</div>
+                <div class="stat-title">90%ILE(MAX)</div>
+                <div class="stat-value">@vm.ExecutionResults.Sum(x=>x.Percentile90?.TotalMilliseconds)?.ToString("0.00")</div>
+            </div>
+            <div class="stat place-items-center place-content-center bg-neutral">
+                <div class="stat-title">RPS(SUM)</div>
+                <div class="stat-value">@vm.ExecutionResults.Sum(x=>x.CurrentRps).ToString("0.00")</div>
             </div>
         </div>
     </footer>

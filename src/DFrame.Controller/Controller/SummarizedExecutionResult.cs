@@ -35,6 +35,8 @@ public class SummarizedExecutionResult
     public TimeSpan Avg => (SucceedCount == 0) ? TimeSpan.Zero : TimeSpan.FromTicks(elapsedSum.Ticks / SucceedCount);
     public double CurrentRps => (TotalElapsed.TotalSeconds == 0 || (executeBegin == null)) ? 0 : (SucceedCount / RunningTime.TotalSeconds);
 
+    public DateTime? ExecuteBegin => executeBegin;
+
     public TimeSpan RunningTime
     {
         get
