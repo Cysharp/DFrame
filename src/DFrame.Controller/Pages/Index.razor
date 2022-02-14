@@ -27,7 +27,7 @@
                     <EditForm Model="@vm" OnSubmit=@HandleExecute>
                         <label class="input-group">
                             <span class="text-slate-300 min-w-[115px]">Workload</span>
-                            <select class="select select-bordered select-sm w-full max-w-xs leading-4" @onchange=vm.ChangeSelectedWorkload>
+                            <select class="select select-bordered select-sm w-full max-w-xs py-0 leading-4" @onchange=vm.ChangeSelectedWorkload>
                                 @foreach (var item in vm.WorkloadInfos)
                                 {
                                     <option>@item.Name</option>
@@ -35,49 +35,57 @@
                             </select>
                         </label>
 
+                        <table>
                         @foreach (var item in vm.SelectedWorkloadParametes)
                         {
-                            <label class="input-group input-group-sm my-2 ml-10">
-                                <span class="text-slate-300">@item.TypeLabel @item.ParameterName</span>
-                                @if (item.SelectableValues.Length != 0)
-                                {
-                                    <select class="select select-bordered select-sm w-full max-w-xs leading-4" @bind=item.Value>
-                                        @foreach (var name in item.SelectableValues)
-                                        {
-                                            <option>@name</option>
-                                        }
-                                    </select>
-                                }
-                                else
-                                {
-                                    <input type="text" class="input input-bordered input-sm text-slate-700" placeholder=@item.Hint @bind-value=item.Value />
-                                }
-                            </label>
+                            <tr>
+                                <td>
+                                    <label class="input-group input-group-sm my-2 ml-10">
+                                        <span class="text-slate-300 w-full" style="border-top-left-radius: 0.5rem; border-bottom-left-radius: 0.5rem;">@item.TypeLabel @item.ParameterName</span>
+                                    </label>
+                                </td>
+                                <td>
+                                    @if (item.SelectableValues.Length != 0)
+                                    {
+                                        <select class="select select-bordered select-sm w-full max-w-xs py-0 leading-4 rounded-none rounded-r-lg" @bind=item.Value>
+                                            @foreach (var name in item.SelectableValues)
+                                            {
+                                                <option>@name</option>
+                                            }
+                                        </select>
+                                    }
+                                    else
+                                    {
+                                        <input type="text" class="input input-bordered input-sm text-slate-700 rounded-r-lg min-w-[260px] placeholder:italic placeholder:text-slate-400" placeholder=@item.Hint @bind-value=item.Value />
+                                    }
+                                </td>
+                            </tr>
                         }
+                        </table>
 
                         <label class="input-group input-group-sm my-2">
                             <span class="text-slate-300 min-w-[115px]">Concurrency</span>
-                            <input type="text" placeholder="Concurrent per worker." class="input input-bordered input-sm text-slate-700" @bind-value=vm.Concurrency />
+                            <input type="text" placeholder="Concurrent per worker." class="input input-bordered input-sm text-slate-700 placeholder:italic placeholder:text-slate-400" @bind-value=vm.Concurrency />
                         </label>
 
                         @if (vm.CommandMode == CommandMode.Request || vm.CommandMode == CommandMode.Repeat)
                         {
                             <label class="input-group input-group-sm my-2">
                                 <span class="text-slate-300 min-w-[115px]">TotalReuest</span>
-                                <input type="text" placeholder="Total request count." class="input input-bordered input-sm text-slate-700" @bind-value=vm.TotalRequest />
+                                <input type="text" placeholder="Total request count." class="input input-bordered input-sm text-slate-700 placeholder:italic placeholder:text-slate-400" @bind-value=vm.TotalRequest />
                             </label>
                         }
 
                         <label class="input-group input-group-sm my-2">
                             <span class="text-slate-300 min-w-[115px]">WorkerLimit</span>
-                            <input type="range" min="0" max="@vm.CurrentConnections" step=1 class="range" value=@vm.RequestWorkerLimit @oninput=vm.ChangeWorkerLimitRange>
+                            <input type="range" min="0" max="@vm.CurrentConnections" step=1 class="range pt-3" value=@vm.RequestWorkerLimit @oninput=vm.ChangeWorkerLimitRange>
                             @if (vm.CurrentConnections == vm.RequestWorkerLimit)
                             {
-                                <span>No Limit</span>
+                                <span class="min-w-[48px] block text-center px-1 text-xs" style="border-top-left-radius: 0.5rem; border-bottom-left-radius: 0.5rem;">No Limit</span>
                             }
                             else
                             {
-                                <span>@vm.RequestWorkerLimit</span>
+                                <span class="min-w-[48px] block text-center px-1" style="border-top-left-radius: 0.5rem; border-bottom-left-radius: 0.5rem;">@vm.RequestWorkerLimit</span>
                             }
                         </label>
 
@@ -85,17 +93,17 @@
                         @if (vm.CommandMode == CommandMode.Repeat)
                         {
                             <label class="input-group input-group-sm my-2">
-                                <span class="text-slate-300 min-w-[115px]">Increase TotalRequest</span>
+                                <span class="text-slate-300 min-w-[172px]">Increase TotalRequest</span>
                                 <input type="text" class="input input-bordered input-sm text-slate-700" @bind-value=vm.IncreaseTotalReqeustCount />
                             </label>
 
                             <label class="input-group input-group-sm my-2">
-                                <span class="text-slate-300 min-w-[115px]">Increase Worker</span>
+                                <span class="text-slate-300 min-w-[172px]">Increase Worker</span>
                                 <input type="text" class="input input-bordered input-sm text-slate-700" @bind-value=vm.IncreaseWorkerCount />
                             </label>
 
                             <label class="input-group input-group-sm my-2">
-                                <span class="text-slate-300 min-w-[115px]">RepeatCount</span>
+                                <span class="text-slate-300 min-w-[172px]">RepeatCount</span>
                                 <input type="text" class="input input-bordered input-sm text-slate-700" @bind-value=vm.RepeatCount />
                             </label>
                         }
