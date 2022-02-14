@@ -11,7 +11,10 @@ public class WorkersRunningStateMachine
     HashSet<WorkerId>? executeCompletes;
     HashSet<WorkerId>? teardownCompletes;
 
+    DateTime? executeBegin;
     IWorkerReceiver? broadcaster;
+
+    public DateTime? ExecuteBegin => executeBegin;
 
     public WorkersRunningStateMachine(int executeCount, IEnumerable<WorkerId> connections, ILoggerFactory loggerFactory)
     {
@@ -88,6 +91,7 @@ public class WorkersRunningStateMachine
             logger.LogInformation($"All workers workload setup complete.");
             createWorkloadAndSetupCompletes = null;
             executeCompletes = new HashSet<WorkerId>(); // setup next state.
+            executeBegin = DateTime.UtcNow;
             broadcaster.Execute(executeCount);
             return false;
         }

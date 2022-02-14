@@ -10,6 +10,10 @@ public enum ExecutionStatus
 
 public class SummarizedExecutionResult
 {
+    DateTime? executeBegin;
+    DateTime? executeCompleted;
+    TimeSpan elapsedSum;
+
     public WorkerId WorkerId { get; }
     internal Guid ConnectionId { get; }
     public int WorkloadCount { get; }
@@ -20,12 +24,30 @@ public class SummarizedExecutionResult
     public int Count { get; private set; }
     public int SucceedCount { get; private set; }
     public int ErrorCount { get; set; }
-    public TimeSpan TotalElapsed { get; private set; }
+    public TimeSpan TotalElapsed => elapsedSum;
     public TimeSpan Latest { get; private set; }
     public TimeSpan Min { get; private set; }
     public TimeSpan Max { get; private set; }
-    public TimeSpan Avg => (SucceedCount == 0) ? TimeSpan.Zero : TimeSpan.FromTicks(TotalElapsed.Ticks / SucceedCount);
-    public double CurrentRps => (TotalElapsed.TotalSeconds == 0) ? 0 : (SucceedCount / TotalElapsed.TotalSeconds);
+    public TimeSpan Avg => (SucceedCount == 0) ? TimeSpan.Zero : TimeSpan.FromTicks(elapsedSum.Ticks / SucceedCount);
+    public double CurrentRps => (TotalElapsed.TotalSeconds == 0 || (executeBegin == null)) ? 0 : (SucceedCount / RunningTime.TotalSeconds);
+
+    public TimeSpan RunningTime
+    {
+        get
+        {
+            if (executeBegin == null)
+            {
+                return TimeSpan.Zero;
+            }
+
+            if (executeCompleted == null)
+            {
+                return DateTime.UtcNow - executeBegin.Value;
+            }
+
+            return executeCompleted.Value - executeBegin.Value;
+        }
+    }
 
     // NOTE: Require Median, Percentile?
 
@@ -35,6 +57,14 @@ public class SummarizedExecutionResult
         this.ConnectionId = connectionId;
         this.WorkloadCount = workloadCount;
         this.ExecutionStatus = ExecutionStatus.Running;
+    }
+
+    public void InitExecuteBeginTime(DateTime executeBegin)
+    {
+        if (this.executeBegin == null)
+        {
+            this.executeBegin = executeBegin;
+        }
     }
 
     public void Add(ExecuteResult result)
@@ -62,7 +92,7 @@ public class SummarizedExecutionResult
             if (Max < elapsed) Max = elapsed;
         }
 
-        TotalElapsed += elapsed;
+        elapsedSum += elapsed;
     }
 
     // on complete.
@@ -70,6 +100,7 @@ public class SummarizedExecutionResult
     {
         if (this.ExecutionStatus == ExecutionStatus.Running)
         {
+            this.executeCompleted = DateTime.UtcNow;
             this.ExecutionStatus = status;
         }
     }

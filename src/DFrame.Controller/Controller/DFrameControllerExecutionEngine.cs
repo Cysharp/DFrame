@@ -174,6 +174,15 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
             {
                 if (latestResults.TryGetValue(workerId, out var i))
                 {
+                    if (RunningState != null)
+                    {
+                        var begin = RunningState.ExecuteBegin;
+                        if (begin != null)
+                        {
+                            latestResultsSorted![i].InitExecuteBeginTime(begin.Value);
+                        }
+                    }
+
                     latestResultsSorted![i].Add(result);
                 }
             }

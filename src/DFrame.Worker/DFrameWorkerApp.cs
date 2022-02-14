@@ -263,6 +263,7 @@ internal class DFrameWorkerEngine : IWorkerReceiver
                         }
 
                         var executeResult = new ExecuteResult(x.context.WorkloadId, sw.Elapsed, i, (errorMsg != null), errorMsg);
+
                         await client!.ReportProgressAsync(executeResult);
                     }
                 }, token.Value)));
