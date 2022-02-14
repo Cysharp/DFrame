@@ -185,7 +185,11 @@ namespace DFrame.Internal
             var start = head & mask;
             var end = (head + count) & mask;
 
-            if (end > start)
+            if (count == 0)
+            {
+                return new RingBufferSpan<T>(Array.Empty<T>(), Array.Empty<T>(), count);
+            }
+            else if (end > start)
             {
                 var first = buffer.AsSpan(start, count);
                 var second = Array.Empty<T>().AsSpan();
