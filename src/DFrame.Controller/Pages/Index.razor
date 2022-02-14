@@ -142,48 +142,50 @@
     <table class="table w-full">
         <thead>
             <tr>
-                <th>Status</th>
-                <th>#Workloads</th>
-                <th>#Succeed</th>
-                <th>#Error</th>
-                <th>Max(ms)</th>
-                <th>Min(ms)</th>
-                <th>Avg(ms)</th>
-                <th>RunningTime(sec)</th>
-                <th>Rps</th>
+                <th class="text-center normal-case">Status</th>
+                <th class="text-center normal-case">#Workloads</th>
+                <th class="text-center normal-case">#Succeed</th>
+                <th class="text-center normal-case">#Error</th>
+                <th class="text-center normal-case">Max(ms)</th>
+                <th class="text-center normal-case">Min(ms)</th>
+                <th class="text-center normal-case">Avg(ms)</th>
+                <th class="text-center normal-case">RunningTime(sec)</th>
+                <th class="text-center normal-case">Rps</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var item in vm.ExecutionResults)
             {
                 <tr class="hover">
-                    <td>
-                        @switch (item.ExecutionStatus)
-                        {
-                            case ExecutionStatus.Running:
-                                <button aria-label="loading button" class="btn btn-ghost btn-sm btn-circle loading"></button>
-                                break;
-                            case ExecutionStatus.Failed:
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 mr-2 stroke-current text-red-500">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                                break;
-                            case ExecutionStatus.Succeed:
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 mr-2 stroke-current text-green-500">
-                                    <path stroke="none" d="M0 0h24v24H0z" />
-                                    <path stroke-width="3" d="M5 12l5 5l10 -10" />
-                                </svg>
-                                break;
-                        }
+                    <td class="text-center">
+                        <div>
+                            @switch (item.ExecutionStatus)
+                            {
+                                case ExecutionStatus.Running:
+                                    <button aria-label="loading button" class="btn btn-ghost btn-sm btn-circle loading"></button>
+                                    break;
+                                case ExecutionStatus.Failed:
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 mr-2 stroke-current text-red-500 scale-125">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                    break;
+                                case ExecutionStatus.Succeed:
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 mr-2 stroke-current text-green-500 scale-125">
+                                        <path stroke="none" d="M0 0h24v24H0z" />
+                                        <path stroke-width="4" d="M5 12l5 5l10 -10" />
+                                    </svg>
+                                    break;
+                            }
+                        </div>
                     </td>
-                    <td>@item.WorkloadCount</td>
-                    <td>@item.SucceedCount</td>
-                    <td>@item.ErrorCount</td>
-                    <td>@item.Max.TotalMilliseconds.ToString("0.00")</td>
-                    <td>@item.Min.TotalMilliseconds.ToString("0.00")</td>
-                    <td>@item.Avg.TotalMilliseconds.ToString("0.00")</td>
-                    <td>@item.RunningTime.TotalSeconds.ToString("0.00")</td>
-                    <td>@item.CurrentRps.ToString("0.00")</td>
+                    <td class="text-center">@item.WorkloadCount</td>
+                    <td class="text-center">@item.SucceedCount</td>
+                    <td class="text-center">@item.ErrorCount</td>
+                    <td class="text-center">@item.Max.TotalMilliseconds.ToString("0.00")</td>
+                    <td class="text-center">@item.Min.TotalMilliseconds.ToString("0.00")</td>
+                    <td class="text-center">@item.Avg.TotalMilliseconds.ToString("0.00")</td>
+                    <td class="text-center">@item.RunningTime.TotalSeconds.ToString("0.00")</td>
+                    <td class="text-center">@item.CurrentRps.ToString("0.00")</td>
                 </tr>
             }
         </tbody>
