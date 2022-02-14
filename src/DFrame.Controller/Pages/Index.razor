@@ -36,31 +36,31 @@
                         </label>
 
                         <table>
-                        @foreach (var item in vm.SelectedWorkloadParametes)
-                        {
-                            <tr>
-                                <td>
-                                    <label class="input-group input-group-sm my-2 ml-10">
-                                        <span class="text-slate-300 w-full" style="border-top-left-radius: 0.5rem; border-bottom-left-radius: 0.5rem;">@item.TypeLabel @item.ParameterName</span>
-                                    </label>
-                                </td>
-                                <td>
-                                    @if (item.SelectableValues.Length != 0)
-                                    {
-                                        <select class="select select-bordered select-sm w-full max-w-xs py-0 leading-4 rounded-none rounded-r-lg" @bind=item.Value>
-                                            @foreach (var name in item.SelectableValues)
-                                            {
-                                                <option>@name</option>
-                                            }
-                                        </select>
-                                    }
-                                    else
-                                    {
-                                        <input type="text" class="input input-bordered input-sm text-slate-700 rounded-r-lg min-w-[260px] placeholder:italic placeholder:text-slate-400" placeholder=@item.Hint @bind-value=item.Value />
-                                    }
-                                </td>
-                            </tr>
-                        }
+                            @foreach (var item in vm.SelectedWorkloadParametes)
+                            {
+                                <tr>
+                                    <td>
+                                        <label class="input-group input-group-sm my-2 ml-10">
+                                            <span class="text-slate-300 w-full" style="border-top-left-radius: 0.5rem; border-bottom-left-radius: 0.5rem;">@item.TypeLabel @item.ParameterName</span>
+                                        </label>
+                                    </td>
+                                    <td>
+                                        @if (item.SelectableValues.Length != 0)
+                                        {
+                                            <select class="select select-bordered select-sm w-full max-w-xs py-0 leading-4 rounded-none rounded-r-lg" @bind=item.Value>
+                                                @foreach (var name in item.SelectableValues)
+                                                {
+                                                    <option>@name</option>
+                                                }
+                                            </select>
+                                        }
+                                        else
+                                        {
+                                            <input type="text" class="input input-bordered input-sm text-slate-700 rounded-r-lg min-w-[260px] placeholder:italic placeholder:text-slate-400" placeholder=@item.Hint @bind-value=item.Value />
+                                        }
+                                    </td>
+                                </tr>
+                            }
                         </table>
 
                         <label class="input-group input-group-sm my-2">
@@ -150,6 +150,9 @@
                 <th>Min(ms)</th>
                 <th>Avg(ms)</th>
                 <th>RunningTime(sec)</th>
+                <th>Median(ms)</th>
+                <th>90%ile(ms)</th>
+                <th>95%ile(ms)</th>
                 <th>Rps</th>
             </tr>
         </thead>
@@ -183,6 +186,9 @@
                     <td>@item.Min.TotalMilliseconds.ToString("0.00")</td>
                     <td>@item.Avg.TotalMilliseconds.ToString("0.00")</td>
                     <td>@item.RunningTime.TotalSeconds.ToString("0.00")</td>
+                    <td>@item.Median?.TotalMilliseconds.ToString("0.00")</td>
+                    <td>@item.Percentile90?.TotalMilliseconds.ToString("0.00")</td>
+                    <td>@item.Percentile95?.TotalMilliseconds.ToString("0.00")</td>
                     <td>@item.CurrentRps.ToString("0.00")</td>
                 </tr>
             }

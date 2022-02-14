@@ -1,4 +1,6 @@
-﻿namespace DFrame.Controller;
+﻿using DFrame.Internal;
+
+namespace DFrame.Controller;
 
 public enum ExecutionStatus
 {
@@ -13,6 +15,8 @@ public class SummarizedExecutionResult
     DateTime? executeBegin;
     DateTime? executeCompleted;
     TimeSpan elapsedSum;
+
+    FixedSizeList<TimeSpan>? elapsedValues;
 
     public WorkerId WorkerId { get; }
     internal Guid ConnectionId { get; }
@@ -49,10 +53,14 @@ public class SummarizedExecutionResult
         }
     }
 
-    // NOTE: Require Median, Percentile?
+    // Calc from elapsedValues when completed.
+    public TimeSpan? Median { get; private set; }
+    public TimeSpan? Percentile90 { get; private set; }
+    public TimeSpan? Percentile95 { get; private set; }
 
     public SummarizedExecutionResult(WorkerId workerId, Guid connectionId, int workloadCount)
     {
+        this.elapsedValues = new FixedSizeList<TimeSpan>(100000); // TODO: from DFrameControllerOptions.
         this.WorkerId = workerId;
         this.ConnectionId = connectionId;
         this.WorkloadCount = workloadCount;
@@ -69,6 +77,8 @@ public class SummarizedExecutionResult
 
     public void Add(ExecuteResult result)
     {
+        if (this.ExecutionStatus != ExecutionStatus.Running) return;
+
         Count++;
         if (result.HasError)
         {
@@ -93,6 +103,7 @@ public class SummarizedExecutionResult
         }
 
         elapsedSum += elapsed;
+        elapsedValues?.AddLast(elapsed);
     }
 
     // on complete.
@@ -102,6 +113,55 @@ public class SummarizedExecutionResult
         {
             this.executeCompleted = DateTime.UtcNow;
             this.ExecutionStatus = status;
+
+            if (elapsedValues != null)
+            {
+                var array = elapsedValues.ToArray();
+                Array.Sort(array);
+                elapsedValues = null;
+
+                if (array.Length > 0)
+                {
+                    if (array.Length == 1)
+                    {
+                        Median = Percentile90 = Percentile95 = array[0];
+                    }
+                    else
+                    {
+                        // Calc Median
+                        if (array.Length % 2 == 0)
+                        {
+                            var i = array.Length / 2;
+                            var i2 = i - 1;
+                            Median = TimeSpan.FromTicks((array[i].Ticks + array[i2].Ticks) / 2);
+                        }
+                        else
+                        {
+                            Median = array[array.Length / 2];
+                        }
+
+                        // Calc percentile
+                        Percentile90 = Percentile(array, 0.9);
+                        Percentile95 = Percentile(array, 0.95);
+                    }
+                }
+            }
+        }
+    }
+
+    // values is sorted.
+    static TimeSpan Percentile(TimeSpan[] values, double percentile)
+    {
+        var realIndex = percentile * (values.Length - 1.0);
+        var index = (int)realIndex;
+        var frac = realIndex - index;
+        if (index + 1 < values.Length)
+        {
+            return values[index] * (1 - frac) + values[index + 1] * frac;
+        }
+        else
+        {
+            return values[index];
         }
     }
 }
