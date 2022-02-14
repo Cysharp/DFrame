@@ -142,25 +142,23 @@
     <table class="table w-full">
         <thead>
             <tr>
-                <th class="text-center normal-case">Status</th>
-                <th class="text-center normal-case">#Workloads</th>
+                <th class="text-center normal-case max-w-[50px]"></th>
                 <th class="text-center normal-case">#Succeed</th>
                 <th class="text-center normal-case">#Error</th>
                 <th class="text-center normal-case">Max(ms)</th>
                 <th class="text-center normal-case">Min(ms)</th>
                 <th class="text-center normal-case">Avg(ms)</th>
-                <th class="text-center normal-case">RunningTime(sec)</th>
                 <th class="text-center normal-case">Median(ms)</th>
                 <th class="text-center normal-case">90%ile(ms)</th>
                 <th class="text-center normal-case">95%ile(ms)</th>
-                <th class="text-center normal-case">Rps</th>
+                <th class="text-center normal-case">RPS</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var item in vm.ExecutionResults)
             {
                 <tr class="hover">
-                    <td class="text-center">
+                    <td class="text-center max-w-[50px]">
                         <div>
                             @switch (item.ExecutionStatus)
                             {
@@ -184,13 +182,11 @@
                             }
                         </div>
                     </td>
-                    <td class="text-center">@item.WorkloadCount</td>
                     <td class="text-center">@item.SucceedCount</td>
                     <td class="text-center">@item.ErrorCount</td>
                     <td class="text-center">@item.Max.TotalMilliseconds.ToString("0.00")</td>
                     <td class="text-center">@item.Min.TotalMilliseconds.ToString("0.00")</td>
                     <td class="text-center">@item.Avg.TotalMilliseconds.ToString("0.00")</td>
-                    <td class="text-center">@item.RunningTime.TotalSeconds.ToString("0.00")</td>
                     <td class="text-center">@item.Median?.TotalMilliseconds.ToString("0.00")</td>
                     <td class="text-center">@item.Percentile90?.TotalMilliseconds.ToString("0.00")</td>
                     <td class="text-center">@item.Percentile95?.TotalMilliseconds.ToString("0.00")</td>
@@ -201,3 +197,39 @@
     </table>
 
 </div>
+
+
+<footer class="footer bg-neutral">
+    <div class="w-full stats bg-neutral">
+        <div class="stat place-items-center place-content-center bg-neutral">
+            <div class="stat-title">COUNT SUM</div> 
+            <div class="stat-value">1000</div> 
+            <div class="stat-desc">description</div>
+        </div>
+        <div class="stat place-items-center place-content-center bg-neutral">
+            <div class="stat-title">ERROR SUM</div> 
+            <div class="stat-value">100</div> 
+            <div class="stat-desc">description</div>
+        </div>
+        <div class="stat place-items-center place-content-center bg-neutral">
+            <div class="stat-title">RPS SUM</div> 
+            <div class="stat-value">1000</div> 
+            <div class="stat-desc">description</div>
+        </div>
+        <div class="stat place-items-center place-content-center bg-neutral">
+            <div class="stat-title">RUNNING TIME</div> 
+            <div class="stat-value">22:22:22</div> 
+            <div class="stat-desc">description</div>
+        </div>
+        <div class="stat place-items-center place-content-center bg-neutral">
+            <div class="stat-title">START TIME</div> 
+            <div class="stat-value">12:12:12</div> 
+            <div class="stat-desc">description</div>
+        </div>
+        <div class="stat place-items-center place-content-center bg-neutral">
+            <div class="stat-title">STATUS</div> 
+            <div class="stat-value">COMPLETED</div> 
+            <div class="stat-desc">description</div>
+        </div>
+    </div>
+</footer>
