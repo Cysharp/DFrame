@@ -211,6 +211,10 @@
                 <div class="stat-value">@vm.ExecutionResults.Max(x=>(TimeSpan?)x.RunningTime)?.ToString(@"hh\:mm\:ss")</div>
             </div>
             <div class="stat place-items-center place-content-center bg-neutral">
+                <div class="stat-title">WORK LOADS</div>
+                <div class="stat-value">@vm.ExecutionResults.Sum(x=>x.WorkloadCount)</div>
+            </div>
+            <div class="stat place-items-center place-content-center bg-neutral">
                 <div class="stat-title">SUCCEED(SUM)</div>
                 <div class="stat-value">@vm.ExecutionResults.Sum(x=>x.SucceedCount)</div>
             </div>
@@ -220,7 +224,7 @@
             </div>
             <div class="stat place-items-center place-content-center bg-neutral">
                 <div class="stat-title">90%ILE(MAX)</div>
-                <div class="stat-value">@vm.ExecutionResults.Sum(x=>x.Percentile90?.TotalMilliseconds)?.ToString("0.00")</div>
+                <div class="stat-value">@vm.ExecutionResults.Max(x=>x.Percentile90?.TotalMilliseconds)?.ToString("0.00")</div>
             </div>
             <div class="stat place-items-center place-content-center bg-neutral">
                 <div class="stat-title">RPS(SUM)</div>

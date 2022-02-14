@@ -135,7 +135,7 @@ public class Echo5000 : Workload
 
     public override async Task ExecuteAsync(WorkloadContext context)
     {
-        await httpClient.GetAsync("http://localhost:5111");
+        await httpClient.GetStringAsync("http://localhost:5111");
     }
 
     public override Task TeardownAsync(WorkloadContext context)
