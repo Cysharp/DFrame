@@ -201,11 +201,11 @@
 
     <footer class="footer bg-neutral fixed bottom-0 left-0">
         <div class="w-full stats bg-neutral">
-            <div class="stat place-items-center place-content-center bg-neutral py-3">
+            <div class="stat place-items-center place-content-center bg-neutral pt-3 pb-0">
                 <div class="stat-value text-2xl">@(vm.IsRunning ? "RUNNING" : (vm.ExecutionResults.Length == 0) ? "READY" : "COMPLETED")</div>
                 <div class="col-start-1 flex">
-                    <div class="ml-1 text-base">@vm.ExecutionResults.Sum(x=>x.WorkloadCount)</div>
-                    <div class="opacity-50 leading-6 text-xs">&nbsp;WORKLOADS</div>
+                    <div class="font-extrabold text-base">@vm.ExecutionResults.Sum(x=>x.WorkloadCount)</div>
+                    <div class="opacity-50 leading-7 text-xs">&nbsp;WORKLOADS</div>
                 </div>
             </div>
             <div class="stat place-items-center place-content-center bg-neutral">
