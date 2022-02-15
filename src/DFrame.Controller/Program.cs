@@ -35,8 +35,6 @@ builder.Services.AddSingleton<ILoggerProvider, RoutingLoggerProvider>();
 
 var app = builder.Build();
 
-GlobalServiceProvider.Instance = app.Services;
-
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
