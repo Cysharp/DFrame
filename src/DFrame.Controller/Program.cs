@@ -32,6 +32,8 @@ builder.Logging.AddZLoggerConsole(options =>
 builder.Services.TryAddSingleton<DFrameControllerExecutionEngine>();
 builder.Services.TryAddSingleton<LogRouter>();
 builder.Services.AddSingleton<ILoggerProvider, RoutingLoggerProvider>();
+// If user sets custom provdier, use it.
+builder.Services.TryAddSingleton<IExecutionResultHistoryProvider, InMemoryExecutionResultHistoryProvider>();
 
 var app = builder.Build();
 

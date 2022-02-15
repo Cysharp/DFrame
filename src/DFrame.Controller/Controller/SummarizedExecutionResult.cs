@@ -10,6 +10,7 @@ public enum ExecutionStatus
     // Canceled
 }
 
+// TODO:make serializable
 public class SummarizedExecutionResult
 {
     DateTime? executeBegin;
@@ -19,7 +20,6 @@ public class SummarizedExecutionResult
     FixedSizeList<TimeSpan>? elapsedValues;
 
     public WorkerId WorkerId { get; }
-    internal Guid ConnectionId { get; }
     public int WorkloadCount { get; }
     public ExecutionStatus ExecutionStatus { get; private set; }
 
@@ -33,9 +33,7 @@ public class SummarizedExecutionResult
     public TimeSpan Min { get; private set; }
     public TimeSpan Max { get; private set; }
     public TimeSpan Avg => (SucceedCount == 0) ? TimeSpan.Zero : TimeSpan.FromTicks(elapsedSum.Ticks / SucceedCount);
-    public double CurrentRps => (TotalElapsed.TotalSeconds == 0 || (executeBegin == null)) ? 0 : (SucceedCount / RunningTime.TotalSeconds);
-
-    public DateTime? ExecuteBegin => executeBegin;
+    public double Rps => (TotalElapsed.TotalSeconds == 0 || (executeBegin == null)) ? 0 : (SucceedCount / RunningTime.TotalSeconds);
 
     public TimeSpan RunningTime
     {
@@ -60,11 +58,10 @@ public class SummarizedExecutionResult
     public TimeSpan? Percentile90 { get; private set; }
     public TimeSpan? Percentile95 { get; private set; }
 
-    public SummarizedExecutionResult(WorkerId workerId, Guid connectionId, int workloadCount)
+    public SummarizedExecutionResult(WorkerId workerId, int workloadCount)
     {
         this.elapsedValues = new FixedSizeList<TimeSpan>(100000); // TODO: from DFrameControllerOptions.
         this.WorkerId = workerId;
-        this.ConnectionId = connectionId;
         this.WorkloadCount = workloadCount;
         this.ExecutionStatus = ExecutionStatus.Running;
     }
@@ -109,7 +106,7 @@ public class SummarizedExecutionResult
     }
 
     // on complete.
-    public void TrySetStatus(ExecutionStatus status)
+    public bool TrySetStatus(ExecutionStatus status)
     {
         if (this.ExecutionStatus == ExecutionStatus.Running)
         {
@@ -148,7 +145,9 @@ public class SummarizedExecutionResult
                     }
                 }
             }
+            return true;
         }
+        return false;
     }
 
     // values is sorted.

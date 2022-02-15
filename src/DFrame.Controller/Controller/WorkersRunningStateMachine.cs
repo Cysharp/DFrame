@@ -2,26 +2,38 @@
 
 public class WorkersRunningStateMachine
 {
-    readonly int executeCount;
+    readonly int executeCountPerWorker;
     readonly HashSet<WorkerId> runningConnections;
     readonly ILogger<WorkersRunningStateMachine> logger;
+    readonly ExecutionSummary executionSummary;
+    readonly Dictionary<WorkerId, int> resultsIndex;
+    readonly SummarizedExecutionResult[] resultsSorted; // for performance reason, store sorted array.
 
     // State
     HashSet<WorkerId>? createWorkloadAndSetupCompletes;
     HashSet<WorkerId>? executeCompletes;
     HashSet<WorkerId>? teardownCompletes;
 
-    DateTime? executeBegin;
     IWorkerReceiver? broadcaster;
+    DateTime? executeBegin;
 
-    public DateTime? ExecuteBegin => executeBegin;
-
-    public WorkersRunningStateMachine(int executeCount, IEnumerable<WorkerId> connections, ILoggerFactory loggerFactory)
+    public WorkersRunningStateMachine(ExecutionSummary summary, int executeCountPerWorker, SummarizedExecutionResult[] sortedResultStore, ILoggerFactory loggerFactory)
     {
-        this.executeCount = executeCount;
-        this.runningConnections = connections.ToHashSet(); // create copy
+        this.executionSummary = summary;
+        this.executeCountPerWorker = executeCountPerWorker;
+        this.runningConnections = sortedResultStore.Select(x => x.WorkerId).ToHashSet(); // create copy
         this.createWorkloadAndSetupCompletes = new HashSet<WorkerId>();
         this.logger = loggerFactory.CreateLogger<WorkersRunningStateMachine>();
+
+        // create result lookup
+        var dict = new Dictionary<WorkerId, int>(sortedResultStore.Length);
+        for (int i = 0; i < sortedResultStore.Length; i++)
+        {
+            var item = sortedResultStore[i];
+            dict.TryAdd(item.WorkerId, i);
+        }
+        this.resultsIndex = dict;
+        this.resultsSorted = sortedResultStore;
     }
 
     // return bool == true, state is completed.
@@ -31,6 +43,13 @@ public class WorkersRunningStateMachine
         logger.LogInformation($"Connection removing: {workerId}");
 
         runningConnections.Remove(workerId);
+
+        // set status to fail.
+        if (resultsIndex.TryGetValue(workerId, out var i))
+        {
+            resultsSorted[i].TrySetStatus(ExecutionStatus.Failed);
+        }
+
         if (createWorkloadAndSetupCompletes != null)
         {
             createWorkloadAndSetupCompletes.Remove(workerId);
@@ -59,9 +78,51 @@ public class WorkersRunningStateMachine
         return SignalState();
     }
 
+    public void ReportExecuteResult(WorkerId workerId, ExecuteResult result)
+    {
+        if (resultsIndex.TryGetValue(workerId, out var i))
+        {
+            resultsSorted[i].Add(result);
+
+            if (result.HasError)
+            {
+                if (executionSummary.ErrorSum == null)
+                {
+                    executionSummary.ErrorSum = 1;
+                }
+                else
+                {
+                    executionSummary.ErrorSum++;
+                }
+            }
+            else
+            {
+                if (executionSummary.SucceedSum == null)
+                {
+                    executionSummary.SucceedSum = 1;
+                }
+                else
+                {
+                    executionSummary.SucceedSum++;
+                }
+            }
+
+            if (executeBegin != null)
+            {
+                executionSummary.RunningTime = DateTime.UtcNow - executeBegin.Value;
+            }
+        }
+    }
+
     public bool ExecuteComplete(WorkerId workerId)
     {
         if (executeCompletes == null) throw new InvalidOperationException("Invalid state.");
+
+        if (resultsIndex.TryGetValue(workerId, out var i))
+        {
+            resultsSorted[i].TrySetStatus(ExecutionStatus.Succeed);
+        }
+
         executeCompletes.Add(workerId);
         return SignalState();
     }
@@ -92,7 +153,16 @@ public class WorkersRunningStateMachine
             createWorkloadAndSetupCompletes = null;
             executeCompletes = new HashSet<WorkerId>(); // setup next state.
             executeBegin = DateTime.UtcNow;
-            broadcaster.Execute(executeCount);
+            foreach (var item in resultsSorted)
+            {
+                item.InitExecuteBeginTime(executeBegin.Value);
+            }
+            executionSummary.RunningTime = TimeSpan.Zero;
+            executionSummary.SucceedSum = 0;
+            executionSummary.ErrorSum = 0;
+            executionSummary.RpsSum = 0;
+
+            broadcaster.Execute(executeCountPerWorker);
             return false;
         }
         if (executeCompletes != null && executeCompletes.Count == runningConnections.Count)

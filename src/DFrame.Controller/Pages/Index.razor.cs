@@ -156,6 +156,7 @@ public class IndexViewModel
     public int CurrentConnections { get; private set; }
     public bool IsRunning { get; private set; }
     public WorkloadInfo[] WorkloadInfos { get; private set; }
+    public ExecutionSummary? ExecutionSummary { get; set; }
     public SummarizedExecutionResult[] ExecutionResults { get; private set; }
 
     // Tab
@@ -201,6 +202,7 @@ public class IndexViewModel
         {
             this.SelectedWorkload = WorkloadInfos.FirstOrDefault()?.Name;
         }
+        this.ExecutionSummary = engine.LatestExecutionSummary;
         this.ExecutionResults = engine.LatestSortedSummarizedExecutionResults;
     }
 

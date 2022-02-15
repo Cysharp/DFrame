@@ -2,8 +2,6 @@
 
 namespace DFrame.Controller;
 
-// Note: this class is too complex, need refactoring.
-
 // Singleton Global State.
 public class DFrameControllerExecutionEngine : INotifyStateChanged
 {
@@ -11,32 +9,33 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
 
     // Notify.
     public event Action? StateChanged;
+
     readonly object EngineSync = new object();
-
     readonly ILoggerFactory loggerFactory;
+    readonly IExecutionResultHistoryProvider historyProvider;
 
+    // Global states
     readonly Dictionary<WorkerId, (Guid ConnectionId, Dictionary<string, string>? metaData)> connections = new();
+    int connectionsCount; // cache field of connections.Count
     WorkloadInfo[] workloadInfos = Array.Empty<WorkloadInfo>();
-
-    public WorkloadInfo[] WorkloadInfos => workloadInfos;
-
-    public int CurrentConnectingCount { get; private set; }
-    public bool IsRunning => RunningState != null;
-
     IGroup? globalGroup;
+
+    // when running, keep this state
     WorkersRunningStateMachine? RunningState;
 
-    public ExecutionId? CurrentExecutionId { get; private set; }
-    public int? CurrentExecutingWorkloadCount { get; set; }
+    // expose state for view
+    public WorkloadInfo[] WorkloadInfos => workloadInfos;
+    public int CurrentConnectingCount => connectionsCount;
+    public bool IsRunning => RunningState != null;
 
-    Dictionary<WorkerId, int>? latestResults; // index of latestResultsSorted
-    SummarizedExecutionResult[]? latestResultsSorted; // for performance reason, store stored array.
+    // storing latest inmemory.
+    public ExecutionSummary? LatestExecutionSummary { get; private set; } = default;
+    public SummarizedExecutionResult[] LatestSortedSummarizedExecutionResults { get; private set; } = Array.Empty<SummarizedExecutionResult>();
 
-    public SummarizedExecutionResult[] LatestSortedSummarizedExecutionResults => latestResultsSorted ?? Array.Empty<SummarizedExecutionResult>();
-
-    public DFrameControllerExecutionEngine(ILoggerFactory loggerFactory)
+    public DFrameControllerExecutionEngine(ILoggerFactory loggerFactory, IExecutionResultHistoryProvider historyProvider)
     {
         this.loggerFactory = loggerFactory;
+        this.historyProvider = historyProvider;
     }
 
     public void StartWorkerFlow(string workloadName, int concurrency, int totalRequestCount, int workerLimit, (string name, string value)[] parameters)
@@ -56,24 +55,35 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
             var createWorkloadCount = concurrency;
             int executeCountPerWorker = totalRequestCount / workerLimit / concurrency;
 
-            CurrentExecutionId = ExecutionId.NewExecutionId();
-            CurrentExecutingWorkloadCount = executeCountPerWorker * workerLimit * concurrency;
-
-            var sorted = connections.Select(x => new SummarizedExecutionResult(x.Key, x.Value.ConnectionId, createWorkloadCount))
+            var connetionIds = new Guid[workerLimit];
+            var sorted = connections
+                .Select((x, i) =>
+                {
+                    // evil side-effect
+                    connetionIds[i] = x.Value.ConnectionId;
+                    return new SummarizedExecutionResult(x.Key, createWorkloadCount);
+                })
                 .OrderBy(x => x.WorkerId)
                 .Take(workerLimit)
                 .ToArray();
 
-            var dict = new Dictionary<WorkerId, int>();
-            for (int i = 0; i < sorted.Length; i++)
-            {
-                var item = sorted[i];
-                dict.TryAdd(item.WorkerId, i);
-            }
-            latestResults = dict;
-            latestResultsSorted = sorted;
+            var executionId = ExecutionId.NewExecutionId();
 
-            RunningState = new WorkersRunningStateMachine(executeCountPerWorker, sorted.Select(x => x.WorkerId), loggerFactory);
+            var summary = new ExecutionSummary
+            {
+                Workload = workloadName,
+                ExecutionId = executionId,
+                WorkerCount = workerLimit,
+                Concurrency = concurrency,
+                WorkloadCount = workerLimit * concurrency,
+                TotalRequest = workerLimit * concurrency * executeCountPerWorker,
+                Parameters = parameters,
+                StartTime = DateTime.UtcNow
+            };
+
+            RunningState = new WorkersRunningStateMachine(summary, executeCountPerWorker, sorted, loggerFactory);
+            LatestExecutionSummary = summary;
+            LatestSortedSummarizedExecutionResults = sorted;
 
             IWorkerReceiver broadcaster;
             if (connections.Count == workerLimit)
@@ -82,10 +92,10 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
             }
             else
             {
-                broadcaster = globalGroup.CreateBroadcasterTo<IWorkerReceiver>(sorted.Select(x => x.ConnectionId).ToArray());
+                broadcaster = globalGroup.CreateBroadcasterTo<IWorkerReceiver>(connetionIds);
             }
 
-            broadcaster.CreateWorkloadAndSetup(CurrentExecutionId.Value, createWorkloadCount, workloadName, parameters);
+            broadcaster.CreateWorkloadAndSetup(executionId, createWorkloadCount, workloadName, parameters);
             StateChanged?.Invoke();
         }
     }
@@ -96,7 +106,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
         {
             this.globalGroup = globalGroup;
             connections.Add(workerId, (connectionId, null));
-            CurrentConnectingCount++;
+            connectionsCount++;
             StateChanged?.Invoke();
         }
     }
@@ -107,16 +117,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
         {
             if (connections.Remove(workerId))
             {
-                CurrentConnectingCount--;
-            }
-
-            if (latestResults != null)
-            {
-                if (latestResults.TryGetValue(workerId, out var i))
-                {
-                    // disconnected before complete is failed.
-                    latestResultsSorted![i].TrySetStatus(ExecutionStatus.Failed);
-                }
+                connectionsCount--;
             }
 
             if (RunningState != null)
@@ -127,7 +128,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
                     return;
                 }
 
-                if (CurrentConnectingCount == 0)
+                if (connectionsCount == 0)
                 {
                     WorkflowCompleted();
                     return;
@@ -170,22 +171,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
     {
         lock (EngineSync)
         {
-            if (latestResults != null)
-            {
-                if (latestResults.TryGetValue(workerId, out var i))
-                {
-                    if (RunningState != null)
-                    {
-                        var begin = RunningState.ExecuteBegin;
-                        if (begin != null)
-                        {
-                            latestResultsSorted![i].InitExecuteBeginTime(begin.Value);
-                        }
-                    }
-
-                    latestResultsSorted![i].Add(result);
-                }
-            }
+            RunningState?.ReportExecuteResult(workerId, result);
 
             // TODO:result has error message, write error to log.
             StateChanged?.Invoke();
@@ -218,14 +204,6 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
     {
         lock (EngineSync)
         {
-            if (latestResults != null)
-            {
-                if (latestResults!.TryGetValue(workerId, out var i))
-                {
-                    latestResultsSorted![i].TrySetStatus(ExecutionStatus.Succeed);
-                }
-            }
-
             if (RunningState?.ExecuteComplete(workerId) ?? true)
             {
                 WorkflowCompleted();
@@ -240,11 +218,17 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
     {
         lock (EngineSync)
         {
-            // TODO: store log to inmemory history.
+            var summary = LatestExecutionSummary;
+            if (summary != null)
+            {
+                summary.RunningTime = LatestSortedSummarizedExecutionResults.Max(x => x.RunningTime);
+                summary.SucceedSum = LatestSortedSummarizedExecutionResults.Sum(x => x.SucceedCount);
+                summary.ErrorSum = LatestSortedSummarizedExecutionResults.Sum(x => x.ErrorCount);
+                summary.RpsSum = LatestSortedSummarizedExecutionResults.Sum(x => x.Rps);
 
+                historyProvider.AddNewResult(summary!, LatestSortedSummarizedExecutionResults);
+            }
             RunningState = null; // complete.
-            CurrentExecutionId = null;
-            CurrentExecutingWorkloadCount = null;
             StateChanged?.Invoke();
         }
     }

@@ -8,7 +8,7 @@
 
 <div class="w-full min-h-screen drawer drawer-end">
 
-    
+
     <input id="right-side-panel" type="checkbox" class="drawer-toggle">
 
     <div class="drawer-side">
@@ -149,8 +149,20 @@
 
         <div class="card shadow-lg rounded m-2">
             <div class="card-body p-4">
-                @*TODO: Show results count => Executing results(@Number)*@
-                <h2>Executing Results. IsRunning: @engine.IsRunning</h2>
+                @if (vm.ExecutionSummary != null)
+                {
+                    <div>@vm.ExecutionSummary.Workload</div>
+                    <div>@vm.ExecutionSummary.WorkerCount</div>
+                    <div>@vm.ExecutionSummary.Concurrency</div>
+                    <div>@vm.ExecutionSummary.TotalRequest</div>
+                    @foreach (var (name, value) in vm.ExecutionSummary.Parameters)
+                    {
+                        <div>
+                            <span>@name</span>
+                            <span>@value</span>
+                        </div>
+                    }
+                }
             </div>
         </div>
 
@@ -207,7 +219,7 @@
                         <td class="text-center">@item.Median?.TotalMilliseconds.ToString("0.00")</td>
                         <td class="text-center">@item.Percentile90?.TotalMilliseconds.ToString("0.00")</td>
                         <td class="text-center">@item.Percentile95?.TotalMilliseconds.ToString("0.00")</td>
-                        <td class="text-center">@item.CurrentRps.ToString("0.00")</td>
+                        <td class="text-center">@item.Rps.ToString("0.00")</td>
                     </tr>
                 }
             </tbody>
@@ -217,31 +229,31 @@
         <footer class="footer bg-neutral fixed bottom-0 left-0">
             <div class="w-full stats bg-neutral">
                 <div class="stat place-items-center place-content-center bg-neutral pt-3 pb-0">
-                    <div class="stat-value text-2xl">@(vm.IsRunning ? "RUNNING" : (vm.ExecutionResults.Length == 0) ? "READY" : "COMPLETED")</div>
+                    <div class="stat-value text-2xl">@(vm.IsRunning ? "RUNNING" : (vm.ExecutionSummary == null) ? "READY" : "COMPLETED")</div>
                     <div class="col-start-1 flex">
-                        <div class="font-extrabold text-base">@vm.ExecutionResults.Sum(x=>x.WorkloadCount)</div>
+                        <div class="font-extrabold text-base">@vm.ExecutionSummary?.WorkerCount</div>
                         <div class="opacity-50 leading-7 text-xs">&nbsp;WORKLOADS</div>
                     </div>
                 </div>
                 <div class="stat place-items-center place-content-center bg-neutral">
                     <div class="stat-title text-xs">START TIME</div>
-                    <div class="stat-value text-2xl">@vm.ExecutionResults.FirstOrDefault()?.ExecuteBegin?.ToLocalTime().ToString("hh:mm:ss")</div>
+                    <div class="stat-value text-2xl">@vm.ExecutionSummary?.StartTime.ToLocalTime().ToString("hh:mm:ss")</div>
                 </div>
                 <div class="stat place-items-center place-content-center bg-neutral">
                     <div class="stat-title text-xs">RUNNING TIME</div>
-                    <div class="stat-value text-2xl">@vm.ExecutionResults.Max(x=>(TimeSpan?)x.RunningTime)?.ToString(@"hh\:mm\:ss")</div>
+                    <div class="stat-value text-2xl">@vm.ExecutionSummary?.RunningTime?.ToString(@"hh\:mm\:ss")</div>
                 </div>
                 <div class="stat place-items-center place-content-center bg-neutral">
                     <div class="stat-title text-xs">SUCCEED(SUM)</div>
-                    <div class="stat-value text-2xl">@vm.ExecutionResults.Sum(x=>x.SucceedCount)</div>
+                    <div class="stat-value text-2xl">@(vm.ExecutionSummary?.SucceedSum)</div>
                 </div>
                 <div class="stat place-items-center place-content-center bg-neutral">
                     <div class="stat-title text-xs">ERROR(SUM)</div>
-                    <div class="stat-value text-2xl">@vm.ExecutionResults.Sum(x=>x.ErrorCount)</div>
+                    <div class="stat-value text-2xl">@(vm.ExecutionSummary?.ErrorSum)</div>
                 </div>
                 <div class="stat place-items-center place-content-center bg-neutral">
                     <div class="stat-title text-xs">RPS(SUM)</div>
-                    <div class="stat-value text-2xl">@vm.ExecutionResults.Sum(x=>x.CurrentRps).ToString("0.00")</div>
+                    <div class="stat-value text-2xl">@(vm.ExecutionResults.Length == 0 ? "" : vm.ExecutionResults.Sum(x=> x.Rps).ToString("0.00"))</div>
                 </div>
             </div>
         </footer>
