@@ -6,230 +6,248 @@
 
 <PageTitle>DFrame Controller</PageTitle>
 
-<div class="w-full min-h-screen relative">
+<div class="w-full min-h-screen drawer drawer-end">
 
-    <div class="flex p-3">
-        <div class="w-80 bg-base-200 p-4 font-bold rounded text-center">
-            <div class="text-white text-[96px]">@vm.CurrentConnections</div>
-            <div class="text-slate-400">Worker connections</div>
+    
+    <input id="right-side-panel" type="checkbox" class="drawer-toggle">
+
+    <div class="drawer-side">
+        <label for="right-side-panel" class="drawer-overlay z-10"></label>
+        <div class="overflow-y-auto w-1/2 bg-base-100 text-base-content z-20">
+            <div class="p-2">
+                side
+            </div>
         </div>
+    </div>
 
-        <div class="ml-2 w-full bg-base-200 rounded">
-            <div class="tabs p-4">
-                <a class="tab tab-bordered @(vm.TabActive(CommandMode.Request))" @onclick="() => vm.ChangeCommandMode(CommandMode.Request)">Request</a>
-                <a class="tab tab-bordered @(vm.TabActive(CommandMode.Repeat))" @onclick="() => vm.ChangeCommandMode(CommandMode.Repeat)">Repeat</a>
-                <a class="tab tab-bordered @(vm.TabActive(CommandMode.InfiniteLoop))" @onclick="() => vm.ChangeCommandMode(CommandMode.InfiniteLoop)">Infinite</a>
+    <div class="drawer-content">
+
+        <div class="flex p-3 relative">
+            <div class="w-80 bg-base-200 p-4 font-bold rounded text-center relative">
+                <div class="text-white text-[96px]">@vm.CurrentConnections</div>
+                <div class="text-slate-400">Worker connections</div>
+                <label for="right-side-panel" class="w-full h-full top-0 left-0 absolute"></label>
             </div>
 
-            <div class="p-4">
+            <div class="ml-2 w-full bg-base-200 rounded">
+                <div class="tabs p-4">
+                    <a class="tab tab-bordered @(vm.TabActive(CommandMode.Request))" @onclick="() => vm.ChangeCommandMode(CommandMode.Request)">Request</a>
+                    <a class="tab tab-bordered @(vm.TabActive(CommandMode.Repeat))" @onclick="() => vm.ChangeCommandMode(CommandMode.Repeat)">Repeat</a>
+                    <a class="tab tab-bordered @(vm.TabActive(CommandMode.InfiniteLoop))" @onclick="() => vm.ChangeCommandMode(CommandMode.InfiniteLoop)">Infinite</a>
+                </div>
 
-                <div class="form-control overflow-hidden">
-                    <EditForm Model="@vm" OnSubmit=@HandleExecute>
-                        <label class="input-group">
-                            <span class="text-slate-300 min-w-[115px]">Workload</span>
-                            <select class="select select-bordered select-sm w-full max-w-xs py-0 leading-4" @onchange=vm.ChangeSelectedWorkload>
-                                @foreach (var item in vm.WorkloadInfos)
+                <div class="p-4">
+
+                    <div class="form-control overflow-hidden">
+                        <EditForm Model="@vm" OnSubmit=@HandleExecute>
+                            <label class="input-group">
+                                <span class="text-slate-300 min-w-[115px]">Workload</span>
+                                <select class="select select-bordered select-sm w-full max-w-xs py-0 leading-4" @onchange=vm.ChangeSelectedWorkload>
+                                    @foreach (var item in vm.WorkloadInfos)
+                                    {
+                                        <option>@item.Name</option>
+                                    }
+                                </select>
+                            </label>
+
+                            <table class="ml-10">
+                                @foreach (var item in vm.SelectedWorkloadParametes)
                                 {
-                                    <option>@item.Name</option>
+                                    <tr>
+                                        <td class="pt-2">
+                                            <label class="input-group input-group-sm">
+                                                <span class="text-slate-300 w-full" style="border-top-left-radius: 0.5rem; border-bottom-left-radius: 0.5rem;">@item.TypeLabel @item.ParameterName</span>
+                                            </label>
+                                        </td>
+                                        <td class="pt-2">
+                                            @if (item.SelectableValues.Length != 0)
+                                            {
+                                                <select class="select select-bordered select-sm w-full max-w-xs py-0 leading-4 rounded-none rounded-r-lg" @bind=item.Value>
+                                                    @foreach (var name in item.SelectableValues)
+                                                    {
+                                                        <option>@name</option>
+                                                    }
+                                                </select>
+                                            }
+                                            else
+                                            {
+                                                <input type="text" class="input input-bordered input-sm text-slate-700 rounded-r-lg min-w-[260px] placeholder:italic placeholder:text-slate-400" placeholder=@item.Hint @bind-value=item.Value />
+                                            }
+                                        </td>
+                                    </tr>
                                 }
-                            </select>
-                        </label>
+                            </table>
 
-                        <table>
-                            @foreach (var item in vm.SelectedWorkloadParametes)
+                            <label class="input-group input-group-sm my-2">
+                                <span class="text-slate-300 min-w-[115px]">Concurrency</span>
+                                <input type="text" placeholder="Concurrent per worker." class="input input-bordered input-sm text-slate-700 placeholder:italic placeholder:text-slate-400" @bind-value=vm.Concurrency />
+                            </label>
+
+                            @if (vm.CommandMode == CommandMode.Request || vm.CommandMode == CommandMode.Repeat)
                             {
-                                <tr>
-                                    <td>
-                                        <label class="input-group input-group-sm my-2 ml-10">
-                                            <span class="text-slate-300 w-full" style="border-top-left-radius: 0.5rem; border-bottom-left-radius: 0.5rem;">@item.TypeLabel @item.ParameterName</span>
-                                        </label>
-                                    </td>
-                                    <td>
-                                        @if (item.SelectableValues.Length != 0)
-                                        {
-                                            <select class="select select-bordered select-sm w-full max-w-xs py-0 leading-4 rounded-none rounded-r-lg" @bind=item.Value>
-                                                @foreach (var name in item.SelectableValues)
-                                                {
-                                                    <option>@name</option>
-                                                }
-                                            </select>
-                                        }
-                                        else
-                                        {
-                                            <input type="text" class="input input-bordered input-sm text-slate-700 rounded-r-lg min-w-[260px] placeholder:italic placeholder:text-slate-400" placeholder=@item.Hint @bind-value=item.Value />
-                                        }
-                                    </td>
-                                </tr>
+                                <label class="input-group input-group-sm my-2">
+                                    <span class="text-slate-300 min-w-[115px]">TotalReuest</span>
+                                    <input type="text" placeholder="Total request count." class="input input-bordered input-sm text-slate-700 placeholder:italic placeholder:text-slate-400" @bind-value=vm.TotalRequest />
+                                </label>
                             }
-                        </table>
 
-                        <label class="input-group input-group-sm my-2">
-                            <span class="text-slate-300 min-w-[115px]">Concurrency</span>
-                            <input type="text" placeholder="Concurrent per worker." class="input input-bordered input-sm text-slate-700 placeholder:italic placeholder:text-slate-400" @bind-value=vm.Concurrency />
-                        </label>
-
-                        @if (vm.CommandMode == CommandMode.Request || vm.CommandMode == CommandMode.Repeat)
-                        {
                             <label class="input-group input-group-sm my-2">
-                                <span class="text-slate-300 min-w-[115px]">TotalReuest</span>
-                                <input type="text" placeholder="Total request count." class="input input-bordered input-sm text-slate-700 placeholder:italic placeholder:text-slate-400" @bind-value=vm.TotalRequest />
+                                <span class="text-slate-300 min-w-[115px]">WorkerLimit</span>
+                                <input type="range" min="0" max="@vm.CurrentConnections" step=1 class="range pt-3" value=@vm.RequestWorkerLimit @oninput=vm.ChangeWorkerLimitRange>
+                                @if (vm.CurrentConnections == vm.RequestWorkerLimit)
+                                {
+                                    <span class="min-w-[48px] block text-center p-1 leading-3 text-xs" style="border-top-left-radius: 0.5rem; border-bottom-left-radius: 0.5rem;">No Limit</span>
+                                }
+                                else
+                                {
+                                    <span class="min-w-[48px] block text-center px-1" style="border-top-left-radius: 0.5rem; border-bottom-left-radius: 0.5rem;">@vm.RequestWorkerLimit</span>
+                                }
                             </label>
-                        }
 
-                        <label class="input-group input-group-sm my-2">
-                            <span class="text-slate-300 min-w-[115px]">WorkerLimit</span>
-                            <input type="range" min="0" max="@vm.CurrentConnections" step=1 class="range pt-3" value=@vm.RequestWorkerLimit @oninput=vm.ChangeWorkerLimitRange>
-                            @if (vm.CurrentConnections == vm.RequestWorkerLimit)
+
+                            @if (vm.CommandMode == CommandMode.Repeat)
                             {
-                                <span class="min-w-[48px] block text-center p-1 leading-3 text-xs" style="border-top-left-radius: 0.5rem; border-bottom-left-radius: 0.5rem;">No Limit</span>
+                                <label class="input-group input-group-sm my-2">
+                                    <span class="text-slate-300 min-w-[172px]">Increase TotalRequest</span>
+                                    <input type="text" class="input input-bordered input-sm text-slate-700" @bind-value=vm.IncreaseTotalReqeustCount />
+                                </label>
+
+                                <label class="input-group input-group-sm my-2">
+                                    <span class="text-slate-300 min-w-[172px]">Increase Worker</span>
+                                    <input type="text" class="input input-bordered input-sm text-slate-700" @bind-value=vm.IncreaseWorkerCount />
+                                </label>
+
+                                <label class="input-group input-group-sm my-2">
+                                    <span class="text-slate-300 min-w-[172px]">RepeatCount</span>
+                                    <input type="text" class="input input-bordered input-sm text-slate-700" @bind-value=vm.RepeatCount />
+                                </label>
                             }
-                            else
+
+                            @if (vm.CommandMode == CommandMode.Request || vm.CommandMode == CommandMode.Repeat)
                             {
-                                <span class="min-w-[48px] block text-center px-1" style="border-top-left-radius: 0.5rem; border-bottom-left-radius: 0.5rem;">@vm.RequestWorkerLimit</span>
+                                <div>
+                                    @*TODO:change the button style from IsRunning*@
+                                    <button class="btn btn-ghost" type="button" @onclick="HandleCancel">Cancel</button>
+                                    <button class="btn btn-secondary btn-active" type="submit">Execute</button>
+                                </div>
                             }
-                        </label>
 
-
-                        @if (vm.CommandMode == CommandMode.Repeat)
-                        {
-                            <label class="input-group input-group-sm my-2">
-                                <span class="text-slate-300 min-w-[172px]">Increase TotalRequest</span>
-                                <input type="text" class="input input-bordered input-sm text-slate-700" @bind-value=vm.IncreaseTotalReqeustCount />
-                            </label>
-
-                            <label class="input-group input-group-sm my-2">
-                                <span class="text-slate-300 min-w-[172px]">Increase Worker</span>
-                                <input type="text" class="input input-bordered input-sm text-slate-700" @bind-value=vm.IncreaseWorkerCount />
-                            </label>
-
-                            <label class="input-group input-group-sm my-2">
-                                <span class="text-slate-300 min-w-[172px]">RepeatCount</span>
-                                <input type="text" class="input input-bordered input-sm text-slate-700" @bind-value=vm.RepeatCount />
-                            </label>
-                        }
-
-                        @if (vm.CommandMode == CommandMode.Request || vm.CommandMode == CommandMode.Repeat)
-                        {
-                            <div>
-                                @*TODO:change the button style from IsRunning*@
-                                <button class="btn btn-ghost" type="button" @onclick="HandleCancel">Cancel</button>
-                                <button class="btn btn-secondary btn-active" type="submit">Execute</button>
-                            </div>
-                        }
-
-                        @if (vm.CommandMode == CommandMode.InfiniteLoop)
-                        {
-                            <div>
-                                @*TODO:change the button style from IsRunning*@
-                                <button class="btn btn-ghost" type="button" @onclick="HandleCancel">Stop</button>
-                                <button class="btn btn-secondary btn-active" type="submit">Execute</button>
-                            </div>
-                        }
-                    </EditForm>
+                            @if (vm.CommandMode == CommandMode.InfiniteLoop)
+                            {
+                                <div>
+                                    @*TODO:change the button style from IsRunning*@
+                                    <button class="btn btn-ghost" type="button" @onclick="HandleCancel">Stop</button>
+                                    <button class="btn btn-secondary btn-active" type="submit">Execute</button>
+                                </div>
+                            }
+                        </EditForm>
+                    </div>
                 </div>
+
             </div>
-
         </div>
-    </div>
 
-    <div class="card shadow-lg rounded m-2">
-        <div class="card-body p-4">
-            @*TODO: Show results count => Executing results(@Number)*@
-            <h2>Executing Results. IsRunning: @engine.IsRunning</h2>
+        <div class="card shadow-lg rounded m-2">
+            <div class="card-body p-4">
+                @*TODO: Show results count => Executing results(@Number)*@
+                <h2>Executing Results. IsRunning: @engine.IsRunning</h2>
+            </div>
         </div>
-    </div>
 
-    <table class="table w-full">
-        <thead>
-            <tr>
-                <th class="text-center normal-case w-[50px]">STATUS</th>
-                <th class="text-center normal-case">#Succeed</th>
-                <th class="text-center normal-case">#Error</th>
-                <th class="text-center normal-case">Max(ms)</th>
-                <th class="text-center normal-case">Min(ms)</th>
-                <th class="text-center normal-case">Avg(ms)</th>
-                <th class="text-center normal-case">Median(ms)</th>
-                <th class="text-center normal-case">90%ile(ms)</th>
-                <th class="text-center normal-case">95%ile(ms)</th>
-                <th class="text-center normal-case">RPS</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in vm.ExecutionResults)
-            {
-                <tr class="hover">
-                    <td class="text-center">
-                        <div>
-                            @switch (item.ExecutionStatus)
-                            {
-                                case ExecutionStatus.Running:
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="inline animate-spin  h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    break;
-                                case ExecutionStatus.Failed:
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 stroke-current text-red-500 scale-125">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                    break;
-                                case ExecutionStatus.Succeed:
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 stroke-current text-green-500 scale-125">
-                                        <path stroke="none" d="M0 0h24v24H0z" />
-                                        <path stroke-width="4" d="M5 12l5 5l10 -10" />
-                                    </svg>
-                                    break;
-                            }
-                        </div>
-                    </td>
-                    <td class="text-center">@item.SucceedCount</td>
-                    <td class="text-center">
-                        <a class="link text-red-500" href="#">@item.ErrorCount</a>
-                    </td>
-                    <td class="text-center">@item.Max.TotalMilliseconds.ToString("0.00")</td>
-                    <td class="text-center">@item.Min.TotalMilliseconds.ToString("0.00")</td>
-                    <td class="text-center">@item.Avg.TotalMilliseconds.ToString("0.00")</td>
-                    <td class="text-center">@item.Median?.TotalMilliseconds.ToString("0.00")</td>
-                    <td class="text-center">@item.Percentile90?.TotalMilliseconds.ToString("0.00")</td>
-                    <td class="text-center">@item.Percentile95?.TotalMilliseconds.ToString("0.00")</td>
-                    <td class="text-center">@item.CurrentRps.ToString("0.00")</td>
+        <table class="table w-full">
+            <thead>
+                <tr>
+                    <th class="text-center normal-case w-[50px]">STATUS</th>
+                    <th class="text-center normal-case">#Succeed</th>
+                    <th class="text-center normal-case">#Error</th>
+                    <th class="text-center normal-case">Max(ms)</th>
+                    <th class="text-center normal-case">Min(ms)</th>
+                    <th class="text-center normal-case">Avg(ms)</th>
+                    <th class="text-center normal-case">Median(ms)</th>
+                    <th class="text-center normal-case">90%ile(ms)</th>
+                    <th class="text-center normal-case">95%ile(ms)</th>
+                    <th class="text-center normal-case">RPS</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var item in vm.ExecutionResults)
+                {
+                    <tr class="hover">
+                        <td class="text-center">
+                            <div>
+                                @switch (item.ExecutionStatus)
+                                {
+                                    case ExecutionStatus.Running:
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="inline animate-spin  h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        break;
+                                    case ExecutionStatus.Failed:
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 stroke-current text-red-500 scale-125">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                        break;
+                                    case ExecutionStatus.Succeed:
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 stroke-current text-green-500 scale-125">
+                                            <path stroke="none" d="M0 0h24v24H0z" />
+                                            <path stroke-width="4" d="M5 12l5 5l10 -10" />
+                                        </svg>
+                                        break;
+                                }
+                            </div>
+                        </td>
+                        <td class="text-center">@item.SucceedCount</td>
+                        <td class="text-center">
+                            <label for="right-side-panel" class="link text-red-500">@item.ErrorCount</label>
+                        </td>
+                        <td class="text-center">@item.Max.TotalMilliseconds.ToString("0.00")</td>
+                        <td class="text-center">@item.Min.TotalMilliseconds.ToString("0.00")</td>
+                        <td class="text-center">@item.Avg.TotalMilliseconds.ToString("0.00")</td>
+                        <td class="text-center">@item.Median?.TotalMilliseconds.ToString("0.00")</td>
+                        <td class="text-center">@item.Percentile90?.TotalMilliseconds.ToString("0.00")</td>
+                        <td class="text-center">@item.Percentile95?.TotalMilliseconds.ToString("0.00")</td>
+                        <td class="text-center">@item.CurrentRps.ToString("0.00")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
 
 
-    <footer class="footer bg-neutral fixed bottom-0 left-0">
-        <div class="w-full stats bg-neutral">
-            <div class="stat place-items-center place-content-center bg-neutral pt-3 pb-0">
-                <div class="stat-value text-2xl">@(vm.IsRunning ? "RUNNING" : (vm.ExecutionResults.Length == 0) ? "READY" : "COMPLETED")</div>
-                <div class="col-start-1 flex">
-                    <div class="font-extrabold text-base">@vm.ExecutionResults.Sum(x=>x.WorkloadCount)</div>
-                    <div class="opacity-50 leading-7 text-xs">&nbsp;WORKLOADS</div>
+        <footer class="footer bg-neutral fixed bottom-0 left-0">
+            <div class="w-full stats bg-neutral">
+                <div class="stat place-items-center place-content-center bg-neutral pt-3 pb-0">
+                    <div class="stat-value text-2xl">@(vm.IsRunning ? "RUNNING" : (vm.ExecutionResults.Length == 0) ? "READY" : "COMPLETED")</div>
+                    <div class="col-start-1 flex">
+                        <div class="font-extrabold text-base">@vm.ExecutionResults.Sum(x=>x.WorkloadCount)</div>
+                        <div class="opacity-50 leading-7 text-xs">&nbsp;WORKLOADS</div>
+                    </div>
+                </div>
+                <div class="stat place-items-center place-content-center bg-neutral">
+                    <div class="stat-title text-xs">START TIME</div>
+                    <div class="stat-value text-2xl">@vm.ExecutionResults.FirstOrDefault()?.ExecuteBegin?.ToLocalTime().ToString("hh:mm:ss")</div>
+                </div>
+                <div class="stat place-items-center place-content-center bg-neutral">
+                    <div class="stat-title text-xs">RUNNING TIME</div>
+                    <div class="stat-value text-2xl">@vm.ExecutionResults.Max(x=>(TimeSpan?)x.RunningTime)?.ToString(@"hh\:mm\:ss")</div>
+                </div>
+                <div class="stat place-items-center place-content-center bg-neutral">
+                    <div class="stat-title text-xs">SUCCEED(SUM)</div>
+                    <div class="stat-value text-2xl">@vm.ExecutionResults.Sum(x=>x.SucceedCount)</div>
+                </div>
+                <div class="stat place-items-center place-content-center bg-neutral">
+                    <div class="stat-title text-xs">ERROR(SUM)</div>
+                    <div class="stat-value text-2xl">@vm.ExecutionResults.Sum(x=>x.ErrorCount)</div>
+                </div>
+                <div class="stat place-items-center place-content-center bg-neutral">
+                    <div class="stat-title text-xs">RPS(SUM)</div>
+                    <div class="stat-value text-2xl">@vm.ExecutionResults.Sum(x=>x.CurrentRps).ToString("0.00")</div>
                 </div>
             </div>
-            <div class="stat place-items-center place-content-center bg-neutral">
-                <div class="stat-title text-xs">START TIME</div>
-                <div class="stat-value text-2xl">@vm.ExecutionResults.FirstOrDefault()?.ExecuteBegin?.ToLocalTime().ToString("hh:mm:ss")</div>
-            </div>
-            <div class="stat place-items-center place-content-center bg-neutral">
-                <div class="stat-title text-xs">RUNNING TIME</div>
-                <div class="stat-value text-2xl">@vm.ExecutionResults.Max(x=>(TimeSpan?)x.RunningTime)?.ToString(@"hh\:mm\:ss")</div>
-            </div>
-            <div class="stat place-items-center place-content-center bg-neutral">
-                <div class="stat-title text-xs">SUCCEED(SUM)</div>
-                <div class="stat-value text-2xl">@vm.ExecutionResults.Sum(x=>x.SucceedCount)</div>
-            </div>
-            <div class="stat place-items-center place-content-center bg-neutral">
-                <div class="stat-title text-xs">ERROR(SUM)</div>
-                <div class="stat-value text-2xl">@vm.ExecutionResults.Sum(x=>x.ErrorCount)</div>
-            </div>
-            <div class="stat place-items-center place-content-center bg-neutral">
-                <div class="stat-title text-xs">RPS(SUM)</div>
-                <div class="stat-value text-2xl">@vm.ExecutionResults.Sum(x=>x.CurrentRps).ToString("0.00")</div>
-            </div>
-        </div>
-    </footer>
+        </footer>
+
+
+    </div>
 
 
 </div>
