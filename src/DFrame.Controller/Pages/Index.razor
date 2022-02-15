@@ -81,7 +81,7 @@
                             <input type="range" min="0" max="@vm.CurrentConnections" step=1 class="range pt-3" value=@vm.RequestWorkerLimit @oninput=vm.ChangeWorkerLimitRange>
                             @if (vm.CurrentConnections == vm.RequestWorkerLimit)
                             {
-                                <span class="min-w-[48px] block text-center px-1 text-xs" style="border-top-left-radius: 0.5rem; border-bottom-left-radius: 0.5rem;">No Limit</span>
+                                <span class="min-w-[48px] block text-center p-1 leading-3 text-xs" style="border-top-left-radius: 0.5rem; border-bottom-left-radius: 0.5rem;">No Limit</span>
                             }
                             else
                             {
@@ -142,7 +142,7 @@
     <table class="table w-full">
         <thead>
             <tr>
-                <th class="text-center normal-case max-w-[50px]"></th>
+                <th class="text-center normal-case w-[50px]">STATUS</th>
                 <th class="text-center normal-case">#Succeed</th>
                 <th class="text-center normal-case">#Error</th>
                 <th class="text-center normal-case">Max(ms)</th>
@@ -158,7 +158,7 @@
             @foreach (var item in vm.ExecutionResults)
             {
                 <tr class="hover">
-                    <td class="text-center max-w-[50px]">
+                    <td class="text-center">
                         <div>
                             @switch (item.ExecutionStatus)
                             {
@@ -183,7 +183,9 @@
                         </div>
                     </td>
                     <td class="text-center">@item.SucceedCount</td>
-                    <td class="text-center">@item.ErrorCount</td>
+                    <td class="text-center">
+                        <a class="link text-red-500" href="#">@item.ErrorCount</a>
+                    </td>
                     <td class="text-center">@item.Max.TotalMilliseconds.ToString("0.00")</td>
                     <td class="text-center">@item.Min.TotalMilliseconds.ToString("0.00")</td>
                     <td class="text-center">@item.Avg.TotalMilliseconds.ToString("0.00")</td>
@@ -199,36 +201,32 @@
 
     <footer class="footer bg-neutral fixed bottom-0 left-0">
         <div class="w-full stats bg-neutral">
-            <div class="stat place-items-center place-content-center bg-neutral">
-                <div class="stat-value">@(vm.IsRunning ? "RUNNING" : (vm.ExecutionResults.Length == 0) ? "READY" : "COMPLETED")</div>
+            <div class="stat place-items-center place-content-center bg-neutral py-3">
+                <div class="stat-value text-2xl">@(vm.IsRunning ? "RUNNING" : (vm.ExecutionResults.Length == 0) ? "READY" : "COMPLETED")</div>
+                <div class="col-start-1 flex">
+                    <div class="opacity-50 leading-6 text-xs">WORKLOADS</div>
+                    <div class="ml-1 text-base">@vm.ExecutionResults.Sum(x=>x.WorkloadCount)</div>
+                </div>
             </div>
             <div class="stat place-items-center place-content-center bg-neutral">
-                <div class="stat-title">START TIME</div>
-                <div class="stat-value">@vm.ExecutionResults.FirstOrDefault()?.ExecuteBegin?.ToLocalTime().ToString("hh:mm:ss")</div>
+                <div class="stat-title text-xs">START TIME</div>
+                <div class="stat-value text-2xl">@vm.ExecutionResults.FirstOrDefault()?.ExecuteBegin?.ToLocalTime().ToString("hh:mm:ss")</div>
             </div>
             <div class="stat place-items-center place-content-center bg-neutral">
-                <div class="stat-title">RUNNING TIME</div>
-                <div class="stat-value">@vm.ExecutionResults.Max(x=>(TimeSpan?)x.RunningTime)?.ToString(@"hh\:mm\:ss")</div>
+                <div class="stat-title text-xs">RUNNING TIME</div>
+                <div class="stat-value text-2xl">@vm.ExecutionResults.Max(x=>(TimeSpan?)x.RunningTime)?.ToString(@"hh\:mm\:ss")</div>
             </div>
             <div class="stat place-items-center place-content-center bg-neutral">
-                <div class="stat-title">WORK LOADS</div>
-                <div class="stat-value">@vm.ExecutionResults.Sum(x=>x.WorkloadCount)</div>
+                <div class="stat-title text-xs">SUCCEED(SUM)</div>
+                <div class="stat-value text-2xl">@vm.ExecutionResults.Sum(x=>x.SucceedCount)</div>
             </div>
             <div class="stat place-items-center place-content-center bg-neutral">
-                <div class="stat-title">SUCCEED(SUM)</div>
-                <div class="stat-value">@vm.ExecutionResults.Sum(x=>x.SucceedCount)</div>
+                <div class="stat-title text-xs">ERROR(SUM)</div>
+                <div class="stat-value text-2xl">@vm.ExecutionResults.Sum(x=>x.ErrorCount)</div>
             </div>
             <div class="stat place-items-center place-content-center bg-neutral">
-                <div class="stat-title">ERROR(SUM)</div>
-                <div class="stat-value">@vm.ExecutionResults.Sum(x=>x.ErrorCount)</div>
-            </div>
-            <div class="stat place-items-center place-content-center bg-neutral">
-                <div class="stat-title">90%ILE(MAX)</div>
-                <div class="stat-value">@vm.ExecutionResults.Max(x=>x.Percentile90?.TotalMilliseconds)?.ToString("0.00")</div>
-            </div>
-            <div class="stat place-items-center place-content-center bg-neutral">
-                <div class="stat-title">RPS(SUM)</div>
-                <div class="stat-value">@vm.ExecutionResults.Sum(x=>x.CurrentRps).ToString("0.00")</div>
+                <div class="stat-title text-xs">RPS(SUM)</div>
+                <div class="stat-value text-2xl">@vm.ExecutionResults.Sum(x=>x.CurrentRps).ToString("0.00")</div>
             </div>
         </div>
     </footer>
