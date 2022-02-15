@@ -264,6 +264,7 @@ internal class DFrameWorkerEngine : IWorkerReceiver
 
                         var executeResult = new ExecuteResult(x.context.WorkloadId, sw.Elapsed, i, (errorMsg != null), errorMsg);
 
+                        // TODO:report progress as batching.
                         await client!.ReportProgressAsync(executeResult);
                     }
                 }, token.Value)));
