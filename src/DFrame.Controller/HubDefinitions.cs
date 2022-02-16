@@ -20,7 +20,7 @@ public interface IControllerHub : IStreamingHub<IControllerHub, IWorkerReceiver>
 public interface IWorkerReceiver
 {
     void CreateWorkloadAndSetup(ExecutionId executionId, int createCount, string workloadName, (string name, string value)[] parameters);
-    void Execute(int executeCount);
+    void Execute(int[] executeCount); // exec count per workload
     void Stop();
     void Teardown();
 }

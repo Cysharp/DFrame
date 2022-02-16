@@ -1,4 +1,5 @@
 ﻿using DFrame.Internal;
+using System.Runtime.Serialization;
 
 namespace DFrame.Controller;
 
@@ -19,13 +20,19 @@ public class SummarizedExecutionResult
 
     FixedSizeList<TimeSpan>? elapsedValues;
 
+
+    [IgnoreDataMember]
+    internal IWorkerReceiver? executeBroadcasterToSelf = default!;
+    [IgnoreDataMember]
+    internal int[] executeCountPerWorkload = default!;
+
     public WorkerId WorkerId { get; }
     public int WorkloadCount { get; }
     public ExecutionStatus ExecutionStatus { get; private set; }
 
     public bool Error { get; private set; }
     public string? ErrorMessage { get; private set; }
-    public int Count { get; private set; }
+    public int CompleteCount { get; private set; }
     public int SucceedCount { get; private set; }
     public int ErrorCount { get; set; }
     public TimeSpan TotalElapsed => elapsedSum;
@@ -78,7 +85,7 @@ public class SummarizedExecutionResult
     {
         if (this.ExecutionStatus != ExecutionStatus.Running) return;
 
-        Count++;
+        CompleteCount++;
         if (result.HasError)
         {
             ErrorCount++;
