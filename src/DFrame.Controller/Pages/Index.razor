@@ -17,30 +17,32 @@
 
             @if (vm.ExecutionSummary != null)
             {
-                <table class="table w-full bg-base-200">
-                    <thead>
-                        <tr>
-                            <th class="normal-case">Name</th>
-                            <th class="normal-case text-gray-300 w-full">Value</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var (name, value) in vm.ExecutionSummary.Parameters)
-                        {
+                <div class="p-3">
+                    <table class="table w-full bg-base-200">
+                        <thead>
                             <tr>
-                                <td class="border-b-[0px] break-words whitespace-pre-wrap">@name</td>
-                                <td class="border-b-[0px] break-words whitespace-pre-wrap text-gray-300">@value</td>
+                                <th class="normal-case">Name</th>
+                                <th class="normal-case text-gray-300 w-full">Value</th>
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach (var (name, value) in vm.ExecutionSummary.Parameters)
+                            {
+                                <tr>
+                                    <td class="border-b-[0px] break-words whitespace-pre-wrap">@name</td>
+                                    <td class="border-b-[0px] break-words whitespace-pre-wrap text-gray-300">@value</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             }
 
 
             <div class="divider">OR</div>
 
 
-            <div class="p-4 bg-base-200 rounded">
+            <div class="m-3 p-4 bg-base-200 rounded">
                 <div class="flex items-center">
                     <svg class="mr-2 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
                     <h3 class="text-lg">
@@ -92,13 +94,13 @@
                                     <tr>
                                         <td class="pt-2">
                                             <label class="input-group input-group-sm">
-                                                <span class="text-slate-300 w-full" style="border-radius: 0.5rem 0 0 0.5rem;">@item.TypeLabel @item.ParameterName</span>
+                                                <span class="text-slate-300 w-full" style="border-radius: 0.25rem 0 0 0.25rem;">@item.TypeLabel @item.ParameterName</span>
                                             </label>
                                         </td>
                                         <td class="pt-2">
                                             @if (item.SelectableValues.Length != 0)
                                             {
-                                                <select class="select select-bordered select-sm w-full max-w-xs py-0 leading-4 rounded-none rounded-r-lg" @bind=item.Value>
+                                                <select class="select select-bordered select-sm w-full max-w-xs py-0 leading-4" style="border-radius: 0 0.25rem 0.25rem 0;" @bind=item.Value>
                                                     @foreach (var name in item.SelectableValues)
                                                     {
                                                         <option>@name</option>
@@ -107,7 +109,7 @@
                                             }
                                             else
                                             {
-                                                <input type="text" class="input input-bordered input-sm text-slate-700 rounded-r-lg min-w-[260px] placeholder:italic placeholder:text-slate-400" placeholder=@item.Hint @bind-value=item.Value />
+                                                <input type="text" class="input input-bordered input-sm text-slate-700 min-w-[260px] placeholder:italic placeholder:text-slate-400" style="border-radius: 0 0.25rem 0.25rem 0;" placeholder=@item.Hint @bind-value=item.Value />
                                             }
                                         </td>
                                     </tr>
@@ -127,16 +129,16 @@
                                 </label>
                             }
 
-                            <label class="input-group input-group-sm my-2">
+                            <label class="input-group input-group-sm my-2 w-1/2">
                                 <span class="text-slate-300 min-w-[115px]">WorkerLimit</span>
                                 <input type="range" min="0" max="@vm.CurrentConnections" step=1 class="range pt-3" value=@vm.RequestWorkerLimit @oninput=vm.ChangeWorkerLimitRange>
                                 @if (vm.CurrentConnections == vm.RequestWorkerLimit)
                                 {
-                                    <span class="min-w-[48px] block text-center p-1 leading-3 text-xs" style="border-top-left-radius: 0.5rem; border-bottom-left-radius: 0.5rem;">No Limit</span>
+                                    <span class="min-w-[48px] block text-center p-1 leading-3 text-xs" style="border-radius: 0.25rem;">No Limit</span>
                                 }
                                 else
                                 {
-                                    <span class="min-w-[48px] block text-center px-1" style="border-top-left-radius: 0.5rem; border-bottom-left-radius: 0.5rem;">@vm.RequestWorkerLimit</span>
+                                    <span class="min-w-[48px] block text-center px-1" style="border-radius: 0.25rem;">@vm.RequestWorkerLimit</span>
                                 }
                             </label>
 
@@ -163,8 +165,8 @@
                             {
                                 <div>
                                     @*TODO:change the button style from IsRunning*@
-                                    <button class="btn btn-ghost" type="button" @onclick="HandleCancel">Cancel</button>
-                                    <button class="btn btn-secondary btn-active" type="submit">Execute</button>
+                                    <button class="btn btn-ghost rounded btn-active opacity-50" type="button" @onclick="HandleCancel">Cancel</button>
+                                    <button class="btn btn-secondary rounded btn-active" type="submit">Execute</button>
                                 </div>
                             }
 
@@ -172,8 +174,8 @@
                             {
                                 <div>
                                     @*TODO:change the button style from IsRunning*@
-                                    <button class="btn btn-ghost" type="button" @onclick="HandleCancel">Stop</button>
-                                    <button class="btn btn-secondary btn-active" type="submit">Execute</button>
+                                    <button class="btn btn-ghost rounded btn-active opacity-50" type="button" @onclick="HandleCancel">Stop</button>
+                                    <button class="btn btn-secondary rounded btn-active" type="submit">Execute</button>
                                 </div>
                             }
                         </EditForm>
