@@ -14,15 +14,39 @@
     <div class="drawer-side">
         <label for="right-side-panel" class="drawer-overlay z-10"></label>
         <div class="overflow-y-auto w-1/2 bg-base-100 text-base-content z-20">
-            <div class="p-2">
-                side
+
+
+            <div class="overflow-x-auto">
+                <table class="table table-compact w-full">
+                    <thead>
+                        <tr>
+                            <th>key</th> 
+                            <th>value</th>
+                        </tr>
+                    </thead> 
+                    <tbody>
+                        <tr>
+                            <td>String nonDefaultString</td> 
+                            <td>hoge</td>
+                        </tr>
+                        <tr>
+                            <td>Double d</td> 
+                            <td>10.212</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
+
+            <div class="mockup-code">
+                <pre><code>Error text.</code></pre>
+            </div>
+
         </div>
     </div>
 
     <div class="drawer-content">
 
-        <div class="flex p-3 relative">
+        <div class="flex px-3 pt-3 pb-1 relative">
             <div class="w-80 bg-base-200 p-4 font-bold rounded text-center relative">
                 <div class="text-white text-[96px]">@vm.CurrentConnections</div>
                 <div class="text-slate-400">Worker connections</div>
@@ -147,14 +171,28 @@
             </div>
         </div>
 
-        <div class="card shadow-lg rounded m-2">
-            <div class="card-body p-4">
+        <div class="card px-3 pt-1 pb-2">
+            <div class="card-body p-1">
                 @if (vm.ExecutionSummary != null)
                 {
-                    <div>@vm.ExecutionSummary.Workload</div>
-                    <div>@vm.ExecutionSummary.WorkerCount</div>
-                    <div>@vm.ExecutionSummary.Concurrency</div>
-                    <div>@vm.ExecutionSummary.TotalRequest</div>
+                    <div class="shadow stats">
+                        <div class="stat bg-base-200">
+                            <div class="stat-title text-sm">Workload</div>
+                            <div class="stat-value text-base">@vm.ExecutionSummary.Workload</div>
+                        </div>
+                        <div class="stat bg-base-200">
+                            <div class="stat-title text-sm">WorkerCount</div>
+                            <div class="stat-value text-base">@vm.ExecutionSummary.WorkerCount</div>
+                        </div>
+                        <div class="stat bg-base-200">
+                            <div class="stat-title text-sm">Concurrency</div>
+                            <div class="stat-value text-base">@vm.ExecutionSummary.Concurrency</div>
+                        </div>
+                        <div class="stat bg-base-200">
+                            <div class="stat-title text-sm">TotalRequest</div>
+                            <div class="stat-value text-base">@vm.ExecutionSummary.TotalRequest</div>
+                        </div>
+                    </div>
                     @foreach (var (name, value) in vm.ExecutionSummary.Parameters)
                     {
                         <div>
