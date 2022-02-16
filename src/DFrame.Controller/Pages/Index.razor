@@ -15,9 +15,8 @@
         <label for="right-side-panel" class="drawer-overlay z-10"></label>
         <div class="overflow-y-auto w-1/2 bg-base-100 text-base-content z-20">
 
-
             <div class="overflow-x-auto">
-                <table class="table table-compact w-full">
+                <table class="table table-compact w-full bg-base-200">
                     <thead>
                         <tr>
                             <th>key</th> 
@@ -37,7 +36,7 @@
                 </table>
             </div>
 
-            <div class="mockup-code">
+            <div class="mockup-code bg-base-200 rounded">
                 <pre><code>Error text.</code></pre>
             </div>
 
@@ -171,26 +170,45 @@
             </div>
         </div>
 
-        <div class="card px-3 pt-1 pb-2">
+        <div class="card px-2 pt-1 pb-2">
             <div class="card-body p-1">
                 @if (vm.ExecutionSummary != null)
                 {
-                    <div class="shadow stats">
-                        <div class="stat bg-base-200">
+                    <div class="shadow stats rounded">
+                        <div class="stat bg-base-200 py-3">
                             <div class="stat-title text-sm">Workload</div>
-                            <div class="stat-value text-base">@vm.ExecutionSummary.Workload</div>
+                            <div class="stat-value text-base">
+                                @vm.ExecutionSummary.Workload
+                            </div>
                         </div>
-                        <div class="stat bg-base-200">
+                        <div class="stat bg-base-200 py-3">
                             <div class="stat-title text-sm">WorkerCount</div>
-                            <div class="stat-value text-base">@vm.ExecutionSummary.WorkerCount</div>
+                            <div class="stat-value text-base">
+                                @vm.ExecutionSummary.WorkerCount
+                            </div>
                         </div>
-                        <div class="stat bg-base-200">
+                        <div class="stat bg-base-200 py-3">
                             <div class="stat-title text-sm">Concurrency</div>
-                            <div class="stat-value text-base">@vm.ExecutionSummary.Concurrency</div>
+                            <div class="stat-value text-base">
+                                @vm.ExecutionSummary.Concurrency
+                            </div>
                         </div>
-                        <div class="stat bg-base-200">
+                        <div class="stat bg-base-200 py-3">
                             <div class="stat-title text-sm">TotalRequest</div>
-                            <div class="stat-value text-base">@vm.ExecutionSummary.TotalRequest</div>
+                            <div class="stat-value text-base">
+                                @vm.ExecutionSummary.TotalRequest
+                            </div>
+                        </div>
+                        <div class="stat bg-base-200 py-3">
+                            <div class="stat-title text-sm">Params</div>
+                            <div class="stat-value text-base">
+                                <label for="right-side-panel">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 stroke-current text-white scale-125">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </label>
+                            </div>
                         </div>
                     </div>
                     @foreach (var (name, value) in vm.ExecutionSummary.Parameters)
@@ -204,7 +222,7 @@
             </div>
         </div>
 
-        <table class="table w-full">
+        <table class="table w-full bg-base-200">
             <thead>
                 <tr>
                     <th class="text-center normal-case w-[50px]">STATUS</th>
