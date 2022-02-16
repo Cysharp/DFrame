@@ -18,7 +18,7 @@
             @if (vm.ExecutionSummary != null)
             {
                 <div class="p-3">
-                    <table class="table w-full bg-base-200">
+                    <table class="table w-full bg-base-200 rounded shadow">
                         <thead>
                             <tr>
                                 <th class="normal-case">Name</th>
@@ -42,7 +42,7 @@
             <div class="divider">OR</div>
 
 
-            <div class="m-3 p-4 bg-base-200 rounded">
+            <div class="m-3 p-4 bg-base-200 rounded shadow">
                 <div class="flex items-center">
                     <svg class="mr-2 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
                     <h3 class="text-lg">
@@ -61,13 +61,13 @@
     <div class="drawer-content">
 
         <div class="flex px-3 pt-3 pb-1 relative">
-            <div class="w-80 bg-base-200 p-4 font-bold rounded text-center relative">
+            <div class="w-80 bg-base-200 p-4 font-bold rounded shadow text-center relative">
                 <div class="text-white text-[96px]">@vm.CurrentConnections</div>
                 <div class="text-slate-400">Worker connections</div>
                 <label for="right-side-panel" class="w-full h-full top-0 left-0 absolute"></label>
             </div>
 
-            <div class="ml-2 w-full bg-base-200 rounded">
+            <div class="ml-2 w-full bg-base-200 rounded shadow">
                 <div class="tabs p-4">
                     <a class="tab tab-bordered @(vm.TabActive(CommandMode.Request))" @onclick="() => vm.ChangeCommandMode(CommandMode.Request)">Request</a>
                     <a class="tab tab-bordered @(vm.TabActive(CommandMode.Repeat))" @onclick="() => vm.ChangeCommandMode(CommandMode.Repeat)">Repeat</a>
@@ -230,7 +230,7 @@
             </div>
         </div>
 
-        <table class="table w-full bg-base-200">
+        <table class="table w-full bg-base-200 rounded shadow">
             <thead>
                 <tr>
                     <th class="text-center normal-case w-[50px]">STATUS</th>
