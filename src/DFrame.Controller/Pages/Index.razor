@@ -15,7 +15,7 @@
         <label for="right-side-panel" class="drawer-overlay z-10"></label>
         <div class="overflow-y-auto w-1/2 bg-base-100 text-base-content z-20">
 
-            @if (vm.ExecutionSummary != null)
+            @if (vm.ExecutionSummary != null && vm.ExecutionSummary.Parameters.Length != 0)
             {
                 <div class="p-3">
                     <table class="table w-full bg-base-200 rounded shadow">
@@ -29,8 +29,8 @@
                             @foreach (var (name, value) in vm.ExecutionSummary.Parameters)
                             {
                                 <tr>
-                                    <td class="border-b-[0px] break-words whitespace-pre-wrap">@name</td>
-                                    <td class="border-b-[0px] break-words whitespace-pre-wrap text-gray-300">@value</td>
+                                    <td class="py-1 border-b-[0px] break-words whitespace-pre-wrap">@name</td>
+                                    <td class="py-1 border-b-[0px] break-words whitespace-pre-wrap text-gray-300">@value </td>
                                 </tr>
                             }
                         </tbody>
