@@ -29,7 +29,7 @@
         @foreach (var item in this.results)
         {
             <tr class="hover">
-                <td><a href="/Result/@item.ExecutionId.AsPrimitive()">@item.ExecutionId</a></td>
+                <td><a class="link" href="/Result/@item.ExecutionId.AsPrimitive()">@item.ExecutionId</a></td>
                 <td>@item.Workload</td>
                 <td>@item.StartTime.ToLocalTime().ToString()</td>
                 <td>@item.RunningTime?.ToString(@"hh\:mm\:ss")</td>
