@@ -127,7 +127,7 @@
         </div>
         <div class="stat place-items-center place-content-center bg-neutral">
             <div class="stat-title text-xs">RPS(SUM)</div>
-            <div class="stat-value text-2xl">@(ExecutionResults.Length == 0 ? "" : ExecutionResults.Sum(x=> x.Rps).ToString("0.00"))</div>
+            <div class="stat-value text-2xl">@(ExecutionResults.Count == 0 ? "" : ExecutionResults.Sum(x=> x.Rps).ToString("0.00"))</div>
         </div>
     </div>
 </footer>
