@@ -1,6 +1,7 @@
 using DFrame.Controller;
 using MagicOnion.Server;
 using MessagePack;
+using MessagePipe;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using ObservableCollections;
 using ZLogger;
@@ -34,6 +35,8 @@ builder.Services.TryAddSingleton<LogRouter>();
 builder.Services.AddSingleton<ILoggerProvider, RoutingLoggerProvider>();
 // If user sets custom provdier, use it.
 builder.Services.TryAddSingleton<IExecutionResultHistoryProvider, InMemoryExecutionResultHistoryProvider>();
+
+builder.Services.AddMessagePipe();
 
 var app = builder.Build();
 
