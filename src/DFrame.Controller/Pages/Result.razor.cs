@@ -10,7 +10,7 @@ public partial class Result
     [Parameter] public Guid executionId { get; set; }
 
     ExecutionSummary summary = default!;
-    IReadOnlyList<SummarizedExecutionResult> results = default!;
+    IReadOnlyList<SummarizedExecutionResult> results = Array.Empty<SummarizedExecutionResult>();
 
     protected override void OnInitialized()
     {

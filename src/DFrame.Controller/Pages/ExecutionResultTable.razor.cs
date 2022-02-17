@@ -15,7 +15,7 @@ public partial class ExecutionResultTable
     public ExecutionSummary? ExecutionSummary { get; set; }
 
     [Parameter, EditorRequired]
-    public IReadOnlyList<SummarizedExecutionResult> ExecutionResults { get; set; } = default!;
+    public IReadOnlyList<SummarizedExecutionResult> ExecutionResults { get; set; } = Array.Empty<SummarizedExecutionResult>();
 
     void ShowParameters()
     {
