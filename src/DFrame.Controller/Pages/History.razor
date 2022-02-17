@@ -1,0 +1,22 @@
+﻿@page "/History"
+
+<h3>Result History</h3>
+
+<table>
+    <tbody>
+        @foreach (var item in this.results)
+        {
+            <tr>
+                <td><a href="/Result/@item.ExecutionId.AsPrimitive()">@item.ExecutionId</a></td>
+                <td>@item.Workload</td>
+                <td>@item.StartTime.ToLocalTime().ToString()</td>
+                <td>@item.RunningTime?.ToString(@"hh\:mm\:ss")</td>
+                <td>@item.WorkloadCount</td>
+                <td>@item.TotalRequest</td>
+                <td>@item.SucceedSum</td>
+                <td>@item.ErrorSum</td>
+                <td>@item.RpsSum</td>
+            </tr>
+        }
+    </tbody>
+</table>

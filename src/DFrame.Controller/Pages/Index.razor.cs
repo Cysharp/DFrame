@@ -8,10 +8,10 @@ namespace DFrame.Pages;
 
 public partial class Index : IDisposable
 {
-    // TODO:rename this name.
-    [Inject] DFrameControllerExecutionEngine engine { get; set; } = default!;
-    [Inject] LogRouter logRouter { get; set; } = default!;
+    [Inject] DFrameControllerExecutionEngine engine { get; set; } = default!; 
+    [Inject] LogRouter logRouter { get; set; } = default!; // TODO:whats this?
     [Inject] ILogger<Index> logger { get; set; } = default!;
+    [Inject] IExecutionResultHistoryProvider historyProvider { get; set; } = default!;
 
     // TODO:to vm?
     ISynchronizedView<string, string> logView = default!;
@@ -23,7 +23,7 @@ public partial class Index : IDisposable
 
     protected override void OnInitialized()
     {
-        vm = new IndexViewModel(engine);
+        vm = new IndexViewModel(engine, historyProvider);
 
         engine.StateChanged += Engine_StateChanged;
 
@@ -35,6 +35,7 @@ public partial class Index : IDisposable
     {
         engine.StateChanged -= Engine_StateChanged;
         logView.CollectionStateChanged -= LogView_CollectionStateChanged;
+        vm?.Dispose();
     }
 
     async void Engine_StateChanged()
@@ -150,8 +151,10 @@ public enum CommandMode
     InfiniteLoop
 }
 
-public class IndexViewModel
+public class IndexViewModel : IDisposable
 {
+    readonly IExecutionResultHistoryProvider historyProvider;
+
     // From Engine
     public int CurrentConnections { get; private set; }
     public bool IsRunning { get; private set; }
@@ -176,10 +179,26 @@ public class IndexViewModel
     public int IncreaseWorkerCount { get; set; } = 0;
     public int RepeatCount { get; set; } = 1;
 
-    public IndexViewModel(DFrameControllerExecutionEngine engine)
+    // History
+    public int ResultHistoryCount { get; set; }
+
+    public IndexViewModel(DFrameControllerExecutionEngine engine, IExecutionResultHistoryProvider historyProvider)
     {
+        this.historyProvider = historyProvider;
         SelectedWorkloadParametes = Array.Empty<WorkloadParameterInfoViewModel>();
+        ResultHistoryCount = historyProvider.GetCount();
+        historyProvider.NotifyCountChanged += HistoryProvider_NotifyCountChanged;
         RefreshEngineProperties(engine);
+    }
+
+    private void HistoryProvider_NotifyCountChanged()
+    {
+        ResultHistoryCount = historyProvider.GetCount();
+    }
+
+    public void Dispose()
+    {
+        historyProvider.NotifyCountChanged -= HistoryProvider_NotifyCountChanged;
     }
 
     [MemberNotNull(nameof(WorkloadInfos), nameof(ExecutionResults), nameof(WorkloadInfos))]

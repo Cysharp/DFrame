@@ -1,0 +1,12 @@
+﻿@page "/Result/{executionId:guid}"
+
+@if (summary == null)
+{
+    <div>NO RESULT</div>
+}
+else
+{
+    <h1>@summary.Workload</h1>
+    <div>@summary.ExecutionId</div>
+    <div>@summary.StartTime</div>
+}
