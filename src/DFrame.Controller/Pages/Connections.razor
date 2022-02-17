@@ -1,22 +1,40 @@
 ﻿@page "/Connections"
 
-<h3>Connections</h3>
+<div class="text-2xl font-bold p-2">
+    Connections
+</div>
 
-<table>
+<table class="table w-full rounded shadow">
+    <thead>
+        <tr>
+            <th class="normal-case">SessionID</th>
+            <th class="normal-case">Time</th>
+            <th class="normal-case w-full">Metadata</th>
+        </tr>
+    </thead>
     <tbody>
         @foreach (var item in this.workerInfos)
         {
-            <tr>
-                <td>@item.ConnectionId</td>
-                <td>@item.ConnectTime.ToLocalTime().ToString()</td>
-
-                @foreach (var meta in item.Metadata)
-                {
-                    <td>
-                        <div>@meta.Key</div>
-                        <div>@meta.Value</div>
-                    </td>
-                }
+            <tr class="hover">
+                <td class="align-top">@item.ConnectionId</td>
+                <td class="align-top">@item.ConnectTime.ToLocalTime().ToString()</td>
+                <td class="align-top pl-0 pr-1">
+                    <table>
+                        <tbody>
+                            @foreach (var meta in item.Metadata)
+                            {
+                                <tr>
+                                    <td class="pt-0 pb-1 break-words whitespace-pre-wrap">
+                                        @meta.Key
+                                    </td>
+                                    <td class="pt-0 pb-1 break-words whitespace-pre-wrap text-gray-300">
+                                        @meta.Value
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </td>
             </tr>
         }
     </tbody>
