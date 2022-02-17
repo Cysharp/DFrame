@@ -18,16 +18,16 @@
             <tr class="hover">
                 <td class="align-top">@item.ConnectionId</td>
                 <td class="align-top">@item.ConnectTime.ToLocalTime().ToString()</td>
-                <td class="align-top">
+                <td class="align-top pl-0 pr-1">
                     <table>
                         <tbody>
                             @foreach (var meta in item.Metadata)
                             {
                                 <tr>
-                                    <td class="pt-0 pb-1">
+                                    <td class="pt-0 pb-1 break-words whitespace-pre-wrap">
                                         @meta.Key
                                     </td>
-                                    <td class="pt-0 pb-1">
+                                    <td class="pt-0 pb-1 break-words whitespace-pre-wrap text-gray-300">
                                         @meta.Value
                                     </td>
                                 </tr>
