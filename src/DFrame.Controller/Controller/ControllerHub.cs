@@ -20,11 +20,7 @@ public sealed class ControllerHub : StreamingHubBase<IControllerHub, IWorkerRece
 
     protected override ValueTask OnConnecting()
     {
-        workerId = WorkerId.Parse(Context.CallContext.RequestHeaders.GetValue("worker-id"));
-
-        var group = Group.AddAsync("global-masterhub-group").GetAwaiter().GetResult(); // always sync.
-        engine.AddConnection(workerId, this.ConnectionId, group); // using new one:)
-
+        // Connect process uses ConnectAsync
         return default;
     }
 
@@ -34,9 +30,15 @@ public sealed class ControllerHub : StreamingHubBase<IControllerHub, IWorkerRece
         return default;
     }
 
-    public Task InitializeMetadataAsync(WorkloadInfo[] workloads, Dictionary<string, string> metadata)
+    public Task ConnectAsync(WorkloadInfo[] workloads, Dictionary<string, string> metadata)
     {
-        engine.AddMetadata(workerId, workloads, metadata);
+        workerId = WorkerId.Parse(Context.CallContext.RequestHeaders.GetValue("worker-id"));
+
+        var workerInfo = new WorkerInfo(workerId, this.ConnectionId, DateTime.UtcNow, metadata);
+
+        var group = Group.AddAsync("global-masterhub-group").GetAwaiter().GetResult(); // always sync.
+        engine.AddConnection(workerInfo, workloads, group); // using new one:)
+
         return Task.CompletedTask;
     }
 

@@ -1,0 +1,23 @@
+﻿@page "/Connections"
+
+<h3>Connections</h3>
+
+<table>
+    <tbody>
+        @foreach (var item in this.workerInfos)
+        {
+            <tr>
+                <td>@item.ConnectionId</td>
+                <td>@item.ConnectTime.ToLocalTime().ToString()</td>
+
+                @foreach (var meta in item.Metadata)
+                {
+                    <td>
+                        <div>@meta.Key</div>
+                        <div>@meta.Value</div>
+                    </td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>

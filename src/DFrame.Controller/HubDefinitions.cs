@@ -10,7 +10,7 @@ namespace DFrame;
 
 public interface IControllerHub : IStreamingHub<IControllerHub, IWorkerReceiver>
 {
-    Task InitializeMetadataAsync(WorkloadInfo[] workloads, Dictionary<string, string> metadata);
+    Task ConnectAsync(WorkloadInfo[] workloads, Dictionary<string, string> metadata);
     Task CreateWorkloadCompleteAsync(ExecutionId executionId);
     Task ReportProgressAsync(ExecuteResult result);
     Task ExecuteCompleteAsync();

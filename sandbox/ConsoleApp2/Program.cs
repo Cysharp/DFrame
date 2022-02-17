@@ -14,6 +14,12 @@ await Host.CreateDefaultBuilder()
     })
     .RunDFrameAsync(args, new DFrameWorkerOptions("http://localhost:7313")
     {
-        VirtualProcess = 32
+        VirtualProcess = 32,
+        Metadata = new Dictionary<string, string>
+        {
+            {"MachineName", Environment.MachineName },
+            {"ProcessorCount", Environment.ProcessorCount.ToString() },
+            {"OSVersion", Environment.OSVersion.ToString() },
+        }
     });
 

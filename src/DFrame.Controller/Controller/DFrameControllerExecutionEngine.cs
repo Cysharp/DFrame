@@ -5,8 +5,6 @@ namespace DFrame.Controller;
 // Singleton Global State.
 public class DFrameControllerExecutionEngine : INotifyStateChanged
 {
-    static readonly IReadOnlyDictionary<string, string> EmptyMetadata = new Dictionary<string, string>();
-
     // Notify.
     public event Action? StateChanged;
 
@@ -15,7 +13,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
     readonly IExecutionResultHistoryProvider historyProvider;
 
     // Global states
-    readonly Dictionary<WorkerId, (Guid ConnectionId, Dictionary<string, string>? metaData)> connections = new();
+    readonly Dictionary<WorkerId, WorkerInfo> connections = new();
     int connectionsCount; // cache field of connections.Count
     WorkloadInfo[] workloadInfos = Array.Empty<WorkloadInfo>();
     IGroup? globalGroup;
@@ -100,13 +98,21 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
         }
     }
 
-    public void AddConnection(WorkerId workerId, Guid connectionId, IGroup globalGroup)
+    internal void AddConnection(WorkerInfo workerInfo, WorkloadInfo[] workloads, IGroup globalGroup)
     {
         lock (EngineSync)
         {
             this.globalGroup = globalGroup;
-            connections.Add(workerId, (connectionId, null));
+
+            connections.Add(workerInfo.WorkerId, workerInfo);
             connectionsCount++;
+
+            // use latest one.
+            if (this.workloadInfos.Length != workloads.Length)
+            {
+                this.workloadInfos = workloads;
+            }
+
             StateChanged?.Invoke();
         }
     }
@@ -139,32 +145,12 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
         }
     }
 
-    public void AddMetadata(WorkerId workerId, WorkloadInfo[] workloads, Dictionary<string, string> metadata)
+    internal WorkerInfo[] GetWorkerInfos()
     {
         lock (EngineSync)
         {
-            if (connections.ContainsKey(workerId))
-            {
-                var (id, _) = connections[workerId];
-                connections[workerId] = (id, metadata);
-            }
-
-            // use latest one.
-            if (this.workloadInfos.Length != workloads.Length)
-            {
-                this.workloadInfos = workloads;
-            }
-            StateChanged?.Invoke();
+            return connections.Select(x => x.Value).ToArray();
         }
-    }
-
-    public IReadOnlyDictionary<string, string> GetMetadata(WorkerId workerId)
-    {
-        if (connections.TryGetValue(workerId, out var dict))
-        {
-            return dict.metaData ?? EmptyMetadata;
-        }
-        return EmptyMetadata;
     }
 
     public void ReportExecuteResult(WorkerId workerId, ExecuteResult result)
