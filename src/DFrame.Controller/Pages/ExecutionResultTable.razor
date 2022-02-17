@@ -43,9 +43,12 @@
                 <div class="stat bg-base-200 py-3">
                     <div class="stat-title text-sm">Parameters</div>
                     <div class="stat-value text-base">
-                        <label class="btn btn-outline rounded btn-xs" @onclick=ShowParameters>
-                            show
-                        </label>
+                        @if (ExecutionSummary.Parameters.Length != 0)
+                        {
+                            <label class="btn btn-outline rounded btn-xs" @onclick=ShowParameters>
+                                show
+                            </label>
+                        }
                     </div>
                 </div>
             </div>

@@ -26,7 +26,8 @@ public partial class ExecutionResultTable
         (
             IsShow: true,
             Parameters: ExecutionSummary?.Parameters,
-            ErrorMessage: null
+            ErrorMessage: null,
+            LogView: null
         ));
     }
 }

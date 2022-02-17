@@ -8,14 +8,13 @@ namespace DFrame.Pages;
 
 public partial class Index : IDisposable
 {
-    [Inject] DFrameControllerExecutionEngine engine { get; set; } = default!; 
-    [Inject] LogRouter logRouter { get; set; } = default!; // TODO:whats this?
+    [Inject] DFrameControllerExecutionEngine engine { get; set; } = default!;
+    [Inject] LogRouter logRouter { get; set; } = default!;
     [Inject] ILogger<Index> logger { get; set; } = default!;
     [Inject] IExecutionResultHistoryProvider historyProvider { get; set; } = default!;
+    [Inject] IScopedPublisher<DrawerRequest> drawerProvider { get; set; } = default!;
 
-    // TODO:to vm?
     ISynchronizedView<string, string> logView = default!;
-
     IndexViewModel vm = default!;
 
     // repeat management.
@@ -23,19 +22,16 @@ public partial class Index : IDisposable
 
     protected override void OnInitialized()
     {
-        vm = new IndexViewModel(engine, historyProvider);
-
-        engine.StateChanged += Engine_StateChanged;
-
         logView = logRouter.GetView();
-        logView.CollectionStateChanged += LogView_CollectionStateChanged;
+        vm = new IndexViewModel(engine, historyProvider, drawerProvider, logView);
+        engine.StateChanged += Engine_StateChanged;
     }
 
     public void Dispose()
     {
         engine.StateChanged -= Engine_StateChanged;
-        logView.CollectionStateChanged -= LogView_CollectionStateChanged;
         vm?.Dispose();
+        logView?.Dispose();
     }
 
     async void Engine_StateChanged()
@@ -45,11 +41,6 @@ public partial class Index : IDisposable
             vm.RefreshEngineProperties(engine);
             StateHasChanged();
         });
-    }
-
-    private async void LogView_CollectionStateChanged(System.Collections.Specialized.NotifyCollectionChangedAction obj)
-    {
-        await InvokeAsync(StateHasChanged);
     }
 
     void HandleExecute()
@@ -154,6 +145,8 @@ public enum CommandMode
 public class IndexViewModel : IDisposable
 {
     readonly IExecutionResultHistoryProvider historyProvider;
+    readonly IScopedPublisher<DrawerRequest> drawerProvider;
+    readonly ISynchronizedView<string, string> logView;
 
     // From Engine
     public int CurrentConnections { get; private set; }
@@ -182,9 +175,11 @@ public class IndexViewModel : IDisposable
     // History
     public int ResultHistoryCount { get; set; }
 
-    public IndexViewModel(DFrameControllerExecutionEngine engine, IExecutionResultHistoryProvider historyProvider)
+    public IndexViewModel(DFrameControllerExecutionEngine engine, IExecutionResultHistoryProvider historyProvider, IScopedPublisher<DrawerRequest> drawerProvider, ISynchronizedView<string, string> logView)
     {
         this.historyProvider = historyProvider;
+        this.drawerProvider = drawerProvider;
+        this.logView = logView;
         SelectedWorkloadParametes = Array.Empty<WorkloadParameterInfoViewModel>();
         ResultHistoryCount = historyProvider.GetCount();
         historyProvider.NotifyCountChanged += HistoryProvider_NotifyCountChanged;
@@ -225,13 +220,16 @@ public class IndexViewModel : IDisposable
         this.ExecutionResults = engine.LatestSortedSummarizedExecutionResults;
     }
 
-    // TODO:log view.
-
-    // TODO:remove this
-    //public IReadOnlyDictionary<string, string> GetMetadataOfWorker(WorkerId id)
-    //{
-    //    return engine.GetMetadata(id);
-    //}
+    public void ShowServerLogs()
+    {
+        drawerProvider.Publish(new DrawerRequest
+        (
+            IsShow: true,
+            Parameters: null,
+            ErrorMessage: null,
+            LogView: logView
+        ));
+    }
 
     public void ChangeSelectedWorkload(ChangeEventArgs e)
     {
