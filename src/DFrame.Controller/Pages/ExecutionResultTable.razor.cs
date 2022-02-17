@@ -11,6 +11,9 @@ public partial class ExecutionResultTable
     [Parameter, EditorRequired]
     public bool IsRunning { get; set; }
 
+    [Parameter]
+    public bool ShowHeader { get; set; }
+
     [Parameter, EditorRequired]
     public ExecutionSummary? ExecutionSummary { get; set; }
 
