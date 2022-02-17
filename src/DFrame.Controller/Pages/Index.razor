@@ -18,7 +18,7 @@
             @if (vm.ExecutionSummary != null && vm.ExecutionSummary.Parameters.Length != 0)
             {
                 <div class="p-3">
-                    <table class="table w-full bg-base-200 rounded shadow">
+                    <table class="table w-full rounded shadow">
                         <thead>
                             <tr>
                                 <th class="normal-case">Name</th>
@@ -30,7 +30,7 @@
                             {
                                 <tr>
                                     <td class="py-1 border-b-[0px] break-words whitespace-pre-wrap">@name</td>
-                                    <td class="py-1 border-b-[0px] break-words whitespace-pre-wrap text-gray-300">@value </td>
+                                    <td class="py-1 border-b-[0px] break-words whitespace-pre-wrap text-gray-300">@value</td>
                                 </tr>
                             }
                         </tbody>
@@ -81,7 +81,7 @@
                         <EditForm Model="@vm" OnSubmit=@HandleExecute>
                             <label class="input-group">
                                 <span class="text-slate-300 min-w-[115px]">Workload</span>
-                                <select class="select select-bordered select-sm w-full max-w-xs py-0 leading-4" @onchange=vm.ChangeSelectedWorkload>
+                                <select class="select select-bordered select-sm leading-4" @onchange=vm.ChangeSelectedWorkload>
                                     @foreach (var item in vm.WorkloadInfos)
                                     {
                                         <option>@item.Name</option>
@@ -132,7 +132,7 @@
 
                             <label class="input-group input-group-sm my-2 w-1/2">
                                 <span class="text-slate-300 min-w-[115px]">WorkerLimit</span>
-                                <input type="range" min="0" max="@vm.CurrentConnections" step=1 class="range pt-3" value=@vm.RequestWorkerLimit @oninput=vm.ChangeWorkerLimitRange>
+                                <input type="range" min="0" max="@vm.CurrentConnections" step=1 class="range range-sm mt-2 min-w-[172px]" value=@vm.RequestWorkerLimit @oninput=vm.ChangeWorkerLimitRange>
                                 @if (vm.CurrentConnections == vm.RequestWorkerLimit)
                                 {
                                     <span class="min-w-[48px] block text-center p-1 leading-3 text-xs" style="border-radius: 0.25rem;">No Limit</span>
@@ -162,23 +162,36 @@
                                 </label>
                             }
 
-                            @if (vm.CommandMode == CommandMode.Request || vm.CommandMode == CommandMode.Repeat)
-                            {
-                                <div>
-                                    @*TODO:change the button style from IsRunning*@
-                                    <button class="btn btn-ghost rounded btn-active opacity-50" type="button" @onclick="HandleCancel">Cancel</button>
-                                    <button class="btn btn-secondary rounded btn-active" type="submit">Execute</button>
-                                </div>
-                            }
+                            <div class="flex">
+                                <div class="flex-none">
+                                    @if (vm.CommandMode == CommandMode.Request || vm.CommandMode == CommandMode.Repeat)
+                                    {
+                                        @*TODO:change the button style from IsRunning*@
+                                        <button class="btn btn-ghost rounded btn-active opacity-50" @onclick="HandleCancel">Cancel</button>
+                                        <button class="btn btn-secondary rounded">Execute</button>
+                                    }
 
-                            @if (vm.CommandMode == CommandMode.InfiniteLoop)
-                            {
-                                <div>
-                                    @*TODO:change the button style from IsRunning*@
-                                    <button class="btn btn-ghost rounded btn-active opacity-50" type="button" @onclick="HandleCancel">Stop</button>
-                                    <button class="btn btn-secondary rounded btn-active" type="submit">Execute</button>
+                                    @if (vm.CommandMode == CommandMode.InfiniteLoop)
+                                    {
+                                        @*TODO:change the button style from IsRunning*@
+                                        <button class="btn btn-ghost rounded btn-active opacity-50" @onclick="HandleCancel">Stop</button>
+                                        <button class="btn btn-secondary rounded">Execute</button>
+                                    }
                                 </div>
-                            }
+                                <div class="grow">
+
+                                </div>
+                                <div class="flex-none">
+                                    <ul class="list-none">
+                                        <li>
+                                            <a class="link link-accent" href="#">Execute Results(3)</a>
+                                        </li>
+                                        <li>
+                                            <a class="link link-accent" href="#">Server Logs</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
                         </EditForm>
                     </div>
                 </div>
@@ -218,11 +231,8 @@
                         <div class="stat bg-base-200 py-3">
                             <div class="stat-title text-sm">Parameters</div>
                             <div class="stat-value text-base">
-                                <label for="right-side-panel">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 stroke-current text-white scale-125">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
+                                <label for="right-side-panel" class="btn btn-outline rounded btn-xs">
+                                    more
                                 </label>
                             </div>
                         </div>
@@ -231,7 +241,7 @@
             </div>
         </div>
 
-        <table class="table w-full bg-base-200 rounded shadow">
+        <table class="table w-full rounded shadow">
             <thead>
                 <tr>
                     <th class="text-center normal-case w-[50px]">STATUS</th>
