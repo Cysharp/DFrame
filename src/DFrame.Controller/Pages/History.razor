@@ -14,7 +14,6 @@
 <table class="table w-full rounded shadow">
     <thead>
         <tr>
-            <th class="normal-case">ID</th>
             <th class="normal-case">Workload</th>
             <th class="normal-case">StartTime</th>
             <th class="normal-case">RunningTime</th>
@@ -29,8 +28,7 @@
         @foreach (var item in this.results)
         {
             <tr class="hover">
-                <td><a class="link" href="/Result/@item.ExecutionId.AsPrimitive()">@item.ExecutionId</a></td>
-                <td>@item.Workload</td>
+                <td><a class="link" href="/Result/@item.ExecutionId.AsPrimitive()">@item.Workload</a></td>
                 <td>@item.StartTime.ToLocalTime().ToString()</td>
                 <td>@item.RunningTime?.ToString(@"hh\:mm\:ss")</td>
                 <td>@item.WorkloadCount</td>
