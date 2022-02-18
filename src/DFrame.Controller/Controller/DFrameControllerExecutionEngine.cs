@@ -114,7 +114,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
             }
             else
             {
-                broadcaster = globalGroup.CreateBroadcasterTo<IWorkerReceiver>(connetionIds);
+                broadcaster = globalGroup.CreateBroadcasterTo<IWorkerReceiver>(connectionIds);
             }
 
             broadcaster.CreateWorkloadAndSetup(executionId, createWorkloadCount, workloadName, parameters);
