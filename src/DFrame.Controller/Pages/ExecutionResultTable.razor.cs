@@ -30,4 +30,17 @@ public partial class ExecutionResultTable
             LogView: null
         ));
     }
+
+    void ShowError(WorkerId workerId)
+    {
+        var result = ExecutionResults.SingleOrDefault(x => x.WorkerId == workerId);
+
+        drawerPublisher.Publish(new DrawerRequest
+        (
+            IsShow: true,
+            Parameters: null,
+            ErrorMessage: result?.ErrorMessage,
+            LogView: null
+        ));
+    }
 }

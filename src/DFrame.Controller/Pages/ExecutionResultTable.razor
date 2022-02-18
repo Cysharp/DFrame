@@ -102,7 +102,14 @@
                 </td>
                 <td class="text-center">@item.SucceedCount</td>
                 <td class="text-center">
-                    <label for="right-side-panel" class="link text-red-500">@item.ErrorCount</label>
+                    @if (item.ErrorCount > -1)
+                    {
+                        <label class="link text-red-500" @onclick=@(() => ShowError(item.WorkerId))>@item.ErrorCount</label>
+                    }
+                    else
+                    {
+                        @item.ErrorCount
+                    }
                 </td>
                 <td class="text-center">@item.Max.TotalMilliseconds.ToString("0.00")</td>
                 <td class="text-center">@item.Min.TotalMilliseconds.ToString("0.00")</td>

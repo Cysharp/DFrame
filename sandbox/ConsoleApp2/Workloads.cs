@@ -174,3 +174,36 @@ public interface IEchoService : IService<IEchoService>
 {
     UnaryResult<Nil> Echo(string message);
 }
+
+[Workload("partly-cloudy")]
+public class PartlyCloudy : Workload
+{
+    readonly ILogger<PartlyCloudy> logger;
+    int execCount = 0;
+
+    public PartlyCloudy(ILogger<PartlyCloudy> logger)
+    {
+        this.logger = logger;
+    }
+
+    public override Task SetupAsync(WorkloadContext context)
+    {
+        logger.LogInformation("Called Setup");
+        return Task.CompletedTask;
+    }
+
+    public override async Task ExecuteAsync(WorkloadContext context)
+    {
+        if (new Random().Next(0, 2) < 1)
+            throw new Exception("It's cloudy today...");
+
+        logger.LogInformation("Execute:" + (++execCount));
+        await Task.Delay(TimeSpan.FromSeconds(1));
+    }
+
+    public override Task TeardownAsync(WorkloadContext context)
+    {
+        logger.LogInformation("Called Teardown");
+        return Task.CompletedTask;
+    }
+}
