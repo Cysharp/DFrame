@@ -53,23 +53,32 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
             }
 
             // If totalRequestCount is lower than workers, concurrency(workload-count), reduce worker at first and after reduce concurrency.
+            if (totalRequestCount < workerCount)
+            {
+                workerCount = totalRequestCount;
+            }
 
             var createWorkloadCount = concurrency;
-            int executeCountPerWorker = totalRequestCount / workerCount / concurrency;
+            if (totalRequestCount < createWorkloadCount * workerCount)
+            {
+                createWorkloadCount = totalRequestCount / workerCount; // concurrency * workerCount (+ rest) = totalRequestCount
+            }
+
+            var executeCountPerWorker = totalRequestCount / workerCount / createWorkloadCount;
             if (executeCountPerWorker == 0) executeCountPerWorker = 1;
             var executeCountPerWorkload = executeCountPerWorker / createWorkloadCount;
             if (executeCountPerWorkload == 0) executeCountPerWorkload = 1;
 
             var rest = totalRequestCount % (executeCountPerWorkload * createWorkloadCount * workerCount);
 
-            var connetionIds = new Guid[workerCount];
+            var connectionIds = new Guid[workerCount];
             var sorted = connections
                 .OrderBy(x => x.Key)
                 .Take(workerCount)
                 .Select((x, i) =>
                 {
                     // evil side-effect
-                    connetionIds[i] = x.Value.ConnectionId;
+                    connectionIds[i] = x.Value.ConnectionId;
                     return new SummarizedExecutionResult(x.Key, createWorkloadCount)
                     {
                         executeCountPerWorkload = Enumerable.Repeat(executeCountPerWorkload, createWorkloadCount).ToArray()
@@ -96,8 +105,8 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
                 Workload = workloadName,
                 ExecutionId = executionId,
                 WorkerCount = workerCount,
-                Concurrency = concurrency,
-                WorkloadCount = workerCount * concurrency,
+                Concurrency = createWorkloadCount,
+                WorkloadCount = workerCount * createWorkloadCount,
                 TotalRequest = totalRequestCount,
                 Parameters = parameters,
                 StartTime = DateTime.UtcNow
