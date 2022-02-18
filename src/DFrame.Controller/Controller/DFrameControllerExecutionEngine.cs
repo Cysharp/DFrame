@@ -41,29 +41,62 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
         lock (EngineSync)
         {
             if (connections.Count == 0) return; // can not start.
-            if (workerLimit == 0) return;
+            if (workerLimit <= 0) return;
+            if (concurrency <= 0) return;
 
             if (globalGroup == null) throw new InvalidOperationException("GlobalGroup does not exists.");
 
+            var workerCount = workerLimit;
             if (connections.Count < workerLimit)
             {
-                workerLimit = connections.Count;
+                workerCount = connections.Count;
+            }
+
+            // If totalRequestCount is lower than workers, concurrency(workload-count), reduce worker at first and after reduce concurrency.
+            if (totalRequestCount < workerCount)
+            {
+                workerCount = totalRequestCount;
             }
 
             var createWorkloadCount = concurrency;
-            int executeCountPerWorker = totalRequestCount / workerLimit / concurrency;
+            if (totalRequestCount < createWorkloadCount * workerCount)
+            {
+                createWorkloadCount = totalRequestCount / workerCount; // concurrency * workerCount (+ rest) = totalRequestCount
+            }
 
-            var connectionIds = new Guid[workerLimit];
+            var executeCountPerWorker = totalRequestCount / workerCount / createWorkloadCount;
+            if (executeCountPerWorker == 0) executeCountPerWorker = 1;
+            var executeCountPerWorkload = executeCountPerWorker / createWorkloadCount;
+            if (executeCountPerWorkload == 0) executeCountPerWorkload = 1;
+
+            var rest = totalRequestCount % (executeCountPerWorkload * createWorkloadCount * workerCount);
+
+            var connectionIds = new Guid[workerCount];
             var sorted = connections
                 .OrderBy(x => x.Key)
-                .Take(workerLimit)
+                .Take(workerCount)
                 .Select((x, i) =>
                 {
                     // evil side-effect
                     connectionIds[i] = x.Value.ConnectionId;
-                    return new SummarizedExecutionResult(x.Key, createWorkloadCount);
+                    return new SummarizedExecutionResult(x.Key, createWorkloadCount)
+                    {
+                        executeCountPerWorkload = Enumerable.Repeat(executeCountPerWorkload, createWorkloadCount).ToArray()
+                    };
                 })
                 .ToArray();
+
+            var workloadIndex = 0;
+            while (rest != 0)
+            {
+                foreach (var item in sorted)
+                {
+                    item.executeCountPerWorkload[workloadIndex] += 1;
+                    rest--;
+                    if (rest == 0) break;
+                }
+                workloadIndex++;
+            }
 
             var executionId = ExecutionId.NewExecutionId();
 
@@ -71,20 +104,20 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
             {
                 Workload = workloadName,
                 ExecutionId = executionId,
-                WorkerCount = workerLimit,
-                Concurrency = concurrency,
-                WorkloadCount = workerLimit * concurrency,
-                TotalRequest = workerLimit * concurrency * executeCountPerWorker,
+                WorkerCount = workerCount,
+                Concurrency = createWorkloadCount,
+                WorkloadCount = workerCount * createWorkloadCount,
+                TotalRequest = totalRequestCount,
                 Parameters = parameters,
                 StartTime = DateTime.UtcNow
             };
 
-            RunningState = new WorkersRunningStateMachine(summary, executeCountPerWorker, sorted, loggerFactory);
+            RunningState = new WorkersRunningStateMachine(summary, sorted, loggerFactory);
             LatestExecutionSummary = summary;
             LatestSortedSummarizedExecutionResults = sorted;
 
             IWorkerReceiver broadcaster;
-            if (connections.Count == workerLimit)
+            if (connections.Count == workerCount)
             {
                 broadcaster = globalGroup.CreateBroadcaster<IWorkerReceiver>();
             }
@@ -164,11 +197,11 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
         }
     }
 
-    public void CreateWorkloadAndSetupComplete(WorkerId workerId, IWorkerReceiver broadcaster)
+    public void CreateWorkloadAndSetupComplete(WorkerId workerId, IWorkerReceiver broadcaster, IWorkerReceiver broadcastToSelf)
     {
         lock (EngineSync)
         {
-            if (RunningState?.CreateWorkloadAndSetupComplete(workerId, broadcaster) ?? true)
+            if (RunningState?.CreateWorkloadAndSetupComplete(workerId, broadcaster, broadcastToSelf) ?? true)
             {
                 WorkflowCompleted();
             }

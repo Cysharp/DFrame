@@ -47,7 +47,9 @@ public sealed class ControllerHub : StreamingHubBase<IControllerHub, IWorkerRece
     {
         executingGroup = Group.AddAsync("running-group-" + executionId.ToString()).GetAwaiter().GetResult();
         var broadcaster = executingGroup.CreateBroadcaster<IWorkerReceiver>();
-        engine.CreateWorkloadAndSetupComplete(workerId, broadcaster);
+        var selfBroadcaster = this.BroadcastToSelf(executingGroup);
+        
+        engine.CreateWorkloadAndSetupComplete(workerId, broadcaster, selfBroadcaster);
 
         return Task.CompletedTask;
     }

@@ -2,7 +2,6 @@
 
 public class WorkersRunningStateMachine
 {
-    readonly int executeCountPerWorker;
     readonly HashSet<WorkerId> runningConnections;
     readonly ILogger<WorkersRunningStateMachine> logger;
     readonly ExecutionSummary executionSummary;
@@ -17,10 +16,9 @@ public class WorkersRunningStateMachine
     IWorkerReceiver? broadcaster;
     DateTime? executeBegin;
 
-    public WorkersRunningStateMachine(ExecutionSummary summary, int executeCountPerWorker, SummarizedExecutionResult[] sortedResultStore, ILoggerFactory loggerFactory)
+    public WorkersRunningStateMachine(ExecutionSummary summary, SummarizedExecutionResult[] sortedResultStore, ILoggerFactory loggerFactory)
     {
         this.executionSummary = summary;
-        this.executeCountPerWorker = executeCountPerWorker;
         this.runningConnections = sortedResultStore.Select(x => x.WorkerId).ToHashSet(); // create copy
         this.createWorkloadAndSetupCompletes = new HashSet<WorkerId>();
         this.logger = loggerFactory.CreateLogger<WorkersRunningStateMachine>();
@@ -70,11 +68,17 @@ public class WorkersRunningStateMachine
         return true;
     }
 
-    public bool CreateWorkloadAndSetupComplete(WorkerId workerId, IWorkerReceiver broadcaster)
+    public bool CreateWorkloadAndSetupComplete(WorkerId workerId, IWorkerReceiver broadcaster, IWorkerReceiver broadcasterToSelf)
     {
         if (createWorkloadAndSetupCompletes == null) throw new InvalidOperationException("Invalid state.");
         this.broadcaster = broadcaster; // override latest(same)
         createWorkloadAndSetupCompletes.Add(workerId);
+
+        if (resultsIndex.TryGetValue(workerId, out var i))
+        {
+            resultsSorted[i].executeBroadcasterToSelf = broadcasterToSelf;
+        }
+
         return SignalState();
     }
 
@@ -153,16 +157,16 @@ public class WorkersRunningStateMachine
             createWorkloadAndSetupCompletes = null;
             executeCompletes = new HashSet<WorkerId>(); // setup next state.
             executeBegin = DateTime.UtcNow;
-            foreach (var item in resultsSorted)
-            {
-                item.InitExecuteBeginTime(executeBegin.Value);
-            }
             executionSummary.RunningTime = TimeSpan.Zero;
             executionSummary.SucceedSum = 0;
             executionSummary.ErrorSum = 0;
             executionSummary.RpsSum = 0;
 
-            broadcaster.Execute(executeCountPerWorker);
+            foreach (var item in resultsSorted)
+            {
+                item.InitExecuteBeginTime(executeBegin.Value);
+                item.executeBroadcasterToSelf?.Execute(item.executeCountPerWorkload);
+            }
             return false;
         }
         if (executeCompletes != null && executeCompletes.Count == runningConnections.Count)

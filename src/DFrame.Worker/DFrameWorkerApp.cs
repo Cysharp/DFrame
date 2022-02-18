@@ -227,7 +227,7 @@ internal class DFrameWorkerEngine : IWorkerReceiver
         }
     }
 
-    async void IWorkerReceiver.Execute(int executeCount)
+    async void IWorkerReceiver.Execute(int[] executeCount)
     {
         var currentExecutionToken = executionToken;
         try
@@ -241,9 +241,10 @@ internal class DFrameWorkerEngine : IWorkerReceiver
 
             try
             {
-                await Task.WhenAll(workloads.Select(x => Task.Run(async () =>
+                await Task.WhenAll(workloads.Select((x, workloadIndex) => Task.Run(async () =>
                 {
-                    for (int i = 0; i < executeCount; i++)
+                    var exec = executeCount[workloadIndex];
+                    for (int i = 0; i < exec; i++)
                     {
                         x.context.CancellationToken.ThrowIfCancellationRequested();
 
