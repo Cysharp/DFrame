@@ -1,0 +1,10 @@
+﻿@page "/Result/{executionId:guid}"
+
+<div class="w-full min-h-screen drawer drawer-end">
+
+    <Drawer />
+
+    <div class="drawer-content">
+        <ExecutionResultTable IsRunning=false ShowHeader=true ExecutionResults=results ExecutionSummary=summary />
+    </div>
+</div>

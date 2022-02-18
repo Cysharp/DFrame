@@ -2,9 +2,10 @@
 {
     public interface IExecutionResultHistoryProvider
     {
-        int Count { get; }
+        public event Action? NotifyCountChanged;
+        int GetCount();
         IReadOnlyList<ExecutionSummary> GetList();
-        SummarizedExecutionResult[] GetResult(ExecutionId executionId);
+        (ExecutionSummary Summary, SummarizedExecutionResult[] Results)? GetResult(ExecutionId executionId);
         void AddNewResult(ExecutionSummary summary, SummarizedExecutionResult[] results);
     }
 
@@ -32,16 +33,15 @@
         readonly object gate = new object();
 
         readonly List<ExecutionSummary> summaries = new List<ExecutionSummary>();
-        readonly Dictionary<ExecutionId, SummarizedExecutionResult[]> resultsLookup = new Dictionary<ExecutionId, SummarizedExecutionResult[]>();
+        readonly Dictionary<ExecutionId, (ExecutionSummary, SummarizedExecutionResult[])> resultsLookup = new();
 
-        public int Count
+        public event Action? NotifyCountChanged;
+
+        public int GetCount()
         {
-            get
+            lock (gate)
             {
-                lock (gate)
-                {
-                    return summaries.Count;
-                }
+                return summaries.Count;
             }
         }
 
@@ -53,11 +53,11 @@
             }
         }
 
-        public SummarizedExecutionResult[] GetResult(ExecutionId executionId)
+        public (ExecutionSummary, SummarizedExecutionResult[])? GetResult(ExecutionId executionId)
         {
             lock (gate)
             {
-                return resultsLookup.TryGetValue(executionId, out var result) ? result : Array.Empty<SummarizedExecutionResult>();
+                return resultsLookup.TryGetValue(executionId, out var result) ? result : null;
             }
         }
 
@@ -66,7 +66,8 @@
             lock (gate)
             {
                 summaries.Add(summary);
-                resultsLookup.Add(summary.ExecutionId, results);
+                resultsLookup.Add(summary.ExecutionId, (summary, results));
+                NotifyCountChanged?.Invoke();
             }
         }
     }

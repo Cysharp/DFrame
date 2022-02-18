@@ -180,7 +180,7 @@ internal class DFrameWorkerEngine : IWorkerReceiver
         this.connectionLifeTime = CancellationTokenSource.CreateLinkedTokenSource(client!.WaitForDisconnect().ToCancellationToken(), applicationLifeTime);
         ResetSources();
 
-        await client.InitializeMetadataAsync(workloadCollection.All.Select(x => x.WorkloadInfo).ToArray(), options.Metadata);
+        await client.ConnectAsync(workloadCollection.All.Select(x => x.WorkloadInfo).ToArray(), options.Metadata);
 
         logger.LogInformation($"Connect completed.");
     }
