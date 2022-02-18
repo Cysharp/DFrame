@@ -53,16 +53,16 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
             var createWorkloadCount = concurrency;
             int executeCountPerWorker = totalRequestCount / workerLimit / concurrency;
 
-            var connetionIds = new Guid[workerLimit];
+            var connectionIds = new Guid[workerLimit];
             var sorted = connections
+                .OrderBy(x => x.Key)
+                .Take(workerLimit)
                 .Select((x, i) =>
                 {
                     // evil side-effect
-                    connetionIds[i] = x.Value.ConnectionId;
+                    connectionIds[i] = x.Value.ConnectionId;
                     return new SummarizedExecutionResult(x.Key, createWorkloadCount);
                 })
-                .OrderBy(x => x.WorkerId)
-                .Take(workerLimit)
                 .ToArray();
 
             var executionId = ExecutionId.NewExecutionId();
@@ -90,7 +90,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
             }
             else
             {
-                broadcaster = globalGroup.CreateBroadcasterTo<IWorkerReceiver>(connetionIds);
+                broadcaster = globalGroup.CreateBroadcasterTo<IWorkerReceiver>(connectionIds);
             }
 
             broadcaster.CreateWorkloadAndSetup(executionId, createWorkloadCount, workloadName, parameters);
