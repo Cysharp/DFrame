@@ -24,6 +24,9 @@ namespace DFrame
 
     public struct SocketsHttpHandlerOptions
     {
+        public SocketsHttpHandlerOptions()
+        { }
+
         public TimeSpan PooledConnectionIdleTimeout { get; set; } = Timeout.InfiniteTimeSpan;
         public TimeSpan PooledConnectionLifetime { get; set; } = Timeout.InfiniteTimeSpan;
         public TimeSpan KeepAlivePingDelay { get; set; } = TimeSpan.FromSeconds(60);
