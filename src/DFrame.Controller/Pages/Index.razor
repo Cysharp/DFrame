@@ -18,10 +18,25 @@
                 </a>
 
                 <div class="ml-2 w-full bg-base-200 rounded shadow">
-                    <div class="tabs p-4">
-                        <a class="tab tab-bordered @(vm.TabActive(CommandMode.Request))" @onclick="() => vm.ChangeCommandMode(CommandMode.Request)">Request</a>
-                        <a class="tab tab-bordered @(vm.TabActive(CommandMode.Repeat))" @onclick="() => vm.ChangeCommandMode(CommandMode.Repeat)">Repeat</a>
-                        <a class="tab tab-bordered @(vm.TabActive(CommandMode.InfiniteLoop))" @onclick="() => vm.ChangeCommandMode(CommandMode.InfiniteLoop)">Infinite</a>
+                    <div class="flex">
+                        <div class="flex-none">
+                            <div class="tabs px-4 pt-4 pb-2">
+                                <a class="tab tab-bordered @(vm.TabActive(CommandMode.Request))" @onclick="() => vm.ChangeCommandMode(CommandMode.Request)">Request</a>
+                                <a class="tab tab-bordered @(vm.TabActive(CommandMode.Repeat))" @onclick="() => vm.ChangeCommandMode(CommandMode.Repeat)">Repeat</a>
+                                <a class="tab tab-bordered @(vm.TabActive(CommandMode.InfiniteLoop))" @onclick="() => vm.ChangeCommandMode(CommandMode.InfiniteLoop)">Infinite</a>
+                            </div>
+                        </div>
+                        <div class="grow">
+                        </div>
+                        <div class="flex-none">
+                            <div data-tip="Server Log" class="tooltip tooltip-left">
+                                <button class="btn rounded mt-2 mr-2" @onclick="vm.ShowServerLogs">
+                                    <svg class="h-8 w-8 text-gray-300"  fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>                
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="p-4">
@@ -126,17 +141,12 @@
                                         }
                                     </div>
                                     <div class="grow">
-
                                     </div>
                                     <div class="flex-none">
-                                        <ul class="list-none">
-                                            <li>
-                                                <a class="link link-accent" href="/History">Execute Results(@vm.ResultHistoryCount)</a>
-                                            </li>
-                                            <li>
-                                                <span class="link link-accent" @onclick="vm.ShowServerLogs">Server Logs</span>
-                                            </li>
-                                        </ul>
+                                        <a class="btn btn-sm btn-active rounded gap-2 mt-4" href="/History">
+                                            <div class="pt-0.5 normal-case text-gray-300">Execute Results</div>
+                                            <div class="badge text-gray-300">@vm.ResultHistoryCount</div>
+                                        </a>
                                     </div>
                                 </div>
                             </EditForm>
