@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using ObservableCollections;
 using DFrame.Controller;
 using System.Diagnostics.CodeAnalysis;
+using DFrame.Utilities;
 
 namespace DFrame.Pages;
 
@@ -13,6 +14,7 @@ public partial class Index : IDisposable
     [Inject] ILogger<Index> logger { get; set; } = default!;
     [Inject] IExecutionResultHistoryProvider historyProvider { get; set; } = default!;
     [Inject] IScopedPublisher<DrawerRequest> drawerProvider { get; set; } = default!;
+    [Inject] LocalStorageAccessor localStorageAccessor { get; set; } = default!;
 
     ISynchronizedView<string, string> logView = default!;
     IndexViewModel vm = default!;
@@ -25,6 +27,21 @@ public partial class Index : IDisposable
         logView = logRouter.GetView();
         vm = new IndexViewModel(engine, historyProvider, drawerProvider, logView);
         engine.StateChanged += Engine_StateChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var (result, settings) = await localStorageAccessor.TryGetItemAsync<ExecuteSettings>("executeSettings", CancellationToken.None);
+
+            if (result)
+            {
+                vm = new IndexViewModel(engine, historyProvider, drawerProvider, logView, settings);
+                engine.StateChanged += Engine_StateChanged;
+                StateHasChanged();
+            }
+        }
     }
 
     public void Dispose()
@@ -43,7 +60,7 @@ public partial class Index : IDisposable
         });
     }
 
-    void HandleExecute()
+    async Task HandleExecute()
     {
         if (vm.SelectedWorkload == null)
         {
@@ -56,16 +73,32 @@ public partial class Index : IDisposable
             return;
         }
 
-        var parameters = vm.SelectedWorkloadParametes.Select(x => (x.ParameterName, x.Value)).ToArray();
+        var parameters = vm.SelectedWorkloadParameters.Select(x => (x.ParameterName, x.Value)).ToArray();
 
         var totalRequest = (vm.CommandMode == CommandMode.InfiniteLoop) ? int.MaxValue : vm.TotalRequest;
+
         engine.StartWorkerFlow(vm.SelectedWorkload, vm.Concurrency, totalRequest, vm.RequestWorkerLimit, parameters!);
 
         if (vm.CommandMode == CommandMode.Repeat)
         {
-            repeatModeState = new RepeatModeState(vm.SelectedWorkload, vm.Concurrency, vm.TotalRequest, vm.IncreaseTotalReqeustCount, vm.RequestWorkerLimit, vm.IncreaseWorkerCount, vm.RepeatCount, parameters!);
+            repeatModeState = new RepeatModeState(vm.SelectedWorkload, vm.Concurrency, vm.TotalRequest, vm.IncreaseTotalRequestCount, vm.RequestWorkerLimit, vm.IncreaseWorkerCount, vm.RepeatCount, parameters!);
             engine.StateChanged += WatchStateChangedForRepeat;
         }
+
+        var executeSettings = new ExecuteSettings
+        {
+            CommandMode = vm.CommandMode,
+            Workload = vm.SelectedWorkload,
+            Concurrency = vm.Concurrency,
+            TotalRequest = totalRequest,
+            WorkerLimit = vm.RequestWorkerLimit,
+            IncreaseTotalRequestCount = vm.IncreaseTotalRequestCount,
+            IncreaseWorkerCount = vm.IncreaseWorkerCount,
+            RepeatCount = vm.RepeatCount,
+            Parameters = parameters.ToDictionary(x => x.ParameterName, x => x.Value)
+        };
+
+        await localStorageAccessor.SetItemAsync("executeSettings", executeSettings, CancellationToken.None);
     }
 
     private void WatchStateChangedForRepeat()
@@ -160,7 +193,7 @@ public class IndexViewModel : IDisposable
 
     // Input Forms for All
     public string? SelectedWorkload { get; set; }
-    public WorkloadParameterInfoViewModel[] SelectedWorkloadParametes { get; private set; }
+    public WorkloadParameterInfoViewModel[] SelectedWorkloadParameters { get; private set; }
     public int Concurrency { get; set; } = 1;
 
     // Request/Repeat
@@ -168,22 +201,51 @@ public class IndexViewModel : IDisposable
     public int RequestWorkerLimit { get; set; }
 
     // Repeat
-    public int IncreaseTotalReqeustCount { get; set; } = 0;
+    public int IncreaseTotalRequestCount { get; set; } = 0;
     public int IncreaseWorkerCount { get; set; } = 0;
     public int RepeatCount { get; set; } = 1;
 
     // History
     public int ResultHistoryCount { get; set; }
 
-    public IndexViewModel(DFrameControllerExecutionEngine engine, IExecutionResultHistoryProvider historyProvider, IScopedPublisher<DrawerRequest> drawerProvider, ISynchronizedView<string, string> logView)
+    public IndexViewModel(DFrameControllerExecutionEngine engine, IExecutionResultHistoryProvider historyProvider, IScopedPublisher<DrawerRequest> drawerProvider, ISynchronizedView<string, string> logView, ExecuteSettings? executeSettings = null)
     {
         this.historyProvider = historyProvider;
         this.drawerProvider = drawerProvider;
         this.logView = logView;
-        SelectedWorkloadParametes = Array.Empty<WorkloadParameterInfoViewModel>();
+
+        SelectedWorkloadParameters = Array.Empty<WorkloadParameterInfoViewModel>();
         ResultHistoryCount = historyProvider.GetCount();
         historyProvider.NotifyCountChanged += HistoryProvider_NotifyCountChanged;
+
         RefreshEngineProperties(engine);
+
+        if (executeSettings != null)
+        {
+            CommandMode = executeSettings.CommandMode;
+            SelectedWorkload = executeSettings.Workload;
+            Concurrency = executeSettings.Concurrency;
+            TotalRequest = executeSettings.TotalRequest;
+            RequestWorkerLimit = executeSettings.WorkerLimit;
+            IncreaseTotalRequestCount = executeSettings.IncreaseTotalRequestCount;
+            IncreaseWorkerCount = executeSettings.IncreaseWorkerCount;
+            RepeatCount = executeSettings.RepeatCount;
+
+            UpdateWorkload();
+
+            if (executeSettings.Parameters != null)
+            {
+                foreach (var parameter in executeSettings.Parameters)
+                {
+                    var p = SelectedWorkloadParameters.FirstOrDefault(x => x.ParameterName == parameter.Key);
+
+                    if (p != null)
+                    {
+                        p.Value = parameter.Value;
+                    }
+                }
+            }
+        }
     }
 
     private void HistoryProvider_NotifyCountChanged()
@@ -234,12 +296,17 @@ public class IndexViewModel : IDisposable
     public void ChangeSelectedWorkload(ChangeEventArgs e)
     {
         this.SelectedWorkload = e.Value as string;
+        UpdateWorkload();
+    }
+
+    public void UpdateWorkload()
+    {
         if (this.SelectedWorkload != null)
         {
             var p = WorkloadInfos.FirstOrDefault(x => x.Name == this.SelectedWorkload);
             if (p != null)
             {
-                this.SelectedWorkloadParametes = p.Arguments.Select(x => new WorkloadParameterInfoViewModel(x)).ToArray();
+                this.SelectedWorkloadParameters = p.Arguments.Select(x => new WorkloadParameterInfoViewModel(x)).ToArray();
             }
         }
     }
@@ -322,4 +389,17 @@ public class IndexViewModel : IDisposable
             }
         }
     }
+}
+
+public class ExecuteSettings
+{
+    public CommandMode CommandMode { get; set; }
+    public string Workload { get; set; } = default!;
+    public int Concurrency { get; set; }
+    public int TotalRequest { get; set; }
+    public int WorkerLimit { get; set; }
+    public int IncreaseTotalRequestCount { get; set; }
+    public int IncreaseWorkerCount { get; set; }
+    public int RepeatCount { get; set; }
+    public Dictionary<string, string?>? Parameters { get; set; } = default!;
 }

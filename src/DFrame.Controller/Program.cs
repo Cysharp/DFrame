@@ -1,4 +1,5 @@
 using DFrame.Controller;
+using DFrame.Utilities;
 using MagicOnion.Server;
 using MessagePack;
 using MessagePipe;
@@ -37,6 +38,8 @@ builder.Services.AddSingleton<ILoggerProvider, RoutingLoggerProvider>();
 builder.Services.TryAddSingleton<IExecutionResultHistoryProvider, InMemoryExecutionResultHistoryProvider>();
 
 builder.Services.AddMessagePipe();
+
+builder.Services.AddScoped<LocalStorageAccessor>();
 
 var app = builder.Build();
 

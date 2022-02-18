@@ -30,7 +30,7 @@
                             <EditForm Model="@vm" OnSubmit=@HandleExecute>
                                 <label class="input-group">
                                     <span class="text-slate-300 min-w-[115px]">Workload</span>
-                                    <select class="select select-bordered select-sm leading-4" @onchange=vm.ChangeSelectedWorkload>
+                                    <select class="select select-bordered select-sm leading-4" @onchange=vm.ChangeSelectedWorkload value="@vm.SelectedWorkload">
                                         @foreach (var item in vm.WorkloadInfos)
                                         {
                                             <option>@item.Name</option>
@@ -39,7 +39,7 @@
                                 </label>
 
                                 <table class="ml-10">
-                                    @foreach (var item in vm.SelectedWorkloadParametes)
+                                    @foreach (var item in vm.SelectedWorkloadParameters)
                                     {
                                         <tr>
                                             <td class="pt-2">
@@ -97,7 +97,7 @@
                                 {
                                     <label class="input-group input-group-sm my-2">
                                         <span class="text-slate-300 min-w-[172px]">Increase TotalRequest</span>
-                                        <input type="text" class="input input-bordered input-sm text-slate-700" @bind-value=vm.IncreaseTotalReqeustCount />
+                                        <input type="text" class="input input-bordered input-sm text-slate-700" @bind-value=vm.IncreaseTotalRequestCount />
                                     </label>
 
                                     <label class="input-group input-group-sm my-2">
