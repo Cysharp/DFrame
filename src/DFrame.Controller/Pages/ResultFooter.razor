@@ -1,0 +1,31 @@
+﻿<footer class="footer bg-neutral fixed bottom-0 left-0">
+    <div class="w-full stats bg-neutral">
+        <div class="stat place-items-center place-content-center bg-neutral pt-3 pb-0">
+            <div class="stat-value text-2xl">@(IsRunning ? "RUNNING" : (ExecutionSummary == null) ? "READY" : "COMPLETED")</div>
+            <div class="col-start-1 flex">
+                <div class="font-extrabold text-base">@ExecutionSummary?.WorkerCount</div>
+                <div class="opacity-50 leading-7 text-xs">&nbsp;WORKLOADS</div>
+            </div>
+        </div>
+        <div class="stat place-items-center place-content-center bg-neutral">
+            <div class="stat-title text-xs">START TIME</div>
+            <div class="stat-value text-2xl">@ExecutionSummary?.StartTime.ToLocalTime().ToString("hh:mm:ss")</div>
+        </div>
+        <div class="stat place-items-center place-content-center bg-neutral">
+            <div class="stat-title text-xs">RUNNING TIME</div>
+            <div class="stat-value text-2xl">@ExecutionSummary?.RunningTime?.ToString(@"hh\:mm\:ss")</div>
+        </div>
+        <div class="stat place-items-center place-content-center bg-neutral">
+            <div class="stat-title text-xs">SUCCEED(SUM)</div>
+            <div class="stat-value text-2xl">@(ExecutionSummary?.SucceedSum)</div>
+        </div>
+        <div class="stat place-items-center place-content-center bg-neutral">
+            <div class="stat-title text-xs">ERROR(SUM)</div>
+            <div class="stat-value text-2xl">@(ExecutionSummary?.ErrorSum)</div>
+        </div>
+        <div class="stat place-items-center place-content-center bg-neutral">
+            <div class="stat-title text-xs">RPS(SUM)</div>
+            <div class="stat-value text-2xl">@(ExecutionResults.Count == 0 ? "" : ExecutionResults.Sum(x=> x.Rps).ToString("0.00"))</div>
+        </div>
+    </div>
+</footer>
