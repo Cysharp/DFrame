@@ -35,7 +35,7 @@
                 <td>@item.TotalRequest</td>
                 <td>@item.SucceedSum</td>
                 <td>@item.ErrorSum</td>
-                <td>@item.RpsSum</td>
+                <td>@item.RpsSum?.ToString("0.00")</td>
             </tr>
         }
     </tbody>
