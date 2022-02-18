@@ -25,8 +25,6 @@ public partial class Index : IDisposable
     protected override void OnInitialized()
     {
         logView = logRouter.GetView();
-        vm = new IndexViewModel(engine, historyProvider, drawerProvider, logView);
-        engine.StateChanged += Engine_StateChanged;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -34,13 +32,9 @@ public partial class Index : IDisposable
         if (firstRender)
         {
             var (result, settings) = await localStorageAccessor.TryGetItemAsync<ExecuteSettings>("executeSettings", CancellationToken.None);
-
-            if (result)
-            {
-                vm = new IndexViewModel(engine, historyProvider, drawerProvider, logView, settings);
-                engine.StateChanged += Engine_StateChanged;
-                StateHasChanged();
-            }
+            vm = new IndexViewModel(engine, historyProvider, drawerProvider, logView, result ? settings : null);
+            engine.StateChanged += Engine_StateChanged;
+            StateHasChanged();
         }
     }
 
@@ -131,6 +125,20 @@ public partial class Index : IDisposable
         }
 
         engine.Cancel();
+    }
+
+    async Task Reset()
+    {
+        vm = new IndexViewModel(engine, historyProvider, drawerProvider, logView, new ExecuteSettings
+        {
+            CommandMode = vm.CommandMode,
+            Workload = vm.SelectedWorkload!,
+            Concurrency = 1,
+            TotalRequest = 1,
+            WorkerLimit = vm.CurrentConnections
+        });
+
+        await localStorageAccessor.RemoveItemAsync("executeSettings", CancellationToken.None);
     }
 }
 
@@ -395,11 +403,11 @@ public class ExecuteSettings
 {
     public CommandMode CommandMode { get; set; }
     public string Workload { get; set; } = default!;
-    public int Concurrency { get; set; }
-    public int TotalRequest { get; set; }
+    public int Concurrency { get; set; } = 1;
+    public int TotalRequest { get; set; } = 1;
     public int WorkerLimit { get; set; }
     public int IncreaseTotalRequestCount { get; set; }
     public int IncreaseWorkerCount { get; set; }
-    public int RepeatCount { get; set; }
-    public Dictionary<string, string?>? Parameters { get; set; } = default!;
+    public int RepeatCount { get; set; } = 1;
+    public Dictionary<string, string?>? Parameters { get; set; }
 }
