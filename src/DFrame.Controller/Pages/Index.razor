@@ -116,12 +116,12 @@
                                         {
                                             @if (vm.IsRunning)
                                             {
-                                                <button class="btn btn-ghost rounded btn-active opacity-80" @onclick="HandleCancel" type="button">Cancel</button>
+                                                <button class="btn btn-ghost rounded btn-active" @onclick="HandleCancel" type="button">Cancel</button>
                                                 <button class="btn btn-secondary rounded ml-1" disabled>Execute</button>
                                             }
                                             else
                                             {
-                                                <button class="btn btn-ghost rounded btn-active opacity-80" type="button" disabled>Cancel</button>
+                                                <button class="btn btn-ghost rounded btn-active" type="button" disabled>Cancel</button>
                                                 <button class="btn btn-secondary rounded ml-1">Execute</button>
                                             }
                                         }
@@ -130,12 +130,12 @@
                                         {
                                             @if (vm.IsRunning)
                                             {
-                                                <button class="btn btn-ghost rounded btn-active opacity-80" @onclick="HandleCancel" type="button">Stop</button>
+                                                <button class="btn btn-ghost rounded btn-active" @onclick="HandleCancel" type="button">Stop</button>
                                                 <button class="btn btn-secondary rounded ml-1" disabled>Execute</button>
                                             }
                                             else
                                             {
-                                                <button class="btn btn-ghost rounded btn-active opacity-80" type="button" disabled>Stop</button>
+                                                <button class="btn btn-ghost rounded btn-active" type="button" disabled>Stop</button>
                                                 <button class="btn btn-secondary rounded ml-1">Execute</button>
                                             }
                                         }

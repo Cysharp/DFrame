@@ -85,3 +85,16 @@ a, .btn-link {
     border-top-right-radius: .25rem;
     border-bottom-right-radius: 0rem;
 }
+.btn-secondary.btn[disabled] {
+    --tw-border-opacity: 0;
+    --tw-text-opacity: 0.5;
+    pointer-events: none;
+    background-color: hsl(var(--s) / var(--tw-bg-opacity));
+    opacity: 0.8;
+    color: hsl(var(--sc) / var(--tw-text-opacity));
+}
+.btn-ghost.btn-active[disabled] {
+    --tw-border-opacity: 0;
+    --tw-bg-opacity: 0.1;
+    background-color: hsl(var(--bc) / var(--tw-bg-opacity));
+}
