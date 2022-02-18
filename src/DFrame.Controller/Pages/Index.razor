@@ -114,14 +114,14 @@
                                     {
                                         @*TODO:change the button style from IsRunning*@
                                         <button class="btn btn-ghost rounded btn-active opacity-50" @onclick="HandleCancel">Cancel</button>
-                                        <button class="btn btn-secondary rounded">Execute</button>
+                                        <button class="btn btn-secondary rounded ml-1">Execute</button>
                                     }
 
                                     @if (vm.CommandMode == CommandMode.InfiniteLoop)
                                     {
                                         @*TODO:change the button style from IsRunning*@
                                         <button class="btn btn-ghost rounded btn-active opacity-50" @onclick="HandleCancel">Stop</button>
-                                        <button class="btn btn-secondary rounded">Execute</button>
+                                        <button class="btn btn-secondary rounded ml-1">Execute</button>
                                     }
                                 </div>
                                 <div class="grow">
