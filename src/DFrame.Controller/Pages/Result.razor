@@ -4,8 +4,16 @@
 
     <Drawer />
 
-    <div class="drawer-content">
-        <ExecutionResultTable IsRunning=false ShowHeader=true ExecutionResults=results ExecutionSummary=summary />
-        <ResultFooter IsRunning=false ExecutionResults=results ExecutionSummary=summary />
+    <div class="flex flex-col drawer-content">
+
+        <div class="grow overflow-auto">
+            <ExecutionResultTable IsRunning=false ShowHeader=true ExecutionResults=results ExecutionSummary=summary />
+        </div>
+
+        <div class="grow-0 bg-neutral min-h-[80px]">
+            <ResultFooter IsRunning=false ExecutionResults=results ExecutionSummary=summary />
+        </div>
+
     </div>
+
 </div>
