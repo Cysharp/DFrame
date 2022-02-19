@@ -11,60 +11,84 @@ public enum ExecutionStatus
     // Canceled
 }
 
-// TODO:make serializable
+[DataContract]
 public class SummarizedExecutionResult
 {
-    DateTime? executeBegin;
-    DateTime? executeCompleted;
-    TimeSpan elapsedSum;
-
+    [IgnoreDataMember]
     FixedSizeList<TimeSpan>? elapsedValues;
-
 
     [IgnoreDataMember]
     internal IWorkerReceiver? executeBroadcasterToSelf = default!;
     [IgnoreDataMember]
     internal long[] executeCountPerWorkload = default!;
 
-    public WorkerId WorkerId { get; }
-    public int WorkloadCount { get; }
-    public IReadOnlyList<(string, string)> Metadata { get; }
-    public ExecutionStatus ExecutionStatus { get; private set; }
-
-    public bool Error { get; private set; }
-    public string? ErrorMessage { get; private set; }
-    public long CompleteCount { get; private set; }
-    public long SucceedCount { get; private set; }
+    [DataMember]
+    DateTime? ExecuteBegin { get; set; }
+    [DataMember]
+    DateTime? ExecuteCompleted { get; set; }
+    [DataMember]
+    public WorkerId WorkerId { get; set; }
+    [DataMember]
+    public int WorkloadCount { get; set; }
+    [DataMember]
+    public IReadOnlyList<(string, string)> Metadata { get; set; }
+    [DataMember]
+    public ExecutionStatus ExecutionStatus { get; set; }
+    [DataMember]
+    public bool Error { get; set; }
+    [DataMember]
+    public string? ErrorMessage { get; set; }
+    [DataMember]
+    public long CompleteCount { get; set; }
+    [DataMember]
+    public long SucceedCount { get; set; }
+    [DataMember]
     public long ErrorCount { get; set; }
-    public TimeSpan TotalElapsed => elapsedSum;
-    public TimeSpan Latest { get; private set; }
-    public TimeSpan Min { get; private set; }
-    public TimeSpan Max { get; private set; }
-    public TimeSpan Avg => (SucceedCount == 0) ? TimeSpan.Zero : TimeSpan.FromTicks(elapsedSum.Ticks / SucceedCount);
-    public double Rps => (TotalElapsed.TotalSeconds == 0 || (executeBegin == null)) ? 0 : (SucceedCount / RunningTime.TotalSeconds);
+    [DataMember]
+    public TimeSpan TotalElapsed { get; set; }
+    [DataMember]
+    public TimeSpan Latest { get; set; }
+    [DataMember]
+    public TimeSpan Min { get; set; }
+    [DataMember]
+    public TimeSpan Max { get; set; }
+
+    // Calc from elapsedValues when completed.
+    [DataMember]
+    public TimeSpan? Median { get; set; }
+    [DataMember]
+    public TimeSpan? Percentile90 { get; set; }
+    [DataMember]
+    public TimeSpan? Percentile95 { get; set; }
+
+    [IgnoreDataMember]
+    public TimeSpan Avg => (SucceedCount == 0) ? TimeSpan.Zero : TimeSpan.FromTicks(TotalElapsed.Ticks / SucceedCount);
+    [IgnoreDataMember]
+    public double Rps => (TotalElapsed.TotalSeconds == 0 || (ExecuteBegin == null)) ? 0 : (SucceedCount / RunningTime.TotalSeconds);
 
     public TimeSpan RunningTime
     {
         get
         {
-            if (executeBegin == null)
+            if (ExecuteBegin == null)
             {
                 return TimeSpan.Zero;
             }
 
-            if (executeCompleted == null)
+            if (ExecuteCompleted == null)
             {
-                return DateTime.UtcNow - executeBegin.Value;
+                return DateTime.UtcNow - ExecuteBegin.Value;
             }
 
-            return executeCompleted.Value - executeBegin.Value;
+            return ExecuteCompleted.Value - ExecuteBegin.Value;
         }
     }
 
-    // Calc from elapsedValues when completed.
-    public TimeSpan? Median { get; private set; }
-    public TimeSpan? Percentile90 { get; private set; }
-    public TimeSpan? Percentile95 { get; private set; }
+    // for serialize.
+    public SummarizedExecutionResult()
+    {
+        Metadata = Array.Empty<(string, string)>();
+    }
 
     public SummarizedExecutionResult(WorkerId workerId, int workloadCount, IReadOnlyList<(string, string)> metadata)
     {
@@ -77,9 +101,9 @@ public class SummarizedExecutionResult
 
     public void InitExecuteBeginTime(DateTime executeBegin)
     {
-        if (this.executeBegin == null)
+        if (this.ExecuteBegin == null)
         {
-            this.executeBegin = executeBegin;
+            this.ExecuteBegin = executeBegin;
         }
     }
 
@@ -110,8 +134,35 @@ public class SummarizedExecutionResult
             if (Max < elapsed) Max = elapsed;
         }
 
-        elapsedSum += elapsed;
+        TotalElapsed += elapsed;
         elapsedValues?.AddLast(elapsed);
+    }
+
+    public void Add(BatchedExecuteResult result)
+    {
+        if (this.ExecutionStatus != ExecutionStatus.Running) return;
+
+        CompleteCount += result.BatchedElapsed.Count;
+        SucceedCount += result.BatchedElapsed.Count;
+
+        foreach (var item in result.BatchedElapsed)
+        {
+            var elapsed = TimeSpan.FromTicks(item);
+
+            Latest = elapsed;
+            if (SucceedCount == 1)
+            {
+                Min = Max = elapsed;
+            }
+            else
+            {
+                if (elapsed < Min) Min = elapsed;
+                if (Max < elapsed) Max = elapsed;
+            }
+
+            TotalElapsed += elapsed;
+            elapsedValues?.AddLast(elapsed);
+        }
     }
 
     // on complete.
@@ -119,7 +170,7 @@ public class SummarizedExecutionResult
     {
         if (this.ExecutionStatus == ExecutionStatus.Running)
         {
-            this.executeCompleted = DateTime.UtcNow;
+            this.ExecuteCompleted = DateTime.UtcNow;
             this.ExecutionStatus = status;
 
             if (elapsedValues != null)

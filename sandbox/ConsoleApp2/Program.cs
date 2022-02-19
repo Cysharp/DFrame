@@ -15,6 +15,7 @@ await Host.CreateDefaultBuilder()
     .RunDFrameAsync(args, new DFrameWorkerOptions("http://localhost:7313")
     {
         VirtualProcess = 32,
+        // BatchRate = 50,
         Metadata = new Dictionary<string, string>
         {
             {"MachineName", Environment.MachineName },

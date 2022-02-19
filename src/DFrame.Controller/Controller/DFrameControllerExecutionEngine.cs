@@ -9,6 +9,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
     public event Action? StateChanged;
 
     readonly object EngineSync = new object();
+    readonly ILogger<DFrameControllerExecutionEngine> logger;
     readonly ILoggerFactory loggerFactory;
     readonly IExecutionResultHistoryProvider historyProvider;
 
@@ -33,6 +34,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
     public DFrameControllerExecutionEngine(ILoggerFactory loggerFactory, IExecutionResultHistoryProvider historyProvider)
     {
         this.loggerFactory = loggerFactory;
+        this.logger = loggerFactory.CreateLogger<DFrameControllerExecutionEngine>();
         this.historyProvider = historyProvider;
     }
 
@@ -194,7 +196,20 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
         {
             RunningState?.ReportExecuteResult(workerId, result);
 
-            // TODO:result has error message, write error to log.
+            if (result.HasError)
+            {
+                logger.LogError($"Received client {workerId} error.{Environment.NewLine}{result.ErrorMessage}");
+            }
+
+            StateChanged?.Invoke();
+        }
+    }
+
+    public void ReportExecuteResult(WorkerId workerId, BatchedExecuteResult result)
+    {
+        lock (EngineSync)
+        {
+            RunningState?.ReportExecuteResult(workerId, result);
             StateChanged?.Invoke();
         }
     }

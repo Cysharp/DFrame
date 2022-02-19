@@ -60,6 +60,12 @@ public sealed class ControllerHub : StreamingHubBase<IControllerHub, IWorkerRece
         return Task.CompletedTask;
     }
 
+    public Task ReportProgressBatchedAsync(BatchedExecuteResult result)
+    {
+        engine.ReportExecuteResult(workerId, result);
+        return Task.CompletedTask;
+    }
+
     public Task ExecuteCompleteAsync()
     {
         engine.ExecuteComplete(workerId);

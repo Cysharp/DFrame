@@ -123,6 +123,28 @@ public class WorkersRunningStateMachine
         }
     }
 
+    public void ReportExecuteResult(WorkerId workerId, BatchedExecuteResult result)
+    {
+        if (resultsIndex.TryGetValue(workerId, out var i))
+        {
+            resultsSorted[i].Add(result);
+
+            if (executionSummary.SucceedSum == null)
+            {
+                executionSummary.SucceedSum = 1;
+            }
+            else
+            {
+                executionSummary.SucceedSum += result.BatchedElapsed.Count;
+            }
+
+            if (executeBegin != null)
+            {
+                executionSummary.RunningTime = DateTime.UtcNow - executeBegin.Value;
+            }
+        }
+    }
+
     public bool ExecuteComplete(WorkerId workerId)
     {
         if (executeCompletes == null) throw new InvalidOperationException("Invalid state.");

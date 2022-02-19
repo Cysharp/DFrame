@@ -12,6 +12,7 @@ public interface IControllerHub : IStreamingHub<IControllerHub, IWorkerReceiver>
     Task ConnectAsync(WorkloadInfo[] workloads, Dictionary<string, string> metadata);
     Task CreateWorkloadCompleteAsync(ExecutionId executionId);
     Task ReportProgressAsync(ExecuteResult result);
+    Task ReportProgressBatchedAsync(BatchedExecuteResult result);
     Task ExecuteCompleteAsync();
     Task TeardownCompleteAsync();
 }
@@ -59,6 +60,22 @@ public class ExecuteResult
         ExecutionNo = executionNo;
         HasError = hasError;
         ErrorMessage = errorMessage;
+    }
+}
+
+[MessagePackObject]
+public class BatchedExecuteResult
+{
+    [Key(0)]
+    public WorkloadId WorkloadId { get; }
+
+    [Key(1)]
+    public List<long> BatchedElapsed { get; }
+
+    public BatchedExecuteResult(WorkloadId workloadId, List<long> batchedElapsed)
+    {
+        WorkloadId = workloadId;
+        BatchedElapsed = batchedElapsed;
     }
 }
 

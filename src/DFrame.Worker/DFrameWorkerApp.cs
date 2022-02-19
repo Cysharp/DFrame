@@ -232,7 +232,7 @@ internal class DFrameWorkerEngine : IWorkerReceiver
         var currentExecutionToken = executionToken;
         try
         {
-            logger.LogInformation($"Executing {workloads.Count} workload(s). (ExecutePerWorkload={executeCount})");
+            logger.LogInformation($"Executing {workloads.Count} workload(s). (ExecutePerWorkload={executeCount.Max()})");
             var token = workloadLifeTime?.Token;
             if (token == null)
             {
@@ -241,12 +241,26 @@ internal class DFrameWorkerEngine : IWorkerReceiver
 
             try
             {
+                var isBatchReporting = options.MaxBatchRate > 1;
+
                 await Task.WhenAll(workloads.Select((x, workloadIndex) => Task.Run(async () =>
                 {
+                    BatchedExecuteResult? batchResult = default;
+                    if (isBatchReporting)
+                    {
+                        batchResult = new BatchedExecuteResult(x.context.WorkloadId, new List<long>(options.MaxBatchRate));
+                    }
+                    var batchRate = 0;
+                    if (isBatchReporting)
+                    {
+                        batchRate = Random.Shared.Next(options.MinBatchRate, options.MaxBatchRate);
+                    }
+
                     var exec = executeCount[workloadIndex];
                     for (long i = 0; i < exec; i++)
                     {
                         x.context.CancellationToken.ThrowIfCancellationRequested();
+
 
                         string? errorMsg = null;
                         var sw = ValueStopwatch.StartNew();
@@ -263,10 +277,26 @@ internal class DFrameWorkerEngine : IWorkerReceiver
                             errorMsg = ex.ToString();
                         }
 
-                        var executeResult = new ExecuteResult(x.context.WorkloadId, sw.Elapsed, i, (errorMsg != null), errorMsg);
+                        if (!isBatchReporting || errorMsg != null)
+                        {
+                            var executeResult = new ExecuteResult(x.context.WorkloadId, sw.Elapsed, i, (errorMsg != null), errorMsg);
+                            await client!.ReportProgressAsync(executeResult);
+                        }
+                        else if (batchResult != null)
+                        {
+                            batchResult.BatchedElapsed.Add(sw.ElapsedTicks);
+                            if (batchResult.BatchedElapsed.Count >= batchRate)
+                            {
+                                await client!.ReportProgressBatchedAsync(batchResult);
+                                batchRate = Random.Shared.Next(options.MinBatchRate, options.MaxBatchRate);
+                                batchResult.BatchedElapsed.Clear();
+                            }
+                        }
+                    }
 
-                        // TODO:report progress as batching.
-                        await client!.ReportProgressAsync(executeResult);
+                    if (batchResult != null && batchResult.BatchedElapsed.Count > 0)
+                    {
+                        await client!.ReportProgressBatchedAsync(batchResult);
                     }
                 }, token.Value)));
             }

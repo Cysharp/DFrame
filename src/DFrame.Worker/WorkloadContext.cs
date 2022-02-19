@@ -7,7 +7,7 @@ public class WorkloadContext
 
     public WorkloadContext(CancellationToken cancellationToken)
     {
-        this.WorkloadId = WorkloadId.NewWorkloadId();
+        this.WorkloadId = WorkloadId.New();
         this.CancellationToken = cancellationToken;
     }
 }
