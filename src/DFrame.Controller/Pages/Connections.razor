@@ -13,12 +13,12 @@
     <thead>
         <tr>
             <th class="normal-case">ID</th>
-            <th class="normal-case">Time</th>
+            <th class="normal-case">Connected At</th>
             <th class="normal-case w-full">Metadata</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in this.workerInfos)
+        @foreach (var item in this.workerInfos.OrderBy(x => x.ConnectTime).ThenBy(x => x.WorkerId))
         {
             <tr class="hover">
                 <td class="align-top">@item.ConnectionId</td>
