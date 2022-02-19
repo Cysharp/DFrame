@@ -48,6 +48,11 @@ public class WorkersRunningStateMachine
             resultsSorted[i].TrySetStatus(ExecutionStatus.Failed);
         }
 
+        if (runningConnections.Count == 0)
+        {
+            return true;
+        }
+
         if (createWorkloadAndSetupCompletes != null)
         {
             createWorkloadAndSetupCompletes.Remove(workerId);

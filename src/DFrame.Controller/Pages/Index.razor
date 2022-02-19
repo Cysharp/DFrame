@@ -48,7 +48,7 @@
                                 <EditForm Model="@vm" OnSubmit=@HandleExecute>
                                     <label class="input-group">
                                         <span class="text-slate-300 min-w-[115px]">Workload</span>
-                                        <select class="select select-bordered select-sm leading-4" @onchange=vm.ChangeSelectedWorkload value="@vm.SelectedWorkload">
+                                        <select class="select select-bordered select-sm leading-4" @onchange=HandleChangeWorkload value="@vm.SelectedWorkload">
                                             @foreach (var item in vm.WorkloadInfos)
                                             {
                                                 <option>@item.Name</option>
@@ -144,14 +144,14 @@
                                             {
                                                 <button class="btn btn-ghost rounded btn-active" type="button" @onclick="HandleCancel" disabled="@(!vm.IsRunning)">Cancel</button>
                                                 <button class="btn btn-secondary rounded ml-1" disabled="@(vm.IsRunning)">Execute</button>
-                                                <button class="btn btn-secondary rounded ml-1" type="button" disabled="@(vm.IsRunning)" @onclick="@(async () => await Reset())">Reset</button>
+                                                @*<button class="btn btn-secondary rounded ml-1" type="button" disabled="@(vm.IsRunning)" @onclick="@(async () => await Reset())">Reset</button>*@
                                             }
 
                                             @if (vm.CommandMode == CommandMode.InfiniteLoop)
                                             {
                                                 <button class="btn btn-ghost rounded btn-active" type="button" @onclick="HandleCancel" disabled="@(!vm.IsRunning)">Stop</button>
                                                 <button class="btn btn-secondary rounded ml-1" disabled="@(vm.IsRunning)">Execute</button>
-                                                <button class="btn btn-secondary rounded ml-1" type="button" disabled="@(vm.IsRunning)" @onclick="@(async () => await Reset())">Reset</button>
+                                                @*<button class="btn btn-secondary rounded ml-1" type="button" disabled="@(vm.IsRunning)" @onclick="@(async () => await Reset())">Reset</button>*@
                                             }
                                         </div>
                                         <div class="grow">

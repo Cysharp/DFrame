@@ -64,12 +64,12 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
                 createWorkloadCount = (int)totalRequestCount / workerCount; // concurrency * workerCount (+ rest) = totalRequestCount
             }
 
-            var executeCountPerWorker = totalRequestCount / workerCount / createWorkloadCount;
-            if (executeCountPerWorker == 0) executeCountPerWorker = 1;
-            var executeCountPerWorkload = executeCountPerWorker / createWorkloadCount;
+            var executeCountPerWorkload = totalRequestCount / (createWorkloadCount * workerCount);
             if (executeCountPerWorkload == 0) executeCountPerWorkload = 1;
 
-            var rest = totalRequestCount % (executeCountPerWorkload * createWorkloadCount * workerCount);
+            var rest = (totalRequestCount == long.MaxValue)
+                ? 0
+                : totalRequestCount - (executeCountPerWorkload * createWorkloadCount * workerCount);
 
             var connectionIds = new Guid[workerCount];
             var sorted = connections

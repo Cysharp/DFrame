@@ -37,6 +37,7 @@ public partial class Index : IDisposable
         {
             var (result, settings) = await localStorageAccessor.TryGetItemAsync<ExecuteSettings>("executeSettings", CancellationToken.None);
             vm = new IndexViewModel(engine, historyProvider, drawerProvider, logView, result ? settings : null);
+            await vm.UpdateWorkloadParametersAsync(localStorageAccessor);
             engine.StateChanged += Engine_StateChanged;
             StateHasChanged();
         }
@@ -85,29 +86,22 @@ public partial class Index : IDisposable
         if (vm.CommandMode == CommandMode.Duration)
         {
             durationCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(vm.DurationTimeSeconds));
-            durationCancellationRegistration= durationCancellationTokenSource.Token.Register(() =>
-            {
-                engine.Cancel();
-            });
+            durationCancellationRegistration = durationCancellationTokenSource.Token.Register(() =>
+             {
+                 engine.Cancel();
+             });
         }
 
-        var executeSettings = new ExecuteSettings
-        {
-            CommandMode = vm.CommandMode,
-            Workload = vm.SelectedWorkload,
-            Concurrency = vm.Concurrency,
-            TotalRequest = totalRequest,
-            WorkerLimit = vm.RequestWorkerLimit,
-            IncreaseTotalRequestCount = vm.IncreaseTotalRequestCount,
-            IncreaseWorkerCount = vm.IncreaseWorkerCount,
-            RepeatCount = vm.RepeatCount,
-            Parameters = parameters.ToDictionary(x => x.ParameterName, x => x.Value)
-        };
-
+        // store lateset settings
+        var executeSettings = new ExecuteSettings(vm, engine.CurrentConnectingCount == vm.CurrentConnections);
         await localStorageAccessor.SetItemAsync("executeSettings", executeSettings, CancellationToken.None);
+        if (parameters.Length > 0)
+        {
+            await localStorageAccessor.SetItemAsync($"executeSettings.parameters.{vm.SelectedWorkload}", parameters, CancellationToken.None);
+        }
     }
 
-    private void WatchStateChangedForRepeat()
+    void WatchStateChangedForRepeat()
     {
         if (!engine.IsRunning)
         {
@@ -142,19 +136,26 @@ public partial class Index : IDisposable
         engine.Cancel();
     }
 
-    async Task Reset()
+    async Task HandleChangeWorkload(ChangeEventArgs e)
     {
-        vm = new IndexViewModel(engine, historyProvider, drawerProvider, logView, new ExecuteSettings
-        {
-            CommandMode = vm.CommandMode,
-            Workload = vm.SelectedWorkload!,
-            Concurrency = 1,
-            TotalRequest = 1,
-            WorkerLimit = vm.CurrentConnections
-        });
-
-        await localStorageAccessor.RemoveItemAsync("executeSettings", CancellationToken.None);
+        vm.SelectedWorkload = e.Value as string;
+        await vm.UpdateWorkloadParametersAsync(localStorageAccessor);
     }
+
+    // only for debugging...
+    //async Task Reset()
+    //{
+    //    vm = new IndexViewModel(engine, historyProvider, drawerProvider, logView, new ExecuteSettings
+    //    {
+    //        CommandMode = vm.CommandMode,
+    //        Workload = vm.SelectedWorkload!,
+    //        Concurrency = 1,
+    //        TotalRequest = 1,
+    //        WorkerLimit = vm.CurrentConnections
+    //    });
+
+    //    await localStorageAccessor.RemoveItemAsync("executeSettings", CancellationToken.None);
+    //}
 }
 
 public class RepeatModeState
@@ -250,28 +251,20 @@ public class IndexViewModel : IDisposable
         if (executeSettings != null)
         {
             CommandMode = executeSettings.CommandMode;
-            SelectedWorkload = executeSettings.Workload;
+            if (executeSettings.Workload != null)
+            {
+                SelectedWorkload = executeSettings.Workload;
+            }
             Concurrency = executeSettings.Concurrency;
             TotalRequest = executeSettings.TotalRequest;
-            RequestWorkerLimit = executeSettings.WorkerLimit;
+            if (executeSettings.WorkerLimit != null)
+            {
+                RequestWorkerLimit = executeSettings.WorkerLimit.Value;
+            }
             IncreaseTotalRequestCount = executeSettings.IncreaseTotalRequestCount;
             IncreaseWorkerCount = executeSettings.IncreaseWorkerCount;
             RepeatCount = executeSettings.RepeatCount;
-
-            UpdateWorkload();
-
-            if (executeSettings.Parameters != null)
-            {
-                foreach (var parameter in executeSettings.Parameters)
-                {
-                    var p = SelectedWorkloadParameters.FirstOrDefault(x => x.ParameterName == parameter.Key);
-
-                    if (p != null)
-                    {
-                        p.Value = parameter.Value;
-                    }
-                }
-            }
+            DurationTimeSeconds = executeSettings.DurationTimeSeconds;
         }
     }
 
@@ -309,6 +302,34 @@ public class IndexViewModel : IDisposable
         this.ExecutionResults = engine.LatestSortedSummarizedExecutionResults;
     }
 
+    internal async ValueTask UpdateWorkloadParametersAsync(LocalStorageAccessor localStorageAccessor)
+    {
+        if (SelectedWorkload != null)
+        {
+            var info = WorkloadInfos.FirstOrDefault(x => x.Name == SelectedWorkload);
+            if (info != null)
+            {
+                SelectedWorkloadParameters = info.Arguments.Select(x => new IndexViewModel.WorkloadParameterInfoViewModel(x)).ToArray();
+            }
+
+            if (SelectedWorkloadParameters.Length != 0)
+            {
+                var (hasValue, parameters) = await localStorageAccessor.TryGetItemAsync<(string, string?)[]>($"executeSettings.parameters.{SelectedWorkload}", CancellationToken.None);
+                if (hasValue)
+                {
+                    foreach (var parameter in parameters)
+                    {
+                        var p = SelectedWorkloadParameters.FirstOrDefault(x => x.ParameterName == parameter.Item1);
+                        if (p != null)
+                        {
+                            p.Value = parameter.Item2;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public void ShowServerLogs()
     {
         drawerProvider.Publish(new DrawerRequest
@@ -319,24 +340,6 @@ public class IndexViewModel : IDisposable
             ErrorMessage: null,
             LogView: logView
         ));
-    }
-
-    public void ChangeSelectedWorkload(ChangeEventArgs e)
-    {
-        this.SelectedWorkload = e.Value as string;
-        UpdateWorkload();
-    }
-
-    public void UpdateWorkload()
-    {
-        if (this.SelectedWorkload != null)
-        {
-            var p = WorkloadInfos.FirstOrDefault(x => x.Name == this.SelectedWorkload);
-            if (p != null)
-            {
-                this.SelectedWorkloadParameters = p.Arguments.Select(x => new WorkloadParameterInfoViewModel(x)).ToArray();
-            }
-        }
     }
 
     public void ChangeWorkerLimitRange(ChangeEventArgs e)
@@ -419,15 +422,52 @@ public class IndexViewModel : IDisposable
     }
 }
 
+// store latest settings to localstorage
 public class ExecuteSettings
 {
-    public CommandMode CommandMode { get; set; }
-    public string Workload { get; set; } = default!;
+    public CommandMode CommandMode { get; set; } = CommandMode.Request;
+    public string? Workload { get; set; }
     public int Concurrency { get; set; } = 1;
+    public int? WorkerLimit { get; set; }  // null as no limit
     public long TotalRequest { get; set; } = 1;
-    public int WorkerLimit { get; set; }
-    public int IncreaseTotalRequestCount { get; set; }
-    public int IncreaseWorkerCount { get; set; }
+
+    public int IncreaseTotalRequestCount { get; set; } = 0;
+    public int IncreaseWorkerCount { get; set; } = 0;
     public int RepeatCount { get; set; } = 1;
-    public Dictionary<string, string?>? Parameters { get; set; }
+    public int DurationTimeSeconds { get; set; } = 1;
+
+    public ExecuteSettings()
+    {
+
+    }
+
+    public ExecuteSettings(IndexViewModel vm, bool isNoLimit)
+    {
+        this.CommandMode = vm.CommandMode;
+        this.Workload = vm.SelectedWorkload;
+        this.Concurrency = vm.Concurrency;
+        if (!isNoLimit)
+        {
+            this.WorkerLimit = vm.RequestWorkerLimit;
+        }
+
+        switch (vm.CommandMode)
+        {
+            case CommandMode.Request:
+                this.TotalRequest = vm.TotalRequest;
+                break;
+            case CommandMode.Repeat:
+                this.TotalRequest = vm.TotalRequest;
+                this.IncreaseTotalRequestCount = vm.IncreaseTotalRequestCount;
+                this.IncreaseWorkerCount = vm.IncreaseWorkerCount;
+                this.RepeatCount = vm.RepeatCount;
+                break;
+            case CommandMode.Duration:
+                this.DurationTimeSeconds = vm.DurationTimeSeconds;
+                break;
+            case CommandMode.InfiniteLoop:
+            default:
+                break;
+        }
+    }
 }

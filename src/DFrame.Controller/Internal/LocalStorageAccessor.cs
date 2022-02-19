@@ -3,13 +3,18 @@ using Microsoft.JSInterop;
 
 namespace DFrame.Utilities;
 
-public class LocalStorageAccessor
+internal class LocalStorageAccessor
 {
     readonly IJSRuntime jsRuntime;
+    readonly JsonSerializerOptions options;
 
     public LocalStorageAccessor(IJSRuntime jsRuntime)
     {
         this.jsRuntime = jsRuntime;
+        this.options = new JsonSerializerOptions
+        {
+            IncludeFields = true
+        };
     }
 
     public async ValueTask<(bool, T)> TryGetItemAsync<T>(string key, CancellationToken cancellationToken)
@@ -18,7 +23,7 @@ public class LocalStorageAccessor
 
         if (v != null)
         {
-            return (true, JsonSerializer.Deserialize<T>(v)!);
+            return (true, JsonSerializer.Deserialize<T>(v, options)!);
         }
         else
         {
@@ -33,7 +38,7 @@ public class LocalStorageAccessor
 
     public async ValueTask SetItemAsync<T>(string key, T value, CancellationToken cancellationToken)
     {
-        var json = JsonSerializer.Serialize(value);
+        var json = JsonSerializer.Serialize(value, options);
         await jsRuntime.InvokeVoidAsync("localStorage.setItem", cancellationToken, new object[] { key, json });
     }
 }
