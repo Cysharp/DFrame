@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Components;
 using ObservableCollections;
 
-namespace DFrame.Pages;
+namespace DFrame.Pages.Components;
 
 public partial class Drawer : IDisposable
 {

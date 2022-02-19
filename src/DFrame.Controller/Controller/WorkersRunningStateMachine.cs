@@ -145,6 +145,7 @@ public class WorkersRunningStateMachine
 
     public void CancelAll()
     {
+        logger.LogInformation($"Send cancel command to all workers.");
         broadcaster?.Stop();
     }
 
@@ -158,7 +159,7 @@ public class WorkersRunningStateMachine
 
         if (createWorkloadAndSetupCompletes != null && createWorkloadAndSetupCompletes.Count == runningConnections.Count)
         {
-            logger.LogInformation($"All workers workload setup complete.");
+            logger.LogInformation($"Workload {executionSummary.Workload} all {executionSummary.WorkerCount} workers {executionSummary.WorkloadCount} workload setup complete.");
             createWorkloadAndSetupCompletes = null;
             executeCompletes = new HashSet<WorkerId>(); // setup next state.
             executeBegin = DateTime.UtcNow;
@@ -176,7 +177,7 @@ public class WorkersRunningStateMachine
         }
         if (executeCompletes != null && executeCompletes.Count == runningConnections.Count)
         {
-            logger.LogInformation($"All workers execute complete.");
+            logger.LogInformation($"Workload {executionSummary.Workload} all {executionSummary.WorkerCount} workers execute complete.");
             executeCompletes = null;
             teardownCompletes = new HashSet<WorkerId>(); // setup next state.
             broadcaster.Teardown();
@@ -184,7 +185,7 @@ public class WorkersRunningStateMachine
         }
         if (teardownCompletes != null && teardownCompletes.Count == runningConnections.Count)
         {
-            logger.LogInformation($"All workers teardown complete.");
+            logger.LogInformation($"Workload {executionSummary.Workload} all {executionSummary.WorkerCount} workers teardown complete.");
             teardownCompletes = null;
             return true;
         }

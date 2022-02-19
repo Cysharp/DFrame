@@ -4,6 +4,7 @@ using ObservableCollections;
 using DFrame.Controller;
 using System.Diagnostics.CodeAnalysis;
 using DFrame.Utilities;
+using DFrame.Pages.Components;
 
 namespace DFrame.Pages;
 
@@ -76,7 +77,12 @@ public partial class Index : IDisposable
 
         var totalRequest = (vm.CommandMode == CommandMode.InfiniteLoop || vm.CommandMode == CommandMode.Duration) ? long.MaxValue : vm.TotalRequest;
 
-        engine.StartWorkerFlow(vm.SelectedWorkload, vm.Concurrency, totalRequest, vm.RequestWorkerLimit, parameters!);
+        var okToStart = engine.StartWorkerFlow(vm.SelectedWorkload, vm.Concurrency, totalRequest, vm.RequestWorkerLimit, parameters!);
+        if (!okToStart)
+        {
+            logger.LogInformation("Invalid parameters, does not run workflow.");
+            return;
+        }
 
         if (vm.CommandMode == CommandMode.Repeat)
         {
@@ -111,13 +117,16 @@ public partial class Index : IDisposable
             {
                 if (state.TryMoveNextRepeat())
                 {
-                    engine.StartWorkerFlow(state.Workload, state.Concurrency, state.TotalRequest, state.WorkerLimit, state.Parameters!);
+                    var okToStart = engine.StartWorkerFlow(state.Workload, state.Concurrency, state.TotalRequest, state.WorkerLimit, state.Parameters!);
+                    if (okToStart)
+                    {
+                        return;
+                    }
+                    logger.LogInformation("Fail to start repeat execution, stop repeat mode.");
                 }
-                else
-                {
-                    repeatModeState = null;
-                    engine.StateChanged -= WatchStateChangedForRepeat;
-                }
+
+                repeatModeState = null;
+                engine.StateChanged -= WatchStateChangedForRepeat;
             }
         }
     }

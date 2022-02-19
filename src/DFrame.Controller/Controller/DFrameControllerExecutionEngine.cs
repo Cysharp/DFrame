@@ -36,13 +36,13 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
         this.historyProvider = historyProvider;
     }
 
-    public void StartWorkerFlow(string workloadName, int concurrency, long totalRequestCount, int workerLimit, (string name, string value)[] parameters)
+    public bool StartWorkerFlow(string workloadName, int concurrency, long totalRequestCount, int workerLimit, (string name, string value)[] parameters)
     {
         lock (EngineSync)
         {
-            if (connections.Count == 0) return; // can not start.
-            if (workerLimit <= 0) return;
-            if (concurrency <= 0) return;
+            if (connections.Count == 0) return false; // can not start.
+            if (workerLimit <= 0) return false;
+            if (concurrency <= 0) return false;
 
             if (globalGroup == null) throw new InvalidOperationException("GlobalGroup does not exists.");
 
@@ -129,6 +129,8 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
             broadcaster.CreateWorkloadAndSetup(executionId, createWorkloadCount, workloadName, parameters);
             StateChanged?.Invoke();
         }
+
+        return true;
     }
 
     internal void AddConnection(WorkerInfo workerInfo, WorkloadInfo[] workloads, IGroup globalGroup)

@@ -2,7 +2,7 @@
 using MessagePipe;
 using Microsoft.AspNetCore.Components;
 
-namespace DFrame.Pages;
+namespace DFrame.Pages.Components;
 
 public partial class ResultFooter
 {
