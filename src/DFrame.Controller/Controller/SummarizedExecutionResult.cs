@@ -28,6 +28,7 @@ public class SummarizedExecutionResult
 
     public WorkerId WorkerId { get; }
     public int WorkloadCount { get; }
+    public IReadOnlyList<(string, string)> Metadata { get; }
     public ExecutionStatus ExecutionStatus { get; private set; }
 
     public bool Error { get; private set; }
@@ -65,12 +66,13 @@ public class SummarizedExecutionResult
     public TimeSpan? Percentile90 { get; private set; }
     public TimeSpan? Percentile95 { get; private set; }
 
-    public SummarizedExecutionResult(WorkerId workerId, int workloadCount)
+    public SummarizedExecutionResult(WorkerId workerId, int workloadCount, IReadOnlyList<(string, string)> metadata)
     {
         this.elapsedValues = new FixedSizeList<TimeSpan>(100000); // TODO: from DFrameControllerOptions.
         this.WorkerId = workerId;
         this.WorkloadCount = workloadCount;
         this.ExecutionStatus = ExecutionStatus.Running;
+        this.Metadata = metadata;
     }
 
     public void InitExecuteBeginTime(DateTime executeBegin)

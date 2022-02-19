@@ -34,7 +34,7 @@ public sealed class ControllerHub : StreamingHubBase<IControllerHub, IWorkerRece
     {
         workerId = WorkerId.Parse(Context.CallContext.RequestHeaders.GetValue("worker-id"));
 
-        var sortedMeta = metadata.OrderBy(x => x.Key).ToArray();
+        var sortedMeta = metadata.OrderBy(x => x.Key).Select(x => (x.Key, x.Value)).ToArray();
         var workerInfo = new WorkerInfo(workerId, this.ConnectionId, DateTime.UtcNow, sortedMeta);
 
         var group = Group.AddAsync("global-masterhub-group").GetAwaiter().GetResult(); // always sync.
@@ -48,7 +48,7 @@ public sealed class ControllerHub : StreamingHubBase<IControllerHub, IWorkerRece
         executingGroup = Group.AddAsync("running-group-" + executionId.ToString()).GetAwaiter().GetResult();
         var broadcaster = executingGroup.CreateBroadcaster<IWorkerReceiver>();
         var selfBroadcaster = this.BroadcastToSelf(executingGroup);
-        
+
         engine.CreateWorkloadAndSetupComplete(workerId, broadcaster, selfBroadcaster);
 
         return Task.CompletedTask;

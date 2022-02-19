@@ -26,14 +26,14 @@
                 <td class="align-top pl-0 pr-1">
                     <table>
                         <tbody>
-                            @foreach (var meta in item.Metadata)
+                            @foreach (var (key, value) in item.Metadata)
                             {
                                 <tr>
                                     <td class="pt-0 pb-1 break-words whitespace-pre-wrap">
-                                        @meta.Key
+                                        @key
                                     </td>
                                     <td class="pt-0 pb-1 break-words whitespace-pre-wrap text-gray-300">
-                                        @meta.Value
+                                        @value
                                     </td>
                                 </tr>
                             }

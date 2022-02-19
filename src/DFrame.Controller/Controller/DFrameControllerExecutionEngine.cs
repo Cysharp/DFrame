@@ -79,7 +79,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
                 {
                     // evil side-effect
                     connectionIds[i] = x.Value.ConnectionId;
-                    return new SummarizedExecutionResult(x.Key, createWorkloadCount)
+                    return new SummarizedExecutionResult(x.Key, createWorkloadCount, x.Value.Metadata)
                     {
                         executeCountPerWorkload = Enumerable.Repeat(executeCountPerWorkload, createWorkloadCount).ToArray()
                     };

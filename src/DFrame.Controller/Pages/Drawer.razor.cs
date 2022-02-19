@@ -9,8 +9,9 @@ public partial class Drawer : IDisposable
     [Inject] IScopedSubscriber<DrawerRequest> subscriber { get; set; } = default!;
     IDisposable? subscription;
 
+    string? title;
     bool isShow;
-    (string, string)[]? parameters;
+    IReadOnlyList<(string, string)>? parameters;
     string? errorMessage;
     ISynchronizedView<string, string>? logView;
 
@@ -18,6 +19,7 @@ public partial class Drawer : IDisposable
     {
         subscription = subscriber.Subscribe(async x =>
         {
+            title = x.Title;
             isShow = x.IsShow;
             parameters = x.Parameters;
             errorMessage = x.ErrorMessage;
@@ -33,4 +35,4 @@ public partial class Drawer : IDisposable
     }
 }
 
-public record DrawerRequest(bool IsShow, (string, string)[]? Parameters, string? ErrorMessage, ISynchronizedView<string, string>? LogView);
+public record DrawerRequest(string? Title, bool IsShow, IReadOnlyList<(string, string)>? Parameters, string? ErrorMessage, ISynchronizedView<string, string>? LogView);
