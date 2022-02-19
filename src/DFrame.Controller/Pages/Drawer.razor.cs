@@ -29,6 +29,11 @@ public partial class Drawer : IDisposable
         });
     }
 
+    void Close()
+    {
+        isShow = false;
+    }
+
     public void Dispose()
     {
         subscription?.Dispose();

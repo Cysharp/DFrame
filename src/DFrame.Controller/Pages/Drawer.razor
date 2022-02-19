@@ -7,9 +7,11 @@
 
         @if (title != null)
         {
-            <div class="m-3 p-4 bg-base-200 rounded shadow">
-                <div>
-                    <span>@title</span>
+            <div class="m-3 p-4 bg-base-200 rounded shadow flex">
+                <div class="flex-grow">@title</div>
+                <div class="flex-none cursor-pointer" @onclick="Close">
+                    @*Close Icon *@
+                    <svg class="h-6 w-6 text-white" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z" />  <line x1="18" y1="6" x2="6" y2="18" />  <line x1="6" y1="6" x2="18" y2="18" /></svg>
                 </div>
             </div>
         }
@@ -49,7 +51,7 @@
                 <div class="m-3 text-sm text-gray-300 break-all overflow-x-auto">
                     <pre class="py-3">
                         @errorMessage
-                    </pre>
+                                </pre>
                 </div>
             </div>
         }
@@ -58,9 +60,11 @@
         {
             <div class="m-3 p-4 bg-base-200 rounded shadow">
                 <div class="m-3 text-sm text-gray-300 break-all">
-                    @foreach(var (value, view) in logView)
+                    @foreach (var (value, view) in logView)
                     {
-                        @view<br />
+                        @view
+
+                        <br />
                     }
                 </div>
             </div>
