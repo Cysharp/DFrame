@@ -19,7 +19,7 @@ public interface IControllerHub : IStreamingHub<IControllerHub, IWorkerReceiver>
 public interface IWorkerReceiver
 {
     void CreateWorkloadAndSetup(ExecutionId executionId, int createCount, string workloadName, (string name, string value)[] parameters);
-    void Execute(int[] executeCount); // exec count per workload
+    void Execute(long[] executeCount); // exec count per workload
     void Stop();
     void Teardown();
 }
@@ -46,13 +46,13 @@ public class ExecuteResult
     [Key(1)]
     public TimeSpan Elapsed { get; }
     [Key(2)]
-    public int ExecutionNo { get; }
+    public long ExecutionNo { get; }
     [Key(3)]
     public bool HasError { get; }
     [Key(4)]
     public string? ErrorMessage { get; }
 
-    public ExecuteResult(WorkloadId workloadId, TimeSpan elapsed, int executionNo, bool hasError, string? errorMessage)
+    public ExecuteResult(WorkloadId workloadId, TimeSpan elapsed, long executionNo, bool hasError, string? errorMessage)
     {
         WorkloadId = workloadId;
         Elapsed = elapsed;

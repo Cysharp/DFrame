@@ -22,6 +22,10 @@ public partial class Index : IDisposable
     // repeat management.
     RepeatModeState? repeatModeState;
 
+    // duration management
+    CancellationTokenSource? durationCancellationTokenSource;
+    CancellationTokenRegistration? durationCancellationRegistration;
+
     protected override void OnInitialized()
     {
         logView = logRouter.GetView();
@@ -69,7 +73,7 @@ public partial class Index : IDisposable
 
         var parameters = vm.SelectedWorkloadParameters.Select(x => (x.ParameterName, x.Value)).ToArray();
 
-        var totalRequest = (vm.CommandMode == CommandMode.InfiniteLoop) ? int.MaxValue : vm.TotalRequest;
+        var totalRequest = (vm.CommandMode == CommandMode.InfiniteLoop || vm.CommandMode == CommandMode.Duration) ? long.MaxValue : vm.TotalRequest;
 
         engine.StartWorkerFlow(vm.SelectedWorkload, vm.Concurrency, totalRequest, vm.RequestWorkerLimit, parameters!);
 
@@ -77,6 +81,14 @@ public partial class Index : IDisposable
         {
             repeatModeState = new RepeatModeState(vm.SelectedWorkload, vm.Concurrency, vm.TotalRequest, vm.IncreaseTotalRequestCount, vm.RequestWorkerLimit, vm.IncreaseWorkerCount, vm.RepeatCount, parameters!);
             engine.StateChanged += WatchStateChangedForRepeat;
+        }
+        if (vm.CommandMode == CommandMode.Duration)
+        {
+            durationCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(vm.DurationTimeSeconds));
+            durationCancellationRegistration= durationCancellationTokenSource.Token.Register(() =>
+            {
+                engine.Cancel();
+            });
         }
 
         var executeSettings = new ExecuteSettings
@@ -124,6 +136,9 @@ public partial class Index : IDisposable
             engine.StateChanged -= WatchStateChangedForRepeat;
         }
 
+        durationCancellationRegistration?.Dispose();
+        durationCancellationTokenSource?.Dispose();
+
         engine.Cancel();
     }
 
@@ -147,13 +162,13 @@ public class RepeatModeState
     public string Workload { get; set; }
     public int Concurrency { get; set; }
     public int RestRepeatCount { get; private set; }
-    public int TotalRequest { get; private set; }
+    public long TotalRequest { get; private set; }
     public int WorkerLimit { get; private set; }
     public int IncreaseWorkerLimit { get; }
     public int IncreaseTotalRequest { get; }
     public (string, string)[] Parameters { get; }
 
-    public RepeatModeState(string workload, int concurrency, int totalRequest, int increaseTotalRequest, int workerLimit, int increaseWorkerLimit, int repeatCount, (string, string)[] parameters)
+    public RepeatModeState(string workload, int concurrency, long totalRequest, int increaseTotalRequest, int workerLimit, int increaseWorkerLimit, int repeatCount, (string, string)[] parameters)
     {
         Workload = workload;
         Concurrency = concurrency;
@@ -180,6 +195,7 @@ public enum CommandMode
 {
     Request,
     Repeat,
+    Duration,
     InfiniteLoop
 }
 
@@ -205,13 +221,16 @@ public class IndexViewModel : IDisposable
     public int Concurrency { get; set; } = 1;
 
     // Request/Repeat
-    public int TotalRequest { get; set; } = 1;
+    public long TotalRequest { get; set; } = 1;
     public int RequestWorkerLimit { get; set; }
 
     // Repeat
     public int IncreaseTotalRequestCount { get; set; } = 0;
     public int IncreaseWorkerCount { get; set; } = 0;
     public int RepeatCount { get; set; } = 1;
+
+    // Duration
+    public int DurationTimeSeconds { get; set; } = 1;
 
     // History
     public int ResultHistoryCount { get; set; }
@@ -404,7 +423,7 @@ public class ExecuteSettings
     public CommandMode CommandMode { get; set; }
     public string Workload { get; set; } = default!;
     public int Concurrency { get; set; } = 1;
-    public int TotalRequest { get; set; } = 1;
+    public long TotalRequest { get; set; } = 1;
     public int WorkerLimit { get; set; }
     public int IncreaseTotalRequestCount { get; set; }
     public int IncreaseWorkerCount { get; set; }

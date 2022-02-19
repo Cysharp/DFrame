@@ -25,6 +25,7 @@
                                 <div class="tabs px-4 pt-4 pb-2">
                                     <a class="tab tab-bordered @(vm.TabActive(CommandMode.Request))" @onclick="() => vm.ChangeCommandMode(CommandMode.Request)">Request</a>
                                     <a class="tab tab-bordered @(vm.TabActive(CommandMode.Repeat))" @onclick="() => vm.ChangeCommandMode(CommandMode.Repeat)">Repeat</a>
+                                    <a class="tab tab-bordered @(vm.TabActive(CommandMode.Duration))" @onclick="() => vm.ChangeCommandMode(CommandMode.Duration)">Duration</a>
                                     <a class="tab tab-bordered @(vm.TabActive(CommandMode.InfiniteLoop))" @onclick="() => vm.ChangeCommandMode(CommandMode.InfiniteLoop)">Infinite</a>
                                 </div>
                             </div>
@@ -91,13 +92,13 @@
                                     @if (vm.CommandMode == CommandMode.Request || vm.CommandMode == CommandMode.Repeat)
                                     {
                                         <label class="input-group input-group-sm my-2">
-                                            <span class="text-slate-300 min-w-[115px]">TotalReuest</span>
+                                            <span class="text-slate-300 min-w-[115px]">Total Reuest</span>
                                             <input type="text" placeholder="Total request count." class="input input-bordered input-sm text-slate-700 placeholder:italic placeholder:text-slate-400" @bind-value=vm.TotalRequest />
                                         </label>
                                     }
 
                                     <label class="input-group input-group-sm my-2 w-1/2">
-                                        <span class="text-slate-300 min-w-[115px]">WorkerLimit</span>
+                                        <span class="text-slate-300 min-w-[115px]">Worker Limit</span>
                                         <input type="range" min="0" max="@vm.CurrentConnections" step=1 class="range range-sm mt-2 min-w-[172px]" value=@vm.RequestWorkerLimit @oninput=vm.ChangeWorkerLimitRange>
                                         @if (vm.CurrentConnections == vm.RequestWorkerLimit)
                                         {
@@ -123,14 +124,23 @@
                                         </label>
 
                                         <label class="input-group input-group-sm my-2">
-                                            <span class="text-slate-300 min-w-[172px]">RepeatCount</span>
+                                            <span class="text-slate-300 min-w-[172px]">Repeat Count</span>
                                             <input type="text" class="input input-bordered input-sm text-slate-700" @bind-value=vm.RepeatCount />
+                                        </label>
+                                    }
+
+
+                                    @if (vm.CommandMode == CommandMode.Duration)
+                                    {
+                                        <label class="input-group input-group-sm my-2">
+                                            <span class="text-slate-300 min-w-[172px]">Execute Time(seconds)</span>
+                                            <input type="text" class="input input-bordered input-sm text-slate-700" @bind-value=vm.DurationTimeSeconds />
                                         </label>
                                     }
 
                                     <div class="flex">
                                         <div class="flex-none">
-                                            @if (vm.CommandMode == CommandMode.Request || vm.CommandMode == CommandMode.Repeat)
+                                            @if (vm.CommandMode == CommandMode.Request || vm.CommandMode == CommandMode.Repeat || vm.CommandMode == CommandMode.Duration)
                                             {
                                                 <button class="btn btn-ghost rounded btn-active" type="button" @onclick="HandleCancel" disabled="@(!vm.IsRunning)">Cancel</button>
                                                 <button class="btn btn-secondary rounded ml-1" disabled="@(vm.IsRunning)">Execute</button>
@@ -156,7 +166,6 @@
                                 </EditForm>
                             </div>
                         </div>
-
                     </div>
                 </div>
 

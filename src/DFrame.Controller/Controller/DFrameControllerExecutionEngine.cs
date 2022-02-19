@@ -36,7 +36,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
         this.historyProvider = historyProvider;
     }
 
-    public void StartWorkerFlow(string workloadName, int concurrency, int totalRequestCount, int workerLimit, (string name, string value)[] parameters)
+    public void StartWorkerFlow(string workloadName, int concurrency, long totalRequestCount, int workerLimit, (string name, string value)[] parameters)
     {
         lock (EngineSync)
         {
@@ -55,13 +55,13 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
             // If totalRequestCount is lower than workers, concurrency(workload-count), reduce worker at first and after reduce concurrency.
             if (totalRequestCount < workerCount)
             {
-                workerCount = totalRequestCount;
+                workerCount = (int)totalRequestCount;
             }
 
             var createWorkloadCount = concurrency;
             if (totalRequestCount < createWorkloadCount * workerCount)
             {
-                createWorkloadCount = totalRequestCount / workerCount; // concurrency * workerCount (+ rest) = totalRequestCount
+                createWorkloadCount = (int)totalRequestCount / workerCount; // concurrency * workerCount (+ rest) = totalRequestCount
             }
 
             var executeCountPerWorker = totalRequestCount / workerCount / createWorkloadCount;
@@ -244,6 +244,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
                 summary.SucceedSum = LatestSortedSummarizedExecutionResults.Sum(x => x.SucceedCount);
                 summary.ErrorSum = LatestSortedSummarizedExecutionResults.Sum(x => x.ErrorCount);
                 summary.RpsSum = LatestSortedSummarizedExecutionResults.Sum(x => x.Rps);
+                summary.TotalRequest = LatestSortedSummarizedExecutionResults.Sum(x => x.CompleteCount);
 
                 historyProvider.AddNewResult(summary!, LatestSortedSummarizedExecutionResults);
             }

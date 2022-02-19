@@ -17,14 +17,14 @@
         public int WorkerCount { get; init; }
         public int WorkloadCount { get; init; }
         public int Concurrency { get; init; }
-        public int TotalRequest { get; init; }
         public (string name, string value)[] Parameters { get; init; } = default!;
         public DateTime StartTime { get; init; }
 
         // modifiable
         public TimeSpan? RunningTime { get; set; }
-        public int? SucceedSum { get; set; }
-        public int? ErrorSum { get; set; }
+        public long TotalRequest { get; set; } // set in init and after completed
+        public long? SucceedSum { get; set; }
+        public long? ErrorSum { get; set; }
         public double? RpsSum { get; set; }
     }
 

@@ -24,7 +24,7 @@ public class SummarizedExecutionResult
     [IgnoreDataMember]
     internal IWorkerReceiver? executeBroadcasterToSelf = default!;
     [IgnoreDataMember]
-    internal int[] executeCountPerWorkload = default!;
+    internal long[] executeCountPerWorkload = default!;
 
     public WorkerId WorkerId { get; }
     public int WorkloadCount { get; }
@@ -32,9 +32,9 @@ public class SummarizedExecutionResult
 
     public bool Error { get; private set; }
     public string? ErrorMessage { get; private set; }
-    public int CompleteCount { get; private set; }
-    public int SucceedCount { get; private set; }
-    public int ErrorCount { get; set; }
+    public long CompleteCount { get; private set; }
+    public long SucceedCount { get; private set; }
+    public long ErrorCount { get; set; }
     public TimeSpan TotalElapsed => elapsedSum;
     public TimeSpan Latest { get; private set; }
     public TimeSpan Min { get; private set; }
