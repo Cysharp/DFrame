@@ -1,9 +1,10 @@
 ﻿using System.Text.Json;
 using Microsoft.JSInterop;
 
-namespace DFrame.Utilities;
+namespace DFrame.Internal;
 
-internal class LocalStorageAccessor
+// TODO:internal
+public class LocalStorageAccessor
 {
     readonly IJSRuntime jsRuntime;
     readonly JsonSerializerOptions options;

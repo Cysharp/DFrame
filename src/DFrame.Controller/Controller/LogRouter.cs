@@ -8,7 +8,7 @@ namespace DFrame.Controller
 
         public LogRouter()
         {
-            ringBuffer = new ObservableFixedSizeRingBuffer<string>(100); // global log buffer.
+            ringBuffer = new ObservableFixedSizeRingBuffer<string>(1000); // global log buffer.
         }
 
         public ISynchronizedView<string, string> GetView()
@@ -22,7 +22,7 @@ namespace DFrame.Controller
         }
     }
 
-    internal class RoutingLoggerProvider : ILoggerProvider
+    public class RoutingLoggerProvider : ILoggerProvider
     {
         readonly LogRouter router;
 
@@ -41,7 +41,7 @@ namespace DFrame.Controller
         }
     }
 
-    internal class RoutingLogger : ILogger
+    public class RoutingLogger : ILogger
     {
         readonly LogRouter router;
 

@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Components;
 using ObservableCollections;
 using DFrame.Controller;
 using System.Diagnostics.CodeAnalysis;
-using DFrame.Utilities;
 using DFrame.Pages.Components;
+using DFrame.Internal;
 
 namespace DFrame.Pages;
 
