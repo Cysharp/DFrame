@@ -5,22 +5,27 @@ namespace DFrame;
 
 public static class DFrameAppHostBuilderExtensions
 {
-    public static Task RunDFrameAsync(this IHostBuilder hostBuilder, string[] args, DFrameWorkerOptions options)
+    public static Task RunDFrameAsync(this IHostBuilder hostBuilder, string controllerAddress)
     {
-        return RunDFrameAsyncCore(hostBuilder, args, options, (_, __) => { });
+        return RunDFrameAsyncCore(hostBuilder, new DFrameWorkerOptions(controllerAddress), (_, __) => { });
     }
 
-    public static Task RunDFrameAsync(this IHostBuilder hostBuilder, string[] args, Action<DFrameWorkerOptions> configureOptions)
+    public static Task RunDFrameAsync(this IHostBuilder hostBuilder, DFrameWorkerOptions options)
     {
-        return RunDFrameAsyncCore(hostBuilder, args, new DFrameWorkerOptions(), (_, x) => configureOptions(x));
+        return RunDFrameAsyncCore(hostBuilder, options, (_, __) => { });
     }
 
-    public static Task RunDFrameAsync(this IHostBuilder hostBuilder, string[] args, Action<HostBuilderContext, DFrameWorkerOptions> configureOptions)
+    public static Task RunDFrameAsync(this IHostBuilder hostBuilder, Action<DFrameWorkerOptions> configureOptions)
     {
-        return RunDFrameAsyncCore(hostBuilder, args, new DFrameWorkerOptions(), configureOptions);
+        return RunDFrameAsyncCore(hostBuilder, new DFrameWorkerOptions(), (_, x) => configureOptions(x));
     }
 
-    static async Task RunDFrameAsyncCore(IHostBuilder hostBuilder, string[] args, DFrameWorkerOptions options, Action<HostBuilderContext, DFrameWorkerOptions> configureOptions)
+    public static Task RunDFrameAsync(this IHostBuilder hostBuilder, Action<HostBuilderContext, DFrameWorkerOptions> configureOptions)
+    {
+        return RunDFrameAsyncCore(hostBuilder, new DFrameWorkerOptions(), configureOptions);
+    }
+
+    static async Task RunDFrameAsyncCore(IHostBuilder hostBuilder, DFrameWorkerOptions options, Action<HostBuilderContext, DFrameWorkerOptions> configureOptions)
     {
         hostBuilder = hostBuilder
             .ConfigureServices((hostContext, services) =>
@@ -29,7 +34,7 @@ public static class DFrameAppHostBuilderExtensions
                 services.AddSingleton(options);
             });
 
-        var app = ConsoleApp.CreateFromHostBuilder(hostBuilder, args, x =>
+        var app = ConsoleApp.CreateFromHostBuilder(hostBuilder, new string[0], x =>
         {
             // this affects indesirable result so disable auto replace.
             x.ReplaceToUseSimpleConsoleLogger = false;
