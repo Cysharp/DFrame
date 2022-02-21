@@ -5,7 +5,7 @@
 
 This library allows you to write distributed load test scenarios in C#. In addition to HTTP/1, you can test HTTP/2, gRPC, MagicOnion, Photon, or original network transport by writing in C#.
 
-**Work In Progress** Preview `0.99.0`.
+**Work In Progress** Preview `0.99.1`.
 
 ![image](https://user-images.githubusercontent.com/46207/154911899-ad34d09d-e97f-42c2-a6e2-add63ead356c.png)
 

@@ -1,4 +1,5 @@
-﻿using DFrame;
+﻿
+using DFrame;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -20,6 +21,7 @@ await Host.CreateDefaultBuilder(args)
 //    }
 //});
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
 public class SampleHttpWorker : Workload
 {
