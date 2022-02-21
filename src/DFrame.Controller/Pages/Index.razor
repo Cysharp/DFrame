@@ -1,0 +1,182 @@
+﻿@page "/"
+@using System.Runtime.InteropServices
+
+@if (vm != null)
+{
+    <div class="w-full min-h-screen drawer drawer-end">
+
+        <Drawer />
+
+        <div class="flex flex-col drawer-content">
+
+            <div class="grow overflow-auto">
+
+                <div class="flex px-3 pt-3 pb-1 relative">
+                    <a href="/Connections" class="contents">
+                        <div class="relative w-80 bg-base-200 p-4 font-bold rounded shadow text-center hover:bg-violet-700">
+                            <div class="text-white text-[96px]">@vm.CurrentConnections</div>
+                            <div class="text-slate-400">Worker connections</div>
+                        </div>
+                    </a>
+
+                    <div class="ml-2 w-full bg-base-200 rounded shadow">
+                        <div class="flex">
+                            <div class="flex-none">
+                                <div class="tabs px-4 pt-4 pb-2">
+                                    <a class="tab tab-bordered @(vm.TabActive(CommandMode.Request))" @onclick="() => vm.ChangeCommandMode(CommandMode.Request)">Request</a>
+                                    <a class="tab tab-bordered @(vm.TabActive(CommandMode.Repeat))" @onclick="() => vm.ChangeCommandMode(CommandMode.Repeat)">Repeat</a>
+                                    <a class="tab tab-bordered @(vm.TabActive(CommandMode.Duration))" @onclick="() => vm.ChangeCommandMode(CommandMode.Duration)">Duration</a>
+                                    <a class="tab tab-bordered @(vm.TabActive(CommandMode.InfiniteLoop))" @onclick="() => vm.ChangeCommandMode(CommandMode.InfiniteLoop)">Infinite</a>
+                                </div>
+                            </div>
+                            <div class="grow">
+                            </div>
+                            <div class="flex-none">
+                                <div data-tip="Server Log" class="tooltip tooltip-left">
+                                    <button class="btn rounded mt-2 mr-2" @onclick="vm.ShowServerLogs">
+                                        <svg class="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-4">
+
+                            <div class="form-control overflow-hidden">
+                                <EditForm Model="@vm" OnSubmit=@HandleExecute>
+                                    <label class="input-group">
+                                        <span class="text-slate-300 min-w-[115px]">Workload</span>
+                                        <select class="select select-bordered select-sm leading-4" @onchange=HandleChangeWorkload value="@vm.SelectedWorkload">
+                                            @foreach (var item in vm.WorkloadInfos)
+                                            {
+                                                <option>@item.Name</option>
+                                            }
+                                        </select>
+                                    </label>
+
+                                    <table class="ml-10">
+                                        @foreach (var item in vm.SelectedWorkloadParameters)
+                                        {
+                                            <tr>
+                                                <td class="pt-2">
+                                                    <label class="input-group input-group-sm">
+                                                        <span class="text-slate-300 w-full" style="border-radius: 0.25rem 0 0 0.25rem;">@item.TypeLabel @item.ParameterName</span>
+                                                    </label>
+                                                </td>
+                                                <td class="pt-2">
+                                                    @if (item.SelectableValues.Length != 0)
+                                                    {
+                                                        <select class="select select-bordered select-sm w-full max-w-xs py-0 leading-4" style="border-radius: 0 0.25rem 0.25rem 0;" @bind=item.Value>
+                                                            @foreach (var name in item.SelectableValues)
+                                                            {
+                                                                <option>@name</option>
+                                                            }
+                                                        </select>
+                                                    }
+                                                    else
+                                                    {
+                                                        <input type="text" class="input input-bordered input-sm text-slate-700 min-w-[260px] placeholder:italic placeholder:text-slate-400" style="border-radius: 0 0.25rem 0.25rem 0;" placeholder=@item.Hint @bind-value=item.Value />
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </table>
+
+                                    <label class="input-group input-group-sm my-2">
+                                        <span class="text-slate-300 min-w-[115px]">Concurrency</span>
+                                        <input type="text" placeholder="Concurrent per worker." class="input input-bordered input-sm text-slate-700 placeholder:italic placeholder:text-slate-400" @bind-value=vm.Concurrency />
+                                    </label>
+
+                                    @if (vm.CommandMode == CommandMode.Request || vm.CommandMode == CommandMode.Repeat)
+                                    {
+                                        <label class="input-group input-group-sm my-2">
+                                            <span class="text-slate-300 min-w-[115px]">Total Reuest</span>
+                                            <input type="text" placeholder="Total request count." class="input input-bordered input-sm text-slate-700 placeholder:italic placeholder:text-slate-400" @bind-value=vm.TotalRequest />
+                                        </label>
+                                    }
+
+                                    <label class="input-group input-group-sm my-2 w-1/2">
+                                        <span class="text-slate-300 min-w-[115px]">Worker Limit</span>
+                                        <input type="range" min="0" max="@vm.CurrentConnections" step=1 class="range range-sm mt-2 min-w-[172px]" value=@vm.RequestWorkerLimit @oninput=vm.ChangeWorkerLimitRange>
+                                        @if (vm.CurrentConnections == vm.RequestWorkerLimit)
+                                        {
+                                            <span class="min-w-[48px] block text-center p-1 leading-3 text-xs" style="border-radius: 0.25rem;">No Limit</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="min-w-[48px] block text-center px-1" style="border-radius: 0.25rem;">@vm.RequestWorkerLimit</span>
+                                        }
+                                    </label>
+
+
+                                    @if (vm.CommandMode == CommandMode.Repeat)
+                                    {
+                                        <label class="input-group input-group-sm my-2">
+                                            <span class="text-slate-300 min-w-[172px]">Increase TotalRequest</span>
+                                            <input type="text" class="input input-bordered input-sm text-slate-700" @bind-value=vm.IncreaseTotalRequestCount />
+                                        </label>
+
+                                        <label class="input-group input-group-sm my-2">
+                                            <span class="text-slate-300 min-w-[172px]">Increase Worker</span>
+                                            <input type="text" class="input input-bordered input-sm text-slate-700" @bind-value=vm.IncreaseWorkerCount />
+                                        </label>
+
+                                        <label class="input-group input-group-sm my-2">
+                                            <span class="text-slate-300 min-w-[172px]">Repeat Count</span>
+                                            <input type="text" class="input input-bordered input-sm text-slate-700" @bind-value=vm.RepeatCount />
+                                        </label>
+                                    }
+
+
+                                    @if (vm.CommandMode == CommandMode.Duration)
+                                    {
+                                        <label class="input-group input-group-sm my-2">
+                                            <span class="text-slate-300 min-w-[172px]">Execute Time(seconds)</span>
+                                            <input type="text" class="input input-bordered input-sm text-slate-700" @bind-value=vm.DurationTimeSeconds />
+                                        </label>
+                                    }
+
+                                    <div class="flex">
+                                        <div class="flex-none">
+                                            @if (vm.CommandMode == CommandMode.Request || vm.CommandMode == CommandMode.Repeat || vm.CommandMode == CommandMode.Duration)
+                                            {
+                                                <button class="btn btn-ghost rounded btn-active" type="button" @onclick="HandleCancel" disabled="@(!vm.IsRunning)">Cancel</button>
+                                                <button class="btn btn-secondary rounded ml-1" disabled="@(vm.IsRunning)">Execute</button>
+                                                @*<button class="btn btn-secondary rounded ml-1" type="button" disabled="@(vm.IsRunning)" @onclick="@(async () => await Reset())">Reset</button>*@
+                                            }
+
+                                            @if (vm.CommandMode == CommandMode.InfiniteLoop)
+                                            {
+                                                <button class="btn btn-ghost rounded btn-active" type="button" @onclick="HandleCancel" disabled="@(!vm.IsRunning)">Stop</button>
+                                                <button class="btn btn-secondary rounded ml-1" disabled="@(vm.IsRunning)">Execute</button>
+                                                @*<button class="btn btn-secondary rounded ml-1" type="button" disabled="@(vm.IsRunning)" @onclick="@(async () => await Reset())">Reset</button>*@
+                                            }
+                                        </div>
+                                        <div class="grow">
+                                        </div>
+                                        <div class="flex-none">
+                                            <a class="btn btn-sm btn-active rounded gap-2 mt-4" href="/History">
+                                                <div class="pt-0.5 normal-case text-gray-300">Execute Results</div>
+                                                <div class="badge text-gray-300">@vm.ResultHistoryCount</div>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </EditForm>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <ExecutionResultTable IsRunning=vm.IsRunning ExecutionResults=vm.ExecutionResults ExecutionSummary=vm.ExecutionSummary />
+            </div>
+
+            <div class="grow-0 bg-neutral min-h-[80px]">
+                <ResultFooter IsRunning=vm.IsRunning ExecutionResults=vm.ExecutionResults ExecutionSummary=vm.ExecutionSummary />
+            </div>
+
+        </div>
+
+    </div>
+}

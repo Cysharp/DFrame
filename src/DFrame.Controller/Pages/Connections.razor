@@ -1,0 +1,46 @@
+﻿@page "/Connections"
+
+<div class="navbar rounded">
+    <a class="btn btn-ghost" href="/">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+    </a>
+    <div class="text-2xl font-bold px-2">
+        Connections
+    </div>
+</div>
+
+<table class="table w-full rounded shadow">
+    <thead>
+        <tr>
+            <th class="normal-case">WorkerID</th>
+            <th class="normal-case">Connected At</th>
+            <th class="normal-case w-full">Metadata</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in this.workerInfos.OrderBy(x => x.ConnectTime).ThenBy(x => x.WorkerId))
+        {
+            <tr class="hover">
+                <td class="align-top">@item.ConnectionId</td>
+                <td class="align-top">@item.ConnectTime.ToLocalTime().ToString()</td>
+                <td class="align-top pl-0 pr-1">
+                    <table>
+                        <tbody>
+                            @foreach (var (key, value) in item.Metadata)
+                            {
+                                <tr>
+                                    <td class="pt-0 pb-1 break-words whitespace-pre-wrap">
+                                        @key
+                                    </td>
+                                    <td class="pt-0 pb-1 break-words whitespace-pre-wrap text-gray-300">
+                                        @value
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

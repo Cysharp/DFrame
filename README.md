@@ -1,18 +1,21 @@
-DFrame
-===
-Kubernetes based Micro **D**istributed Batch **Frame**work and Load Testing Library for C#.
+# DFrame
+[![GitHub Actions](https://github.com/Cysharp/DFrame/workflows/Build-Debug/badge.svg)](https://github.com/Cysharp/DFrame/actions) [![Releases](https://img.shields.io/github/release/Cysharp/DFrame.svg)](https://github.com/Cysharp/DFrame/releases)
 
-This library allows you to write distributed batch or load test scenarios in C#. In addition to HTTP/1, you can test HTTP/2, gRPC, MagicOnion, Photon, or original network transport by writing in C#.
+**D**istributed load-testing **Frame**work for .NET and Unity.
 
-**Work In Progress** Preview `0.0.4`.
+This library allows you to write distributed load test scenarios in C#. In addition to HTTP/1, you can test HTTP/2, gRPC, MagicOnion, Photon, or original network transport by writing in C#.
+
+**Work In Progress** Preview `0.99.0`.
+
+![image](https://user-images.githubusercontent.com/46207/154911899-ad34d09d-e97f-42c2-a6e2-add63ead356c.png)
+
+
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 ## Table of Contents
 
 - [Getting started](#getting-started)
-- [Distributed Collections](#distributed-collections)
-- [Kubernetes](#kubernetes)
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -21,180 +24,134 @@ Getting started
 ---
 Install via NuGet
 
-> Install-Package DFrame  
-> Install-Package DFrame.LoadTesting  
+> Install-Package DFrame.Controller  
+> Install-Package DFrame.Worker  
 
-Sample code of HTTP/1 load testing.
+DFrame has two components, Controller and Worker so you need to create two .NET applications.
 
-Implement `Workload` class in your assembly.
+DFrame.Controller is a single ASP.NET app however you can create from ConsoleApp template.
+
+```csharp
+using DFrame;
+using Microsoft.AspNetCore.Builder;
+
+var builder = WebApplication.CreateBuilder(args);
+await builder.RunDFrameControllerAsync();
+```
+
+`DFrame.Controller` open two addresses, `Http/1` is for Web UI(built on Blazor Server), `Http/2` is for worker clusters(built on [MagicOnion](https://github.com/Cysharp/MagicOnion/)(gRPC)). You have to add `appsettings.json` to configure address.
+
+```json
+{
+  "Kestrel": {
+    "EndpointDefaults": {
+      "Protocols": "Http1AndHttp2"
+    },
+    "Endpoints": {
+      "Http": {
+        "Url": "http://localhost:7312",
+        "Protocols": "Http1"
+      },
+      "Grpc": {
+        "Url": "http://localhost:7313",
+        "Protocols": "Http2"
+      }
+    }
+  }
+}
+```
+
+Open `http://localhost:7312"` on your browser, you can see Web UI.
+
+`DFrame.Worker` is a worker app of clusters to write load-testing scenarios. Implement `Workload` class in your assembly.
+
+```csharp
+using DFrame;
+using Microsoft.Extensions.Hosting;
+
+await Host.CreateDefaultBuilder(args)
+    .RunDFrameAsync("http://localhost:7313"); // http/2 address to connect controller
+```
+
+Test scenario(called `Workload`) can write in C#. For example, simple HTTP/1 request like here.
 
 ```csharp
 public class SampleHttpWorker : Workload
 {
-    const string url = "http://localhost:5000";
+    public override async Task ExecuteAsync(WorkloadContext context)
+    {
+        await new HttpClient().GetAsync("http://localhost:5000", context.CancellationToken);
+    }
+}
+```
 
-    HttpClient httpClient;
+Workloads will listup in Controller WebUI when worker connected.
+
+Workload alos has `SetupAsync` and `TeardownAsync` method to prepare value for execute. For example store HttpClient to field is better.
+
+```csharp
+public class SampleHttpWorker2 : Workload
+{
+    HttpClient httpClient = default!;
 
     public override async Task SetupAsync(WorkloadContext context)
     {
-        var handler = new HttpClientHandler
-        {
-            MaxConnectionsPerServer = 100,
-        };
-        httpClient = new HttpClient(handler);
-        httpClient.DefaultRequestHeaders.Add("ContentType", "application/json");
+        httpClient = new HttpClient();
     }
 
     public override async Task ExecuteAsync(WorkloadContext context)
     {
-        await httpClient.GetAsync(_url, cts.Token);
+        await httpClient.GetAsync("http://localhost:5000", context.CancellationToken);
     }
 
     public override async Task TeardownAsync(WorkloadContext context)
     {
+        httpClient.Dispose();
     }
 }
 ```
 
-Setup entrypoint `RunDFrameAsync` or `RunDFrameLoadTestingAsync`.
+Worker constructor supports DI and parameter.
 
 ```csharp
-class Program
+public class SampleAppForDI : Workload
 {
-    static async Task Main(string[] args)
+    readonly ILogger<SampleAppForDI> logger;
+
+    public SampleAppForDI(ILogger<SampleAppForDI> logger)
     {
-        await Host.CreateDefaultBuilder(args)
-            // .RunDFrameAsync(args, new DFrameOptions("localhost", 12345));
-            .RunDFrameLoadTestingAsync(args, new DFrameOptions("localhost", 12345));
-    }
-```
-
-And execute commandline.
-
-```
-Usage: <Command> <Args>
-
-Commands:
-  batch
-  request
-  rampup
-```
-
-```
-batch Options:
-  -workloadname <String>     (Required)
-  -workercount <Int32>       (Default: 1)
-
-Options:
-  -workloadname <String>          (Required)
-  -workercount <Int32>            (Required)
-  -workloadperworker <Int32>      (Required)
-  -executeperworkload <Int32>     (Required)
-
-Options:
-  -workloadname <String>            (Required)
-  -workercount <Int32>              (Required)
-  -maxworkloadperworker <Int32>     (Required)
-  -workloadspawncount <Int32>       (Required)
-  -workloadspawnsecond <Int32>      (Required)
-```
-
-* workerCount - scaling worker count. in kuberenetes means Pod count. for inprocess, recommend to use 1.
-* workloadPerWorker - workload count of worker. This is similar to concurrent count.
-* executePerWorkload - execute count per workload, if use for batch, recommend to set 1.
-* workloadName - execute workload name, default is type name of Workload.
-
-```
-SampleApp.exe request -workercount 1 -workloadperworker 10 -executeperworkload 10 -workloadname SampleHttpWorkload
-```
-
-If use `RunDFrameLoadTestingAsync`, shows execution result like apache bench.
-
-```test
-Show Load Testing result report.
-Finished 1 requests
-
-Scaling Type:           InProcessScalingProvider
-Workload Name:          SampleWorkload
-
-Request count:          1
-WorkerCount:            0
-WorkloadPerWorker:      0
-ExecutePerWorkload:     0
-Concurrency level:      1
-Complete requests:      1
-Failed requests:        0
-
-Time taken for tests:   0.05 seconds
-Requests per seconds:   18.97 [#/sec] (mean)
-Time per request:       52.73 [ms] (mean)
-Time per request:       52.73 [ms] (mean, across all concurrent requests)
-
-Percentage of the requests served within a certain time (ms)
- 50%      52
- 66%      52
- 75%      52
- 80%      52
- 90%      52
- 95%      52
- 98%      52
- 99%      52
-100%      52 (longest request)
-```
-
-Distributed Collections
----
-Data can be shared between workers via DistirbutedColleciton.
-
-* `DistributedList<T>`
-* `DistributedQueue<T>`
-* `DistributedStack<T>`
-* `DistributedHashSet<T>`
-* `DistributedDictionary<TKey, TValue>`
-
-```csharp
-public class SampleWorker : Worker
-{
-    IDistributedQueue<int> queue;
-    Random rand;
-
-    public override async Task SetupAsync(WorkerContext context)
-    {
-        queue = context.CreateDistributedQueue<int>("sampleworker-testq");
-        rand = new Random();
+        this.logger = logger;
     }
 
-    public override async Task ExecuteAsync(WorkerContext context)
+    public override async Task ExecuteAsync(WorkloadContext context)
     {
-        await queue.EnqueueAsync(rand.Next());
-    }
-
-    public override async Task TeardownAsync(WorkerContext context)
-    {
-        while (true)
-        {
-            var v = await queue.TryDequeueAsync();
-            if (v.HasValue)
-            {
-                Console.WriteLine($"Dequeue all from {Environment.MachineName} {context.WorkerId}: {v.Value}");
-            }
-            else
-            {
-                return;
-            }
-        }
+        logger.LogInformation("Execute");
     }
 }
 ```
 
-Kubernetes
----
-WIP, DFrame scales 1-10000 workers via Kuberenetes. Distributed batches can be written collaboratively through inter-worker communication through Distributed Collections. It also enables large scale load testing.
+If constructor parameter type is primitive(all primitives and Guid, DateTime, Enum), input form will show in Web UI and receive value from controller when execute.
 
-You can choose for Kuberentes or AWS ECS(includes Fargate)
+```csharp
+public class SampleAppForDIAndParameter : Workload
+{
+    readonly ILogger<SampleAppForDIAndParameter> logger;
+    readonly string message;
 
-> Install-Package DFrame.Kubernetes  
-> Install-Package DFrame.Ecs
+    public SampleAppForDIAndParameter(ILogger<SampleAppForDIAndParameter> logger, string message)
+    {
+        this.logger = logger;
+        this.message = message;
+    }
+
+    public override async Task ExecuteAsync(WorkloadContext context)
+    {
+        logger.LogInformation("Execute:" + message);
+    }
+}
+```
+
+`DFrame.Worker` is a simple daemon application. Connects to the Controller at startup and waits for execution commands. You can cluster your load tests by deploying multiple Workers.
 
 License
 ---
