@@ -8,7 +8,7 @@ using ZLogger;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.ClearProviders();
-builder.Logging.SetMinimumLevel(LogLevel.Debug);
+builder.Logging.SetMinimumLevel(LogLevel.Information);
 builder.Logging.AddZLoggerConsole(options => { });
 
 await builder.RunDFrameControllerAsync();

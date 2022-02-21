@@ -11,7 +11,7 @@ namespace DFrame.Pages;
 public partial class Index : IDisposable
 {
     [Inject] DFrameControllerExecutionEngine engine { get; set; } = default!;
-    [Inject] LogRouter logRouter { get; set; } = default!;
+    [Inject] DFrameControllerLogBuffer logRouter { get; set; } = default!;
     [Inject] ILogger<Index> logger { get; set; } = default!;
     [Inject] IExecutionResultHistoryProvider historyProvider { get; set; } = default!;
     [Inject] IScopedPublisher<DrawerRequest> drawerProvider { get; set; } = default!;

@@ -12,6 +12,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
     readonly ILogger<DFrameControllerExecutionEngine> logger;
     readonly ILoggerFactory loggerFactory;
     readonly IExecutionResultHistoryProvider historyProvider;
+    readonly DFrameControllerOptions options;
 
     // Global states
     readonly Dictionary<WorkerId, WorkerInfo> connections = new();
@@ -31,11 +32,12 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
     public ExecutionSummary? LatestExecutionSummary { get; private set; } = default;
     public SummarizedExecutionResult[] LatestSortedSummarizedExecutionResults { get; private set; } = Array.Empty<SummarizedExecutionResult>();
 
-    public DFrameControllerExecutionEngine(ILoggerFactory loggerFactory, IExecutionResultHistoryProvider historyProvider)
+    public DFrameControllerExecutionEngine(ILoggerFactory loggerFactory, IExecutionResultHistoryProvider historyProvider, DFrameControllerOptions options)
     {
         this.loggerFactory = loggerFactory;
         this.logger = loggerFactory.CreateLogger<DFrameControllerExecutionEngine>();
         this.historyProvider = historyProvider;
+        this.options = options;
     }
 
     public bool StartWorkerFlow(string workloadName, int concurrency, long totalRequestCount, int workerLimit, (string name, string value)[] parameters)
@@ -81,7 +83,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
                 {
                     // evil side-effect
                     connectionIds[i] = x.Value.ConnectionId;
-                    return new SummarizedExecutionResult(x.Key, createWorkloadCount, x.Value.Metadata)
+                    return new SummarizedExecutionResult(x.Key, createWorkloadCount, x.Value.Metadata, options)
                     {
                         executeCountPerWorkload = Enumerable.Repeat(executeCountPerWorkload, createWorkloadCount).ToArray()
                     };

@@ -90,9 +90,9 @@ public class SummarizedExecutionResult
         Metadata = Array.Empty<(string, string)>();
     }
 
-    public SummarizedExecutionResult(WorkerId workerId, int workloadCount, IReadOnlyList<(string, string)> metadata)
+    public SummarizedExecutionResult(WorkerId workerId, int workloadCount, IReadOnlyList<(string, string)> metadata, DFrameControllerOptions options)
     {
-        this.elapsedValues = new FixedSizeList<TimeSpan>(100000); // TODO: from DFrameControllerOptions.
+        this.elapsedValues = new FixedSizeList<TimeSpan>(options.CompleteElapsedBufferCount);
         this.WorkerId = workerId;
         this.WorkloadCount = workloadCount;
         this.ExecutionStatus = ExecutionStatus.Running;

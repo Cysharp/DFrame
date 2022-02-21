@@ -2,13 +2,14 @@
 
 namespace DFrame.Controller
 {
-    public class LogRouter
+    // singleton.
+    public class DFrameControllerLogBuffer
     {
         ObservableFixedSizeRingBuffer<string> ringBuffer;
 
-        public LogRouter()
+        public DFrameControllerLogBuffer(DFrameControllerOptions options)
         {
-            ringBuffer = new ObservableFixedSizeRingBuffer<string>(1000); // global log buffer.
+            ringBuffer = new ObservableFixedSizeRingBuffer<string>(options.ServerLogBufferCount);
         }
 
         public ISynchronizedView<string, string> GetView()
@@ -22,18 +23,18 @@ namespace DFrame.Controller
         }
     }
 
-    public class RoutingLoggerProvider : ILoggerProvider
+    public class DFrameControllerLoggerProvider : ILoggerProvider
     {
-        readonly LogRouter router;
+        readonly DFrameControllerLogBuffer router;
 
-        public RoutingLoggerProvider(LogRouter router)
+        public DFrameControllerLoggerProvider(DFrameControllerLogBuffer router)
         {
             this.router = router;
         }
 
         public ILogger CreateLogger(string categoryName)
         {
-            return new RoutingLogger(router);
+            return new DFrameControllerLogger(router);
         }
 
         public void Dispose()
@@ -41,11 +42,11 @@ namespace DFrame.Controller
         }
     }
 
-    public class RoutingLogger : ILogger
+    public class DFrameControllerLogger : ILogger
     {
-        readonly LogRouter router;
+        readonly DFrameControllerLogBuffer router;
 
-        public RoutingLogger(LogRouter router)
+        public DFrameControllerLogger(DFrameControllerLogBuffer router)
         {
             this.router = router;
         }
@@ -57,7 +58,7 @@ namespace DFrame.Controller
 
         public bool IsEnabled(LogLevel logLevel)
         {
-            return true;
+            return logLevel != LogLevel.None;
         }
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)

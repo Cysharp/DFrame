@@ -3,8 +3,7 @@ using Microsoft.JSInterop;
 
 namespace DFrame.Internal;
 
-// TODO:internal
-public class LocalStorageAccessor
+internal class LocalStorageAccessor
 {
     readonly IJSRuntime jsRuntime;
     readonly JsonSerializerOptions options;

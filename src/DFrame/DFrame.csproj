@@ -5,22 +5,18 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<RootNamespace>DFrame</RootNamespace>
+
+		<!-- NuGet Packaging -->
+		<SignAssembly>true</SignAssembly>
 	</PropertyGroup>
 
-
 	<ItemGroup>
-		<PackageReference Include="ConsoleAppFramework" Version="4.0.6" />
-		<PackageReference Include="MagicOnion.Client" Version="4.3.1" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
-		<PackageReference Include="UnitGenerator" Version="1.4.2">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
+		<None Include="..\..\Icon.png" Pack="true" PackagePath="/" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\DFrame.Controller\DFrame.Controller.csproj" />
-	  <ProjectReference Include="..\DFrame.Worker\DFrame.Worker.csproj" />
+		<ProjectReference Include="..\DFrame.Controller\DFrame.Controller.csproj" />
+		<ProjectReference Include="..\DFrame.Worker\DFrame.Worker.csproj" />
 	</ItemGroup>
 
 </Project>
