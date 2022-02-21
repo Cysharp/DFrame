@@ -16,8 +16,6 @@ This library allows you to write distributed load test scenarios in C#. In addit
 ## Table of Contents
 
 - [Getting started](#getting-started)
-- [Distributed Collections](#distributed-collections)
-- [Kubernetes](#kubernetes)
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
