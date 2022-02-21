@@ -29,6 +29,8 @@ Install via NuGet
 
 DFrame has two components, Controller and Worker so you need to create two .NET applications.
 
+![image](https://user-images.githubusercontent.com/46207/154921606-b9955331-1d15-4c4f-a769-faeb61b13872.png)
+
 DFrame.Controller is a single ASP.NET app however you can create from ConsoleApp template.
 
 ```csharp
