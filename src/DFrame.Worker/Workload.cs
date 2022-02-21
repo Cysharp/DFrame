@@ -16,6 +16,11 @@ public abstract class Workload
         return Task.CompletedTask;
     }
 
+    public virtual Dictionary<string, string>? Complete()
+    {
+        return null;
+    }
+
     internal async Task InternalTeardownAsync(WorkloadContext context)
     {
         if (Interlocked.Increment(ref isDisposed) == 1)

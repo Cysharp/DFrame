@@ -239,6 +239,7 @@ internal class DFrameWorkerEngine : IWorkerReceiver
                 throw new InvalidOperationException("Token is lost before invoke Execute.");
             }
 
+            var completeResults = new Dictionary<WorkloadId, Dictionary<string, string>?>();
             try
             {
                 var isBatchReporting = options.MaxBatchRate > 1;
@@ -298,6 +299,11 @@ internal class DFrameWorkerEngine : IWorkerReceiver
                     {
                         await client!.ReportProgressBatchedAsync(batchResult);
                     }
+
+                    lock (completeResults)
+                    {
+                        completeResults[x.context.WorkloadId] = x.workload.Complete();
+                    }
                 }, token.Value)));
             }
             catch (OperationCanceledException e) when (e.CancellationToken == token.Value)
@@ -307,7 +313,7 @@ internal class DFrameWorkerEngine : IWorkerReceiver
             if (currentExecutionToken == executionToken)
             {
                 completeExecute.TrySetResult(); // call complete before ExecuteCompleteAsync
-                await client!.ExecuteCompleteAsync();
+                await client!.ExecuteCompleteAsync(completeResults);
             }
         }
         catch (Exception ex)

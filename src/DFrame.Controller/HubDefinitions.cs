@@ -13,7 +13,7 @@ public interface IControllerHub : IStreamingHub<IControllerHub, IWorkerReceiver>
     Task CreateWorkloadCompleteAsync(ExecutionId executionId);
     Task ReportProgressAsync(ExecuteResult result);
     Task ReportProgressBatchedAsync(BatchedExecuteResult result);
-    Task ExecuteCompleteAsync();
+    Task ExecuteCompleteAsync(Dictionary<WorkloadId, Dictionary<string, string>?> results);
     Task TeardownCompleteAsync();
 }
 
