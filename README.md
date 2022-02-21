@@ -7,7 +7,7 @@ This library allows you to write distributed load test scenarios in C#. In addit
 
 **Work In Progress** Preview `0.99.1`.
 
- <div><video controls src="https://user-images.githubusercontent.com/46207/154933672-7ef38a4e-b0df-4960-9911-bdfb82b6f4f5.mp4" muted="false"></video></div>
+https://user-images.githubusercontent.com/46207/154933672-7ef38a4e-b0df-4960-9911-bdfb82b6f4f5.mp4
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
