@@ -39,6 +39,11 @@ namespace DFrame
             };
         }
 
+        public void Dispose()
+        {
+            cancellationTokenSource.Cancel();
+        }
+
 #endif
 
         internal DFrameWorkerApp(DFrameWorkerOptions options, IServiceProviderIsService isService, IServiceProvider serviceProvider)
@@ -215,12 +220,10 @@ namespace DFrame
 
             var callInvoker = channel.CreateCallInvoker();
             var callOption = new CallOptions(new Metadata { { "worker-id", workerId.ToString() } });
-            var connectTask = StreamingHubClient.ConnectAsync<IControllerHub, IWorkerReceiver>(callInvoker, this, option: callOption, serializerOptions:
-#if UNITY_2020_1_OR_NEWER
-                DFrameResolver.Options
-#else
-                MessagePackSerializerOptions.Standard
-#endif
+            var connectTask = StreamingHubClient.ConnectAsync<IControllerHub, IWorkerReceiver>(callInvoker, this, option: callOption,
+
+                serializerOptions: DFrameResolver.Options
+
             );
             client = await connectTask.WaitAsync(connectTimeout);
 

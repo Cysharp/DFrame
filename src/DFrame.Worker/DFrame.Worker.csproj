@@ -2,7 +2,8 @@
 
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
-		<ImplicitUsings>enable</ImplicitUsings>
+		<!-- for share with Unity, disable. -->
+		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<RootNamespace>DFrame</RootNamespace>
 
@@ -27,4 +28,16 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 	</ItemGroup>
+
+	<!-- Copy files for Unity -->
+	<PropertyGroup>
+		<DestinationRoot>$(MSBuildProjectDirectory)\..\DFrame.Unity\Assets\Plugins\DFrame\Runtime\</DestinationRoot>
+	</PropertyGroup>
+	<ItemGroup>
+		<TargetFiles1 Include="$(MSBuildProjectDirectory)\**\*.cs" Exclude="**\bin\**\*.*;**\obj\**\*.*;_InternalVisibleTo.cs;DFrameWorkerAppHostBuilderExtensions.cs" />
+	</ItemGroup>
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Copy SourceFiles="@(TargetFiles1)" DestinationFiles="$(DestinationRoot)\%(RecursiveDir)%(Filename)%(Extension)" SkipUnchangedFiles="true" />
+	</Target>
 </Project>

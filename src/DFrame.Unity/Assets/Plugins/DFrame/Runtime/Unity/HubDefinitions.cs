@@ -1,4 +1,5 @@
-﻿// This file is share with DFrame.Controller and DFrame.
+﻿#nullable enable
+// This file is share with DFrame.Controller and DFrame.
 // Original exists in DFrame.Controller.
 
 using MagicOnion;
@@ -6,7 +7,6 @@ using MessagePack;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using UnitGenerator;
 
 namespace DFrame
 {
@@ -28,18 +28,10 @@ namespace DFrame
         void Teardown();
     }
 
-    internal static class GenerateOptions
-    {
-        internal const UnitGenerateOptions Guid = UnitGenerateOptions.MessagePackFormatter | UnitGenerateOptions.ParseMethod | UnitGenerateOptions.Comparable | UnitGenerateOptions.WithoutComparisonOperator;
-    }
-
-    [UnitOf(typeof(Guid), GenerateOptions.Guid)]
     public readonly partial struct ExecutionId { }
 
-    [UnitOf(typeof(Guid), GenerateOptions.Guid)]
     public readonly partial struct WorkerId { }
 
-    [UnitOf(typeof(Guid), GenerateOptions.Guid)]
     public readonly partial struct WorkloadId { }
 
     [MessagePackObject]
