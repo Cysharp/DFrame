@@ -2,7 +2,10 @@
 using Microsoft.AspNetCore.Builder;
 
 var builder = WebApplication.CreateBuilder(args);
-await builder.RunDFrameControllerAsync();
+await builder.RunDFrameControllerAsync(opt =>
+{
+    opt.Title = "foo";
+});
 
 
 //builder.Logging.ClearProviders();
