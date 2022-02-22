@@ -7,9 +7,7 @@ This library allows you to write distributed load test scenarios in C#. In addit
 
 **Work In Progress** Preview `0.99.1`.
 
-![image](https://user-images.githubusercontent.com/46207/154911899-ad34d09d-e97f-42c2-a6e2-add63ead356c.png)
-
-
+https://user-images.githubusercontent.com/46207/154933672-7ef38a4e-b0df-4960-9911-bdfb82b6f4f5.mp4
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -28,6 +26,8 @@ Install via NuGet
 > Install-Package DFrame.Worker  
 
 DFrame has two components, Controller and Worker so you need to create two .NET applications.
+
+![image](https://user-images.githubusercontent.com/46207/154921606-b9955331-1d15-4c4f-a769-faeb61b13872.png)
 
 DFrame.Controller is a single ASP.NET app however you can create from ConsoleApp template.
 

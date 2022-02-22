@@ -9,17 +9,17 @@ await Host.CreateDefaultBuilder(args)
     //    x.ClearProviders();
     //    x.AddZLoggerConsole();
     //})
-    .RunDFrameAsync("http://localhost:7313");
-//{
-//    VirtualProcess = 32,
-//    // BatchRate = 50,
-//    Metadata = new Dictionary<string, string>
-//    {
-//        {"MachineName", Environment.MachineName },
-//        {"ProcessorCount", Environment.ProcessorCount.ToString() },
-//        {"OSVersion", Environment.OSVersion.ToString() },
-//    }
-//});
+    .RunDFrameAsync(new DFrameWorkerOptions("http://localhost:7313")
+    {
+        VirtualProcess = 32,
+        // BatchRate = 50,
+        Metadata = new Dictionary<string, string>
+        {
+            {"MachineName", Environment.MachineName },
+            {"ProcessorCount", Environment.ProcessorCount.ToString() },
+            {"OSVersion", Environment.OSVersion.ToString() },
+        }
+    });
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 

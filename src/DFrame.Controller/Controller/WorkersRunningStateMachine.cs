@@ -45,7 +45,7 @@ public class WorkersRunningStateMachine
         // set status to fail.
         if (resultsIndex.TryGetValue(workerId, out var i))
         {
-            resultsSorted[i].TrySetStatus(ExecutionStatus.Failed);
+            resultsSorted[i].TrySetStatus(ExecutionStatus.Failed, null);
         }
 
         if (runningConnections.Count == 0)
@@ -145,13 +145,13 @@ public class WorkersRunningStateMachine
         }
     }
 
-    public bool ExecuteComplete(WorkerId workerId)
+    public bool ExecuteComplete(WorkerId workerId, Dictionary<WorkloadId, Dictionary<string, string>?> results)
     {
         if (executeCompletes == null) throw new InvalidOperationException("Invalid state.");
 
         if (resultsIndex.TryGetValue(workerId, out var i))
         {
-            resultsSorted[i].TrySetStatus(ExecutionStatus.Succeed);
+            resultsSorted[i].TrySetStatus(ExecutionStatus.Succeed, results);
         }
 
         executeCompletes.Add(workerId);

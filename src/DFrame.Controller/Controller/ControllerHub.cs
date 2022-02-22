@@ -66,9 +66,9 @@ public sealed class ControllerHub : StreamingHubBase<IControllerHub, IWorkerRece
         return Task.CompletedTask;
     }
 
-    public Task ExecuteCompleteAsync()
+    public Task ExecuteCompleteAsync(Dictionary<WorkloadId, Dictionary<string, string>?> results)
     {
-        engine.ExecuteComplete(workerId);
+        engine.ExecuteComplete(workerId, results);
         return Task.CompletedTask;
     }
 

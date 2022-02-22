@@ -33,6 +33,8 @@ public class SummarizedExecutionResult
     [DataMember]
     public IReadOnlyList<(string, string)> Metadata { get; set; }
     [DataMember]
+    public Dictionary<WorkloadId, Dictionary<string, string>?>? Results { get; set; }
+    [DataMember]
     public ExecutionStatus ExecutionStatus { get; set; }
     [DataMember]
     public bool Error { get; set; }
@@ -166,12 +168,13 @@ public class SummarizedExecutionResult
     }
 
     // on complete.
-    public bool TrySetStatus(ExecutionStatus status)
+    public bool TrySetStatus(ExecutionStatus status, Dictionary<WorkloadId, Dictionary<string, string>?>? results)
     {
         if (this.ExecutionStatus == ExecutionStatus.Running)
         {
             this.ExecuteCompleted = DateTime.UtcNow;
             this.ExecutionStatus = status;
+            this.Results = results;
 
             if (elapsedValues != null)
             {

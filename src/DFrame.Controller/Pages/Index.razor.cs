@@ -99,7 +99,7 @@ public partial class Index : IDisposable
         }
 
         // store lateset settings
-        var executeSettings = new ExecuteSettings(vm, engine.CurrentConnectingCount == vm.CurrentConnections);
+        var executeSettings = new ExecuteSettings(vm, engine.CurrentConnectingCount == vm.RequestWorkerLimit);
         await localStorageAccessor.SetItemAsync("executeSettings", executeSettings, CancellationToken.None);
         if (parameters.Length > 0)
         {
@@ -347,7 +347,8 @@ public class IndexViewModel : IDisposable
             IsShow: true,
             Parameters: null,
             ErrorMessage: null,
-            LogView: logView
+            LogView: logView,
+            Results: null
         ));
     }
 

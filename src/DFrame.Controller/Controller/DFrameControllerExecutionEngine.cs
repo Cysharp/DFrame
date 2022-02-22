@@ -238,11 +238,11 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
         }
     }
 
-    public void ExecuteComplete(WorkerId workerId)
+    public void ExecuteComplete(WorkerId workerId, Dictionary<WorkloadId, Dictionary<string, string>?> results)
     {
         lock (EngineSync)
         {
-            if (RunningState?.ExecuteComplete(workerId) ?? true)
+            if (RunningState?.ExecuteComplete(workerId, results) ?? true)
             {
                 WorkflowCompleted();
                 return;

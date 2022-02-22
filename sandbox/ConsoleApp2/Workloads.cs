@@ -38,6 +38,15 @@ public class TrialWorkload : Workload
         logger.LogInformation("Called Teardown");
         return Task.CompletedTask;
     }
+
+    public override Dictionary<string, string>? Complete()
+    {
+        return new()
+        {
+            { "ok", "foo" },
+            { "nong", "bar" },
+        };
+    }
 }
 
 [Workload("myworkload2")]

@@ -39,6 +39,34 @@
             </div>
         }
 
+        @if (results != null && results.Count != 0)
+        {
+            @foreach (var (workloadId, result) in results)
+            {
+                @if (result != null)
+                {
+                    <div class="p-3">
+                        <table class="table w-full rounded shadow">
+                            <thead>
+                                <tr>
+                                    <th class="normal-case" colspan="2">Workload #@workloadId</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var (name, value) in result)
+                                {
+                                    <tr>
+                                        <td class="py-1 border-b-[0px] break-words whitespace-pre-wrap">@name</td>
+                                        <td class="py-1 border-b-[0px] break-words whitespace-pre-wrap text-gray-300">@value</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            }
+        }
+
         @if (errorMessage != null)
         {
             <div class="m-3 p-4 bg-base-200 rounded shadow">

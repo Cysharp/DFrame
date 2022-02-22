@@ -28,7 +28,8 @@ public partial class ExecutionResultTable
             IsShow: true,
             Parameters: ExecutionSummary?.Parameters,
             ErrorMessage: null,
-            LogView: null
+            LogView: null,
+            Results: null
         ));
     }
 
@@ -42,7 +43,8 @@ public partial class ExecutionResultTable
             IsShow: true,
             Parameters: result?.Metadata,
             ErrorMessage: result?.ErrorMessage,
-            LogView: null
+            LogView: null,
+            Results: result?.Results
         ));
     }
 }
