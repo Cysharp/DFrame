@@ -353,4 +353,23 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
+#Unity
+src/DFrame.Unity/Library/*
+src/DFrame.Unity/Temp/*
+src/DFrame.Unity/Logs/*
+src/DFrame.Unity/Assembly-CSharp.csproj
+src/DFrame.Unity/Assembly-CSharp-firstpass.csproj
+src/DFrame.Unity/Assembly-CSharp-Editor.csproj
+src/DFrame.Unity/DFrame.Unity.sln
 
+src/DFrame.Unity/MagicOnion.Abstractions.csproj
+
+src/DFrame.Unity/MagicOnion.Client.csproj
+
+src/DFrame.Unity/MagicOnion.Unity.csproj
+
+src/DFrame.Unity/MagicOnion.Unity.Editor.csproj
+
+src/DFrame.Unity/MessagePack.Annotations.csproj
+
+src/DFrame.Unity/MessagePack.csproj
