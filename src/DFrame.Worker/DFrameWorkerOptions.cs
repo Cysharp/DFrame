@@ -10,7 +10,12 @@ namespace DFrame
         public string ControllerAddress { get; set; } = default!;
         public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromMinutes(1);
         public TimeSpan ReconnectTime { get; set; } = TimeSpan.FromSeconds(5);
+#if !UNITY_2020_1_OR_NEWER
         public SocketsHttpHandlerOptions SocketsHttpHandlerOptions { get; set; } = new SocketsHttpHandlerOptions();
+#else
+        public Grpc.Core.ChannelCredentials GrpcChannelCredentials { get; set; } = Grpc.Core.ChannelCredentials.Insecure;
+        public IEnumerable<Grpc.Core.ChannelOption> GrpcChannelOptions { get; set; } = Array.Empty<Grpc.Core.ChannelOption>();
+#endif
         public Assembly[] WorkloadAssemblies { get; set; } = AppDomain.CurrentDomain.GetAssemblies();
         public Dictionary<string, string> Metadata { get; set; } = new Dictionary<string, string>();
         public int VirtualProcess { get; set; } = 1;

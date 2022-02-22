@@ -4,13 +4,25 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 
+
 public class SampleOne : MonoBehaviour
 {
     DFrameWorkerApp app;
 
+    [RuntimeInitializeOnLoadMethod]
+    static void Init()
+    {
+        new GameObject("DFrame Worker", typeof(SampleOne));
+    }
+
+    private void Awake()
+    {
+        DontDestroyOnLoad(gameObject);
+    }
+
     async void Start()
     {
-        app = new DFrameWorkerApp(new DFrameWorkerOptions("localhost:7313"));
+        app = new DFrameWorkerApp("localhost:7313");
         await app.Run();
     }
 
@@ -20,7 +32,7 @@ public class SampleOne : MonoBehaviour
     }
 }
 
-
+[Preserve]
 public class SampleWorkload : Workload
 {
     public override Task ExecuteAsync(WorkloadContext context)
@@ -34,4 +46,10 @@ public class SampleWorkload : Workload
         Debug.Log("Teardown");
         return Task.CompletedTask;
     }
+}
+
+// Preserve for Unity IL2CPP
+
+internal class PreserveAttribute : System.Attribute
+{
 }

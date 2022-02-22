@@ -29,6 +29,11 @@ namespace DFrame
 
         CancellationTokenSource cancellationTokenSource = default!;
 
+        public DFrameWorkerApp(string address)
+            : this(new DFrameWorkerOptions(address))
+        {
+        }
+
         public DFrameWorkerApp(DFrameWorkerOptions options)
             : this(options, new IServiceProviderIsService(), null!)
         {
@@ -41,7 +46,7 @@ namespace DFrame
 
         public void Dispose()
         {
-            cancellationTokenSource.Dispose();
+            cancellationTokenSource.Cancel();
         }
 
 #endif
@@ -206,7 +211,7 @@ namespace DFrame
             logger.LogInformation($"Start to connect Worker -> Controller. Address: {options.ControllerAddress}");
 
 #if UNITY_2020_1_OR_NEWER
-            channel = new Grpc.Core.Channel(options.ControllerAddress, ChannelCredentials.Insecure); // TODO:channel options
+            channel = new Grpc.Core.Channel(options.ControllerAddress, options.GrpcChannelCredentials, options.GrpcChannelOptions);
 #else
             channel = GrpcChannel.ForAddress(options.ControllerAddress, new GrpcChannelOptions
             {
