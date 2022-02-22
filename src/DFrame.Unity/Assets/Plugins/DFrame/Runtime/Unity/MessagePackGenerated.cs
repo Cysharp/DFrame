@@ -11,7 +11,7 @@
 #pragma warning disable SA1312 // Variable names should begin with lower-case letter
 #pragma warning disable SA1649 // File name should match first type name
 
-namespace DFrame
+namespace DFrame.Resolvers
 {
     using System;
 
@@ -73,11 +73,11 @@ namespace DFrame
             {
                 case 0: return new global::MessagePack.Formatters.ArrayFormatter<global::DFrame.WorkloadParameterInfo>();
                 case 1: return new global::MessagePack.Formatters.ListFormatter<long>();
-                case 2: return new MessagePack.Formatters.DFrame.AllowParameterTypeFormatter();
-                case 3: return new MessagePack.Formatters.DFrame.BatchedExecuteResultFormatter();
-                case 4: return new MessagePack.Formatters.DFrame.ExecuteResultFormatter();
-                case 5: return new MessagePack.Formatters.DFrame.WorkloadInfoFormatter();
-                case 6: return new MessagePack.Formatters.DFrame.WorkloadParameterInfoFormatter();
+                case 2: return new DFrame.Formatters.DFrame.AllowParameterTypeFormatter();
+                case 3: return new DFrame.Formatters.DFrame.BatchedExecuteResultFormatter();
+                case 4: return new DFrame.Formatters.DFrame.ExecuteResultFormatter();
+                case 5: return new DFrame.Formatters.DFrame.WorkloadInfoFormatter();
+                case 6: return new DFrame.Formatters.DFrame.WorkloadParameterInfoFormatter();
                 default: return null;
             }
         }
@@ -107,7 +107,7 @@ namespace DFrame
 #pragma warning disable SA1403 // File may only contain a single namespace
 #pragma warning disable SA1649 // File name should match first type name
 
-namespace MessagePack.Formatters.DFrame
+namespace DFrame.Formatters.DFrame
 {
     using System;
     using System.Buffers;
@@ -154,7 +154,7 @@ namespace MessagePack.Formatters.DFrame
 #pragma warning disable SA1403 // File may only contain a single namespace
 #pragma warning disable SA1649 // File name should match first type name
 
-namespace MessagePack.Formatters.DFrame
+namespace DFrame.Formatters.DFrame
 {
     using global::System.Buffers;
     using global::MessagePack;

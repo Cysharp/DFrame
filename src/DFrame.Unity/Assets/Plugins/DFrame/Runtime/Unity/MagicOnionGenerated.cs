@@ -40,7 +40,7 @@ namespace DFrame
 #pragma warning disable 219
 #pragma warning disable 168
 
-namespace DFrame
+namespace DFrame.Resolvers
 {
     using System;
     using MessagePack;
@@ -82,12 +82,12 @@ namespace DFrame
         {
             lookup = new global::System.Collections.Generic.Dictionary<Type, int>(6)
             {
-                {typeof((string name, string value)[]), 0 },
-                {typeof(global::DFrame.WorkloadInfo[]), 1 },
-                {typeof(global::MagicOnion.DynamicArgumentTuple<global::DFrame.ExecutionId, int, string, (string name, string value)[]>), 2 },
-                {typeof(global::MagicOnion.DynamicArgumentTuple<global::DFrame.WorkloadInfo[], global::System.Collections.Generic.Dictionary<string, string>>), 3 },
-                {typeof(global::System.Collections.Generic.Dictionary<global::DFrame.WorkloadId, global::System.Collections.Generic.Dictionary<string, string>>), 4 },
-                {typeof(global::System.Collections.Generic.Dictionary<string, string>), 5 },
+                {typeof(global::DFrame.WorkloadInfo[]), 0 },
+                {typeof(global::MagicOnion.DynamicArgumentTuple<global::DFrame.ExecutionId, int, string, global::System.Collections.Generic.KeyValuePair<string, string>[]>), 1 },
+                {typeof(global::MagicOnion.DynamicArgumentTuple<global::DFrame.WorkloadInfo[], global::System.Collections.Generic.Dictionary<string, string>>), 2 },
+                {typeof(global::System.Collections.Generic.Dictionary<global::DFrame.WorkloadId, global::System.Collections.Generic.Dictionary<string, string>>), 3 },
+                {typeof(global::System.Collections.Generic.Dictionary<string, string>), 4 },
+                {typeof(global::System.Collections.Generic.KeyValuePair<string, string>[]), 5 },
             };
         }
 
@@ -101,12 +101,12 @@ namespace DFrame
 
             switch (key)
             {
-                case 0: return new global::MessagePack.Formatters.ArrayFormatter<(string name, string value)>();
-                case 1: return new global::MessagePack.Formatters.ArrayFormatter<global::DFrame.WorkloadInfo>();
-                case 2: return new global::MagicOnion.DynamicArgumentTupleFormatter<global::DFrame.ExecutionId, int, string, (string name, string value)[]>(default(global::DFrame.ExecutionId), default(int), default(string), default((string name, string value)[]));
-                case 3: return new global::MagicOnion.DynamicArgumentTupleFormatter<global::DFrame.WorkloadInfo[], global::System.Collections.Generic.Dictionary<string, string>>(default(global::DFrame.WorkloadInfo[]), default(global::System.Collections.Generic.Dictionary<string, string>));
-                case 4: return new global::MessagePack.Formatters.DictionaryFormatter<global::DFrame.WorkloadId, global::System.Collections.Generic.Dictionary<string, string>>();
-                case 5: return new global::MessagePack.Formatters.DictionaryFormatter<string, string>();
+                case 0: return new global::MessagePack.Formatters.ArrayFormatter<global::DFrame.WorkloadInfo>();
+                case 1: return new global::MagicOnion.DynamicArgumentTupleFormatter<global::DFrame.ExecutionId, int, string, global::System.Collections.Generic.KeyValuePair<string, string>[]>(default(global::DFrame.ExecutionId), default(int), default(string), default(global::System.Collections.Generic.KeyValuePair<string, string>[]));
+                case 2: return new global::MagicOnion.DynamicArgumentTupleFormatter<global::DFrame.WorkloadInfo[], global::System.Collections.Generic.Dictionary<string, string>>(default(global::DFrame.WorkloadInfo[]), default(global::System.Collections.Generic.Dictionary<string, string>));
+                case 3: return new global::MessagePack.Formatters.DictionaryFormatter<global::DFrame.WorkloadId, global::System.Collections.Generic.Dictionary<string, string>>();
+                case 4: return new global::MessagePack.Formatters.DictionaryFormatter<string, string>();
+                case 5: return new global::MessagePack.Formatters.ArrayFormatter<global::System.Collections.Generic.KeyValuePair<string, string>>();
                 default: return null;
             }
         }
@@ -158,7 +158,7 @@ namespace DFrame {
             {
                 case 984740550: // CreateWorkloadAndSetup
                 {
-                    var result = MessagePackSerializer.Deserialize<DynamicArgumentTuple<global::DFrame.ExecutionId, int, string, (string name, string value)[]>>(data, serializerOptions);
+                    var result = MessagePackSerializer.Deserialize<DynamicArgumentTuple<global::DFrame.ExecutionId, int, string, global::System.Collections.Generic.KeyValuePair<string, string>[]>>(data, serializerOptions);
                     receiver.CreateWorkloadAndSetup(result.Item1, result.Item2, result.Item3, result.Item4); break;
                 }
                 case 650159416: // Execute

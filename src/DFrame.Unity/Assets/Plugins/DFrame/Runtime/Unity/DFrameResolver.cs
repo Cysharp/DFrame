@@ -24,14 +24,14 @@ namespace DFrame
 
             static Cache()
             {
-                var f = MagicOnionResolver.Instance.GetFormatter<T>();
+                var f = DFrame.Resolvers.MagicOnionResolver.Instance.GetFormatter<T>();
                 if (f != null)
                 {
                     Formatter = f;
                     return;
                 }
 
-                f = GeneratedResolver.Instance.GetFormatter<T>();
+                f = DFrame.Resolvers.GeneratedResolver.Instance.GetFormatter<T>();
                 if (f != null)
                 {
                     Formatter = f;

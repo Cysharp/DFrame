@@ -40,7 +40,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
         this.options = options;
     }
 
-    public bool StartWorkerFlow(string workloadName, int concurrency, long totalRequestCount, int workerLimit, (string name, string value)[] parameters)
+    public bool StartWorkerFlow(string workloadName, int concurrency, long totalRequestCount, int workerLimit, KeyValuePair<string, string?>[] parameters)
     {
         lock (EngineSync)
         {

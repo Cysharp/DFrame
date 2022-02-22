@@ -41,12 +41,17 @@ namespace DFrame
 
         public void Dispose()
         {
-            cancellationTokenSource.Cancel();
+            cancellationTokenSource.Dispose();
         }
 
 #endif
 
-        internal DFrameWorkerApp(DFrameWorkerOptions options, IServiceProviderIsService isService, IServiceProvider serviceProvider)
+#if UNITY_2020_1_OR_NEWER
+        internal
+#else
+        public
+#endif
+            DFrameWorkerApp(DFrameWorkerOptions options, IServiceProviderIsService isService, IServiceProvider serviceProvider)
         {
             var workloadCollection = DFrameWorkloadCollection.FromAssemblies(options.WorkloadAssemblies, isService);
 #if UNITY_2020_1_OR_NEWER
@@ -220,10 +225,12 @@ namespace DFrame
 
             var callInvoker = channel.CreateCallInvoker();
             var callOption = new CallOptions(new Metadata { { "worker-id", workerId.ToString() } });
-            var connectTask = StreamingHubClient.ConnectAsync<IControllerHub, IWorkerReceiver>(callInvoker, this, option: callOption,
-
-                serializerOptions: DFrameResolver.Options
-
+            var connectTask = StreamingHubClient.ConnectAsync<IControllerHub, IWorkerReceiver>(callInvoker, this, option: callOption, serializerOptions:
+#if UNITY_2020_1_OR_NEWER
+                DFrameResolver.Options
+#else
+                MessagePackSerializerOptions.Standard
+#endif
             );
             client = await connectTask.WaitAsync(connectTimeout);
 
@@ -235,7 +242,7 @@ namespace DFrame
             logger.LogInformation($"Connect completed.");
         }
 
-        async void IWorkerReceiver.CreateWorkloadAndSetup(ExecutionId executionId, int createCount, string workloadName, (string name, string value)[] parameters)
+        async void IWorkerReceiver.CreateWorkloadAndSetup(ExecutionId executionId, int createCount, string workloadName, KeyValuePair<string, string>[] parameters)
         {
             var currentExecutionToken = executionToken;
             try

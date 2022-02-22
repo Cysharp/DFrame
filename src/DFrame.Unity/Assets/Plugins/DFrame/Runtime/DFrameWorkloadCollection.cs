@@ -84,14 +84,14 @@ namespace DFrame
             this.Activator = activator;
         }
 
-        public object?[] CrateArgument((string name, string value)[] arguments)
+        public object?[] CrateArgument(KeyValuePair<string, string>[] arguments)
         {
             var ctors = WorkloadType.GetConstructors();
             if (ctors.Length == 0) return Array.Empty<object>();
 
             var ctor = ctors[0];
 
-            var dict = arguments.ToDictionary(x => x.name, x => x.value);
+            var dict = arguments.ToDictionary(x => x.Key, x => x.Value);
 
             var parameters = ctor.GetParameters();
             var result = parameters

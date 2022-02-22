@@ -1,4 +1,6 @@
-﻿namespace DFrame.Controller
+﻿using System.Runtime.Serialization;
+
+namespace DFrame.Controller
 {
     public interface IExecutionResultHistoryProvider
     {
@@ -9,22 +11,36 @@
         void AddNewResult(ExecutionSummary summary, SummarizedExecutionResult[] results);
     }
 
+    // Serializable
+    [DataContract]
     public class ExecutionSummary
     {
         // inits
-        public string Workload { get; init; } = default!;
-        public ExecutionId ExecutionId { get; init; }
-        public int WorkerCount { get; init; }
-        public int WorkloadCount { get; init; }
-        public int Concurrency { get; init; }
-        public (string name, string value)[] Parameters { get; init; } = default!;
-        public DateTime StartTime { get; init; }
+        [DataMember]
+        public string Workload { get; set; } = default!;
+        [DataMember]
+        public ExecutionId ExecutionId { get; set; }
+        [DataMember]
+        public int WorkerCount { get; set; }
+        [DataMember]
+        public int WorkloadCount { get; set; }
+        [DataMember]
+        public int Concurrency { get; set; }
+        [DataMember]
+        public KeyValuePair<string, string?>[] Parameters { get; set; } = default!;
+        [DataMember]
+        public DateTime StartTime { get; set; }
 
         // modifiable
+        [DataMember]
         public TimeSpan? RunningTime { get; set; }
+        [DataMember]
         public long TotalRequest { get; set; } // set in init and after completed
+        [DataMember]
         public long? SucceedSum { get; set; }
+        [DataMember]
         public long? ErrorSum { get; set; }
+        [DataMember]
         public double? RpsSum { get; set; }
     }
 

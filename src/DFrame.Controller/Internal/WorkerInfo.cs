@@ -4,5 +4,5 @@ internal record WorkerInfo(
     WorkerId WorkerId,
     Guid ConnectionId,
     DateTime ConnectTime,
-    IReadOnlyList<(string, string)> Metadata
+    IReadOnlyList<KeyValuePair<string, string>> Metadata
 );

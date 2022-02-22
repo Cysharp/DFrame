@@ -34,7 +34,7 @@ public sealed class ControllerHub : StreamingHubBase<IControllerHub, IWorkerRece
     {
         workerId = WorkerId.Parse(Context.CallContext.RequestHeaders.GetValue("worker-id"));
 
-        var sortedMeta = metadata.OrderBy(x => x.Key).Select(x => (x.Key, x.Value)).ToArray();
+        var sortedMeta = metadata.OrderBy(x => x.Key).ToArray();
         var workerInfo = new WorkerInfo(workerId, this.ConnectionId, DateTime.UtcNow, sortedMeta);
 
         var group = Group.AddAsync("global-masterhub-group").GetAwaiter().GetResult(); // always sync.

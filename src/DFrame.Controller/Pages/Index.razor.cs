@@ -73,7 +73,7 @@ public partial class Index : IDisposable
             return;
         }
 
-        var parameters = vm.SelectedWorkloadParameters.Select(x => (x.ParameterName, x.Value)).ToArray();
+        var parameters = vm.SelectedWorkloadParameters.Select(x => new KeyValuePair<string, string?>(x.ParameterName, x.Value)).ToArray();
 
         var totalRequest = (vm.CommandMode == CommandMode.InfiniteLoop || vm.CommandMode == CommandMode.Duration) ? long.MaxValue : vm.TotalRequest;
 
@@ -176,9 +176,9 @@ public class RepeatModeState
     public int WorkerLimit { get; private set; }
     public int IncreaseWorkerLimit { get; }
     public int IncreaseTotalRequest { get; }
-    public (string, string)[] Parameters { get; }
+    public KeyValuePair<string, string>[] Parameters { get; }
 
-    public RepeatModeState(string workload, int concurrency, long totalRequest, int increaseTotalRequest, int workerLimit, int increaseWorkerLimit, int repeatCount, (string, string)[] parameters)
+    public RepeatModeState(string workload, int concurrency, long totalRequest, int increaseTotalRequest, int workerLimit, int increaseWorkerLimit, int repeatCount, KeyValuePair<string, string>[] parameters)
     {
         Workload = workload;
         Concurrency = concurrency;
