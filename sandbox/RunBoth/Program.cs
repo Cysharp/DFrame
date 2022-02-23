@@ -11,6 +11,8 @@ builder.ConfigureServices(services =>
 });
 builder.ConfigureWorker(options =>
 {
+    options.MinBatchRate = 5000;
+    options.MaxBatchRate = 10000;
     options.Metadata = new Dictionary<string, string>
     {
         {"ProcessorCount", Environment.ProcessorCount.ToString() }
@@ -27,6 +29,7 @@ builder.Run();
 public class SampleWorkload : Workload
 {
     readonly string world;
+    int i;
 
     public SampleWorkload(string world)
     {
@@ -35,12 +38,12 @@ public class SampleWorkload : Workload
 
     public override async Task ExecuteAsync(WorkloadContext context)
     {
-        Console.WriteLine($"{context.WorkloadId} Hello {world}!");
+        Interlocked.Increment(ref i);
     }
 
     public override Dictionary<string, string>? Complete()
     {
-        return new Dictionary<string, string> { { "yeah", "Ohno" } };
+        return new Dictionary<string, string> { { "succeed", i.ToString() } };
     }
 }
 

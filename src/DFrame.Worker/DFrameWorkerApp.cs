@@ -310,7 +310,6 @@ namespace DFrame
                     throw new InvalidOperationException("Token is lost before invoke Execute.");
                 }
 
-                var completeResults = new Dictionary<WorkloadId, Dictionary<string, string>?>();
                 try
                 {
                     var isBatchReporting = options.MaxBatchRate > 1;
@@ -370,11 +369,6 @@ namespace DFrame
                         {
                             await client!.ReportProgressBatchedAsync(batchResult);
                         }
-
-                        lock (completeResults)
-                        {
-                            completeResults[x.context.WorkloadId] = x.workload.Complete();
-                        }
                     }, token.Value)));
                 }
                 catch (OperationCanceledException e) when (e.CancellationToken == token.Value)
@@ -383,6 +377,12 @@ namespace DFrame
 
                 if (currentExecutionToken == executionToken)
                 {
+                    var completeResults = new Dictionary<WorkloadId, Dictionary<string, string>?>();
+                    foreach (var item in workloads)
+                    {
+                        completeResults[item.context.WorkloadId] = item.workload.Complete();
+                    }
+
                     completeExecute.TrySetResult(null!); // call complete before ExecuteCompleteAsync
                     await client!.ExecuteCompleteAsync(completeResults);
                 }
