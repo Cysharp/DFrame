@@ -323,15 +323,15 @@ public class IndexViewModel : IDisposable
 
             if (SelectedWorkloadParameters.Length != 0)
             {
-                var (hasValue, parameters) = await localStorageAccessor.TryGetItemAsync<(string, string?)[]>($"executeSettings.parameters.{SelectedWorkload}", CancellationToken.None);
+                var (hasValue, parameters) = await localStorageAccessor.TryGetItemAsync<KeyValuePair<string, string?>[]>($"executeSettings.parameters.{SelectedWorkload}", CancellationToken.None);
                 if (hasValue)
                 {
                     foreach (var parameter in parameters)
                     {
-                        var p = SelectedWorkloadParameters.FirstOrDefault(x => x.ParameterName == parameter.Item1);
+                        var p = SelectedWorkloadParameters.FirstOrDefault(x => x.ParameterName == parameter.Key);
                         if (p != null)
                         {
-                            p.Value = parameter.Item2;
+                            p.Value = parameter.Value;
                         }
                     }
                 }

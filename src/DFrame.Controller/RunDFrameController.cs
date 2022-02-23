@@ -45,11 +45,10 @@ public static class DFrameControllerWebApplicationBuilderExtensions
             services.AddRazorPages()
                 .ConfigureApplicationPartManager(manager =>
                 {
-                // import libraries razor pages
-                var assembly = typeof(DFrameControllerWebApplicationBuilderExtensions).Assembly;
-                    var assemblyPart = new CompiledRazorAssemblyPart(assembly);
-                    manager.ApplicationParts.Add(assemblyPart);
-
+                    // import libraries razor pages
+                    var assembly = typeof(DFrameControllerWebApplicationBuilderExtensions).Assembly;
+                        var assemblyPart = new CompiledRazorAssemblyPart(assembly);
+                        manager.ApplicationParts.Add(assemblyPart);
                 });
 
             services.AddServerSideBlazor();
