@@ -8,6 +8,24 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnitGenerator;
+#if DFRAME_CONTROLLER
+using DFrame;
+using DFrame.Controller;
+#endif
+
+#if DFRAME_CONTROLLER
+namespace DFrame.Controller
+{
+    [UnitOf(typeof(Guid), GenerateOptions.GuidJson)]
+    public readonly partial struct ExecutionId { }
+
+    [UnitOf(typeof(Guid), GenerateOptions.GuidJson)]
+    public readonly partial struct WorkerId { }
+
+    [UnitOf(typeof(Guid), GenerateOptions.GuidJson)]
+    public readonly partial struct WorkloadId { }
+}
+#endif
 
 namespace DFrame
 {
@@ -32,7 +50,10 @@ namespace DFrame
     internal static class GenerateOptions
     {
         internal const UnitGenerateOptions Guid = UnitGenerateOptions.MessagePackFormatter | UnitGenerateOptions.ParseMethod | UnitGenerateOptions.Comparable | UnitGenerateOptions.WithoutComparisonOperator;
+        internal const UnitGenerateOptions GuidJson = UnitGenerateOptions.MessagePackFormatter | UnitGenerateOptions.ParseMethod | UnitGenerateOptions.Comparable | UnitGenerateOptions.WithoutComparisonOperator | UnitGenerateOptions.JsonConverter | UnitGenerateOptions.JsonConverterDictionaryKeySupport;
     }
+
+#if !DFRAME_CONTROLLER
 
     [UnitOf(typeof(Guid), GenerateOptions.Guid)]
     public readonly partial struct ExecutionId { }
@@ -42,6 +63,7 @@ namespace DFrame
 
     [UnitOf(typeof(Guid), GenerateOptions.Guid)]
     public readonly partial struct WorkloadId { }
+#endif
 
     [MessagePackObject]
     public class ExecuteResult

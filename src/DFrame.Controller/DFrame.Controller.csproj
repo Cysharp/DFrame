@@ -4,8 +4,9 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<Nullable>enable</Nullable>
-		<ImplicitUsings>enable</ImplicitUsings>
 		<RootNamespace>DFrame</RootNamespace>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<DefineConstants>DFRAME_CONTROLLER</DefineConstants>
 
 		<!-- NuGet Packaging -->
 		<SignAssembly>true</SignAssembly>
@@ -20,7 +21,7 @@
 		<PackageReference Include="MagicOnion" Version="4.3.1" />
 		<PackageReference Include="MessagePipe" Version="1.7.1" />
 		<PackageReference Include="ObservableCollections" Version="1.1.2" />
-		<PackageReference Include="UnitGenerator" Version="1.4.5">
+		<PackageReference Include="UnitGenerator" Version="1.4.7">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>

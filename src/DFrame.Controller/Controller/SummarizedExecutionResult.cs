@@ -32,6 +32,7 @@ public class SummarizedExecutionResult
     public int WorkloadCount { get; set; }
     [DataMember]
     public IReadOnlyList<KeyValuePair<string, string>> Metadata { get; set; }
+    
     [DataMember]
     public Dictionary<WorkloadId, Dictionary<string, string>?>? Results { get; set; }
     [DataMember]

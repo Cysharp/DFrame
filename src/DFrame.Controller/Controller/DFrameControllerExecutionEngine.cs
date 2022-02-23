@@ -265,7 +265,14 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
                 summary.RpsSum = LatestSortedSummarizedExecutionResults.Sum(x => x.Rps);
                 summary.TotalRequest = LatestSortedSummarizedExecutionResults.Sum(x => x.CompleteCount);
 
-                historyProvider.AddNewResult(summary!, LatestSortedSummarizedExecutionResults);
+                try
+                {
+                    historyProvider.AddNewResult(summary!, LatestSortedSummarizedExecutionResults);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error on add history provider to log.");
+                }
             }
             RunningState = null; // complete.
             StateChanged?.Invoke();

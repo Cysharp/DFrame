@@ -1,4 +1,6 @@
-﻿namespace DFrame;
+﻿using DFrame.Controller;
+
+namespace DFrame;
 
 internal record WorkerInfo(
     WorkerId WorkerId,

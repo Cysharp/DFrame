@@ -13,7 +13,7 @@ public static class DFrameApp
 {
     public static void Run(string hostAddress, bool useHttps = false)
     {
-        RunAsync(hostAddress, useHttps).GetAwaiter().GetResult();
+        new DFrameAppBuilder(hostAddress, useHttps).Run();
     }
 
     public static async Task RunAsync(string hostAddress, bool useHttps = false)
@@ -152,6 +152,11 @@ public class DFrameAppBuilder
         WorkerBuilder.ConfigureLogging(configureDelegate);
     }
 
+    public void ConfigureController(Action<DFrameControllerOptions> configureController)
+    {
+        this.configureController = (_, options) => configureController(options);
+    }
+
     public void ConfigureController(Action<WebHostBuilderContext, DFrameControllerOptions> configureController)
     {
         this.configureController = configureController;
@@ -164,6 +169,20 @@ public class DFrameAppBuilder
             options.ControllerAddress = Http2HostAddress;
             configureWorker(ctx, options);
         };
+    }
+
+    public void ConfigureWorker(Action<DFrameWorkerOptions> configureWorker)
+    {
+        this.configureWorker = (_, options) =>
+        {
+            options.ControllerAddress = Http2HostAddress;
+            configureWorker(options);
+        };
+    }
+
+    public void Run()
+    {
+        RunAsync().GetAwaiter().GetResult();
     }
 
     public async Task RunAsync()

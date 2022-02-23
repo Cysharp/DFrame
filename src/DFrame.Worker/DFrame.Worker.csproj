@@ -23,7 +23,7 @@
 		<PackageReference Include="ConsoleAppFramework" Version="4.0.6" />
 		<PackageReference Include="MagicOnion.Client" Version="4.3.1" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
-		<PackageReference Include="UnitGenerator" Version="1.4.5">
+		<PackageReference Include="UnitGenerator" Version="1.4.7">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
@@ -34,7 +34,10 @@
 		<DestinationRoot>$(MSBuildProjectDirectory)\..\DFrame.Unity\Assets\Plugins\DFrame\Runtime\</DestinationRoot>
 	</PropertyGroup>
 	<ItemGroup>
-		<TargetFiles1 Include="$(MSBuildProjectDirectory)\**\*.cs" Exclude="**\bin\**\*.*;**\obj\**\*.*;_InternalVisibleTo.cs;DFrameWorkerAppHostBuilderExtensions.cs" />
+		<TargetFiles1 Include="$(MSBuildProjectDirectory)\**\*.cs" Exclude="**\bin\**\*.*;**\obj\**\*.*;_InternalVisibleTo.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <TargetFiles1 Remove="RunDFrame.cs" />
 	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
