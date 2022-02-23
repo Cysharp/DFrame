@@ -69,6 +69,7 @@ public class SummarizedExecutionResult
     [IgnoreDataMember]
     public double Rps => (TotalElapsed.TotalSeconds == 0 || (ExecuteBegin == null)) ? 0 : (SucceedCount / RunningTime.TotalSeconds);
 
+    [IgnoreDataMember]
     public TimeSpan RunningTime
     {
         get

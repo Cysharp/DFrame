@@ -82,10 +82,15 @@ public class FlatFileLogExecutionResultHistoryProvider : IExecutionResultHistory
         Console.WriteLine(d.FullName);
         File.WriteAllText(Path.Combine(rootDir, fileName), json);
 
+        var hogehoge = JsonSerializer.Deserialize<LogFor>(json);
+        var json2 = JsonSerializer.Serialize(hogehoge, new JsonSerializerOptions { WriteIndented = true });
+
         memoryProvider.AddNewResult(summary, results);
         NotifyCountChanged?.Invoke();
     }
 }
+
+public record LogFor(ExecutionSummary summary, SummarizedExecutionResult[] results);
 
 //using DFrame;
 //using Microsoft.Extensions.Logging;
