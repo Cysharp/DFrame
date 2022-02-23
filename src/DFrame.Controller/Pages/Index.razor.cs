@@ -53,9 +53,15 @@ public partial class Index : IDisposable
 
     async void Engine_StateChanged()
     {
-        await InvokeAsync(() =>
+        await InvokeAsync(async () =>
         {
+            var isNullSelectedWorkload = (vm.SelectedWorkload == null);
             vm.RefreshEngineProperties(engine);
+            if (isNullSelectedWorkload && vm.SelectedWorkload != null && vm.SelectedWorkloadParameters.Length != 0)
+            {
+                await vm.UpdateWorkloadParametersAsync(localStorageAccessor);
+            }
+
             StateHasChanged();
         });
     }
@@ -93,9 +99,9 @@ public partial class Index : IDisposable
         {
             durationCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(vm.DurationTimeSeconds));
             durationCancellationRegistration = durationCancellationTokenSource.Token.Register(() =>
-             {
-                 engine.Cancel();
-             });
+            {
+                engine.Cancel();
+            });
         }
 
         // store lateset settings
@@ -176,9 +182,9 @@ public class RepeatModeState
     public int WorkerLimit { get; private set; }
     public int IncreaseWorkerLimit { get; }
     public int IncreaseTotalRequest { get; }
-    public KeyValuePair<string, string>[] Parameters { get; }
+    public KeyValuePair<string, string?>[] Parameters { get; }
 
-    public RepeatModeState(string workload, int concurrency, long totalRequest, int increaseTotalRequest, int workerLimit, int increaseWorkerLimit, int repeatCount, KeyValuePair<string, string>[] parameters)
+    public RepeatModeState(string workload, int concurrency, long totalRequest, int increaseTotalRequest, int workerLimit, int increaseWorkerLimit, int repeatCount, KeyValuePair<string, string?>[] parameters)
     {
         Workload = workload;
         Concurrency = concurrency;

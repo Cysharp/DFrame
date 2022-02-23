@@ -47,6 +47,9 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
             if (connections.Count == 0) return false; // can not start.
             if (workerLimit <= 0) return false;
             if (concurrency <= 0) return false;
+            if (IsRunning) return false;
+
+            if (!workloadInfos.Any(x => x.Name == workloadName)) throw new InvalidOperationException($"Workload is not found. Name:{workloadName}");
 
             if (globalGroup == null) throw new InvalidOperationException("GlobalGroup does not exists.");
 

@@ -10,4 +10,6 @@ public class DFrameControllerOptions
     public int ServerLogBufferCount { get; set; } = 1000;
 
     public string Title { get; set; } = "DFrame Controller";
+
+    public bool DisableRestApi { get; set; } = false;
 }
