@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace DFrame;
 
-public static class DFrameControllerHostBuilderExtensions
+public static class DFrameControllerWebApplicationBuilderExtensions
 {
     public static Task RunDFrameControllerAsync(this WebApplicationBuilder appBuilder)
     {
@@ -46,7 +46,7 @@ public static class DFrameControllerHostBuilderExtensions
                 .ConfigureApplicationPartManager(manager =>
                 {
                 // import libraries razor pages
-                var assembly = typeof(DFrameControllerHostBuilderExtensions).Assembly;
+                var assembly = typeof(DFrameControllerWebApplicationBuilderExtensions).Assembly;
                     var assemblyPart = new CompiledRazorAssemblyPart(assembly);
                     manager.ApplicationParts.Add(assemblyPart);
 

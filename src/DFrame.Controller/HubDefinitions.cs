@@ -1,6 +1,7 @@
 ﻿// This file is share with DFrame.Controller and DFrame.
 // Original exists in DFrame.Controller.
 
+// DFrame.Worker does not use implicit using so keep all using.
 using MagicOnion;
 using MessagePack;
 using System;

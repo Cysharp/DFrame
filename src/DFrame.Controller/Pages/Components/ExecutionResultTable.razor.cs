@@ -41,7 +41,7 @@ public partial class ExecutionResultTable
         (
             Title: "#" + result?.WorkerId,
             IsShow: true,
-            Parameters: result?.Metadata,
+            Parameters: result?.Metadata!,
             ErrorMessage: result?.ErrorMessage,
             LogView: null,
             Results: result?.Results

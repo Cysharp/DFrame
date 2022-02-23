@@ -75,7 +75,16 @@ namespace DFrame
         [RootCommand]
         public async Task Run()
         {
-            await Task.WhenAll(engines.Select(x => x.RunAsync(this.Context.CancellationToken)));
+            try
+            {
+                await Task.WhenAll(engines.Select(x => x.RunAsync(this.Context.CancellationToken)));
+            }
+            catch (OperationCanceledException)
+            {
+#if !UNITY_2020_1_OR_NEWER
+                throw;
+#endif
+            }
         }
     }
 

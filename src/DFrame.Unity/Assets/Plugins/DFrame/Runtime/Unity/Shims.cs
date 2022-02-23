@@ -51,7 +51,7 @@ namespace DFrame
             if (resultTask == tcs.Task)
             {
                 registration.Dispose();
-                throw new TimeoutException();
+                throw new OperationCanceledException(cancellationToken);
             }
             else
             {
@@ -68,7 +68,14 @@ namespace DFrame
             if (resultTask == timeoutTask)
             {
                 timeoutCancellation.Dispose();
-                throw new TimeoutException();
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    throw new OperationCanceledException(cancellationToken);
+                }
+                else
+                {
+                    throw new TimeoutException();
+                }
             }
             else
             {
@@ -140,6 +147,7 @@ namespace DFrame
         }
         public void LogError(Exception ex, string message)
         {
+            if (ex is OperationCanceledException) return;
             UnityEngine.Debug.LogException(ex);
         }
     }

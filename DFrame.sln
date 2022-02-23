@@ -36,6 +36,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MinimalMagicOnion", "sandbo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleController", "sandbox\ConsoleController\ConsoleController.csproj", "{6268F9D3-BF91-4CAB-BD66-D6CCA07FE278}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RunBoth", "sandbox\RunBoth\RunBoth.csproj", "{680A7D0B-FBC2-4826-AEC8-2F63B30AC622}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -74,6 +76,10 @@ Global
 		{6268F9D3-BF91-4CAB-BD66-D6CCA07FE278}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6268F9D3-BF91-4CAB-BD66-D6CCA07FE278}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6268F9D3-BF91-4CAB-BD66-D6CCA07FE278}.Release|Any CPU.Build.0 = Release|Any CPU
+		{680A7D0B-FBC2-4826-AEC8-2F63B30AC622}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{680A7D0B-FBC2-4826-AEC8-2F63B30AC622}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{680A7D0B-FBC2-4826-AEC8-2F63B30AC622}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{680A7D0B-FBC2-4826-AEC8-2F63B30AC622}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -85,6 +91,7 @@ Global
 		{89348DF6-6BE6-4526-ADEA-48BD6AEED9FA} = {DDD04377-167A-4FDC-90D5-01EDCB7BA465}
 		{5187A58D-FC0D-4D1C-AC64-1EE0A5882770} = {DDD04377-167A-4FDC-90D5-01EDCB7BA465}
 		{6268F9D3-BF91-4CAB-BD66-D6CCA07FE278} = {DDD04377-167A-4FDC-90D5-01EDCB7BA465}
+		{680A7D0B-FBC2-4826-AEC8-2F63B30AC622} = {DDD04377-167A-4FDC-90D5-01EDCB7BA465}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {77245B01-4128-4759-BF61-CC223FAA2E01}
