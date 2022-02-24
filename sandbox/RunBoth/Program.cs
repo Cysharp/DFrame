@@ -43,7 +43,11 @@ public class SampleWorkload : Workload
 
     public override Dictionary<string, string>? Complete()
     {
-        return new Dictionary<string, string> { { "succeed", i.ToString() } };
+        return new Dictionary<string, string>
+        {
+            { "succeed", i.ToString() },
+            { "hogemoge", "takoyaki!" }
+        };
     }
 }
 

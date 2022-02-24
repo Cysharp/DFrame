@@ -34,10 +34,7 @@
 		<DestinationRoot>$(MSBuildProjectDirectory)\..\DFrame.Unity\Assets\Plugins\DFrame\Runtime\</DestinationRoot>
 	</PropertyGroup>
 	<ItemGroup>
-		<TargetFiles1 Include="$(MSBuildProjectDirectory)\**\*.cs" Exclude="**\bin\**\*.*;**\obj\**\*.*;_InternalVisibleTo.cs" />
-	</ItemGroup>
-	<ItemGroup>
-	  <TargetFiles1 Remove="RunDFrame.cs" />
+		<TargetFiles1 Include="$(MSBuildProjectDirectory)\**\*.cs" Exclude="**\bin\**\*.*;**\obj\**\*.*;_InternalVisibleTo.cs;RunDFrame.cs;DFrameWorkerApp.cs" />
 	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
