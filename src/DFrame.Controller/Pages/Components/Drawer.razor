@@ -10,7 +10,12 @@
             <div class="p-4 bg-base-200 rounded-none shadow flex text-lg font-bold">
                 @if(kind != null)
                 {
-                    <div class="flex-grow">@kind @title</div>
+                    <div class="flex-grow">
+                        <div class="flex">
+                            <div class="text-gray-400 mr-2">@kind</div>
+                            <div>@title</div>
+                        </div>
+                    </div>
                 }
                 else
                 {
