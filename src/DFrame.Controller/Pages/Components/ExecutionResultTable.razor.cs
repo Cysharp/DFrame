@@ -24,13 +24,14 @@ public partial class ExecutionResultTable
     {
         drawerPublisher.Publish(new DrawerRequest
         (
-            Title: ExecutionSummary?.Workload + " parameters",
+            Kind: "Parameters",
+            Title: ExecutionSummary?.Workload,
             IsShow: true,
             Parameters: ExecutionSummary?.Parameters,
             ErrorMessage: null,
             LogView: null,
             Results: null
-        ));
+        )); ;
     }
 
     void ShowWorkerInfo(WorkerId workerId)
@@ -39,7 +40,8 @@ public partial class ExecutionResultTable
 
         drawerPublisher.Publish(new DrawerRequest
         (
-            Title: "#" + result?.WorkerId,
+            Kind: "Worker",
+            Title: (result == null) ? "" : result.WorkerId.ToString(),
             IsShow: true,
             Parameters: result?.Metadata!,
             ErrorMessage: result?.ErrorMessage,

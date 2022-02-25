@@ -10,6 +10,7 @@ public partial class Drawer : IDisposable
     [Inject] IScopedSubscriber<DrawerRequest> subscriber { get; set; } = default!;
     IDisposable? subscription;
 
+    string? kind;
     string? title;
     bool isShow;
     Dictionary<string, string>? parameters;
@@ -21,6 +22,7 @@ public partial class Drawer : IDisposable
     {
         subscription = subscriber.Subscribe(async x =>
         {
+            kind = x.Kind;
             title = x.Title;
             isShow = x.IsShow;
             parameters = x.Parameters;
@@ -44,6 +46,7 @@ public partial class Drawer : IDisposable
 }
 
 public record DrawerRequest(
+    string? Kind,
     string? Title,
     bool IsShow,
     Dictionary<string, string>? Parameters,

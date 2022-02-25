@@ -349,6 +349,7 @@ public class IndexViewModel : IDisposable
     {
         drawerProvider.Publish(new DrawerRequest
         (
+            Kind: null,
             Title: "Server Log",
             IsShow: true,
             Parameters: null,

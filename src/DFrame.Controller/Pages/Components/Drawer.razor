@@ -8,7 +8,14 @@
         @if (title != null)
         {
             <div class="p-4 bg-base-200 rounded-none shadow flex text-lg font-bold">
-                <div class="flex-grow">@title</div>
+                @if(kind != null)
+                {
+                    <div class="flex-grow">@kind @title</div>
+                }
+                else
+                {
+                    <div class="flex-grow">@title</div>
+                }
                 <div class="flex-none cursor-pointer" @onclick="Close">
                     @*Close Icon *@
                     <svg class="h-6 w-6 text-white" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z" />  <line x1="18" y1="6" x2="6" y2="18" />  <line x1="6" y1="6" x2="18" y2="18" /></svg>
