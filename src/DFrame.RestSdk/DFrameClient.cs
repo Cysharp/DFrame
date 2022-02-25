@@ -2,7 +2,7 @@
 using System.Runtime.Serialization;
 using UnitGenerator;
 
-namespace DFrame.ResetSdk;
+namespace DFrame.RestSdk;
 
 public class DFrameClient
 {
@@ -12,7 +12,13 @@ public class DFrameClient
     string? urlIsRunning;
     string? urlConnections;
     string? urlLatestResult;
+    string? urlResultsCount;
+    string? urlResultsList;
     string? urlCancel;
+    string? urlRequest;
+    string? urlRepeat;
+    string? urlDuration;
+    string? urlInfinite;
 
     public DFrameClient(string rootAddress)
         : this(new HttpClient(), rootAddress)
@@ -45,12 +51,54 @@ public class DFrameClient
         return await response.EnsureSuccessStatusCode().Content.ReadFromJsonAsync<ExecutionResult>();
     }
 
+    public async Task<int> GetResultsCountAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.GetAsync(urlResultsCount ??= $"{rootAddress}/api/resultscount", cancellationToken);
+        return await response.EnsureSuccessStatusCode().Content.ReadFromJsonAsync<int>();
+    }
+
+    public async Task<ExecutionSummary[]> GetResultsListAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.GetAsync(urlResultsList ??= $"{rootAddress}/api/resultslist", cancellationToken);
+        return (await response.EnsureSuccessStatusCode().Content.ReadFromJsonAsync<ExecutionSummary[]>())!;
+    }
+
+    public async Task<ExecutionResult?> GetResultAsync(ExecutionId executionId, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.GetAsync($"{rootAddress}/api/getresult?executionId={executionId}", cancellationToken);
+        return (await response.EnsureSuccessStatusCode().Content.ReadFromJsonAsync<ExecutionResult?>());
+    }
+
     // Post Apis
 
     public async Task CancelAsync(CancellationToken cancellationToken = default)
     {
         var response = await httpClient.PostAsync(urlCancel ??= $"{rootAddress}/api/cancel", null, cancellationToken);
         response.EnsureSuccessStatusCode();
+    }
+
+    public async Task<ExecutionSummary> ExecuteRequestAsync(RequestBody body, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsJsonAsync(urlRequest ??= $"{rootAddress}/api/request", body, cancellationToken);
+        return (await response.EnsureSuccessStatusCode().Content.ReadFromJsonAsync<ExecutionSummary>())!;
+    }
+
+    public async Task<ExecutionSummary> ExecuteRepeatAsync(RepeatBody body, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsJsonAsync(urlRepeat ??= $"{rootAddress}/api/repeat", body, cancellationToken);
+        return (await response.EnsureSuccessStatusCode().Content.ReadFromJsonAsync<ExecutionSummary>())!;
+    }
+
+    public async Task<ExecutionSummary> ExecuteDurationAsync(DurationBody body, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsJsonAsync(urlDuration ??= $"{rootAddress}/api/duration", body, cancellationToken);
+        return (await response.EnsureSuccessStatusCode().Content.ReadFromJsonAsync<ExecutionSummary>())!;
+    }
+
+    public async Task<ExecutionSummary> ExecuteInfiniteAsync(InfiniteBody body, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsJsonAsync(urlInfinite ??= $"{rootAddress}/api/infinite", body, cancellationToken);
+        return (await response.EnsureSuccessStatusCode().Content.ReadFromJsonAsync<ExecutionSummary>())!;
     }
 
     // Utils

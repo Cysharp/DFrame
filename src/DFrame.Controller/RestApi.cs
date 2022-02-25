@@ -107,6 +107,23 @@ namespace DFrame
                 return new { summary = engine.LatestExecutionSummary, results = engine.LatestSortedSummarizedExecutionResults };
             });
 
+            app.MapGet("api/resultscount", (IExecutionResultHistoryProvider provider) =>
+            {
+                return provider.GetCount();
+            });
+
+            app.MapGet("api/resultslist", (IExecutionResultHistoryProvider provider) =>
+            {
+                return provider.GetList();
+            });
+
+            app.MapGet("api/getresult", (IExecutionResultHistoryProvider provider, ExecutionId executionId) =>
+            {
+                var r = provider.GetResult(executionId);
+                if (r == null) return null;
+                return new { summary = r.Value.Summary, results = r.Value.Results };
+            });
+
             static bool StartRequest(DFrameControllerExecutionEngine engine, string workload, int concurrency, long totalRequest, int? workerlimit, Dictionary<string, string?>? parameters, out IResult result)
             {
                 if (engine.IsRunning)
