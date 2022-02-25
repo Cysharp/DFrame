@@ -7,7 +7,7 @@
 
         @if (title != null)
         {
-            <div class="m-3 p-4 bg-base-200 rounded shadow flex">
+            <div class="p-4 bg-base-200 rounded-none shadow flex text-lg font-bold">
                 <div class="flex-grow">@title</div>
                 <div class="flex-none cursor-pointer" @onclick="Close">
                     @*Close Icon *@
@@ -49,7 +49,12 @@
                         <table class="table w-full rounded shadow">
                             <thead>
                                 <tr>
-                                    <th class="normal-case" colspan="2">Workload #@workloadId</th>
+                                    <th class="normal-case" colspan="2">
+                                        <div class="flex">
+                                            <div class="text-gray-400 mr-1">Workload</div>
+                                            <div>@workloadId</div>
+                                        </div>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
