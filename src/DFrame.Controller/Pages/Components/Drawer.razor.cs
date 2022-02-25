@@ -12,7 +12,7 @@ public partial class Drawer : IDisposable
 
     string? title;
     bool isShow;
-    IReadOnlyList<KeyValuePair<string, string?>>? parameters;
+    Dictionary<string, string>? parameters;
     string? errorMessage;
     ISynchronizedView<string, string>? logView;
     Dictionary<WorkloadId, Dictionary<string, string>?>? results;
@@ -46,7 +46,7 @@ public partial class Drawer : IDisposable
 public record DrawerRequest(
     string? Title,
     bool IsShow,
-    IReadOnlyList<KeyValuePair<string, string?>>? Parameters,
+    Dictionary<string, string>? Parameters,
     string? ErrorMessage, ISynchronizedView<string, string>? LogView,
     Dictionary<WorkloadId, Dictionary<string, string>?>? Results
 );

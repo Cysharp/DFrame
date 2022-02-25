@@ -6,5 +6,5 @@ internal record WorkerInfo(
     WorkerId WorkerId,
     Guid ConnectionId,
     DateTime ConnectTime,
-    IReadOnlyList<KeyValuePair<string, string>> Metadata
+    Dictionary<string, string> Metadata
 );

@@ -27,7 +27,7 @@ namespace DFrame.Controller
         [DataMember]
         public int Concurrency { get; set; }
         [DataMember]
-        public KeyValuePair<string, string?>[] Parameters { get; set; } = default!;
+        public Dictionary<string, string> Parameters { get; set; } = default!;
         [DataMember]
         public DateTime StartTime { get; set; }
 

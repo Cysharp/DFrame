@@ -115,7 +115,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
                 Concurrency = createWorkloadCount,
                 WorkloadCount = workerCount * createWorkloadCount,
                 TotalRequest = totalRequestCount,
-                Parameters = parameters,
+                Parameters = parameters.ToDictionary(x => x.Key, x => x.Value ?? ""),
                 StartTime = DateTime.UtcNow
             };
 

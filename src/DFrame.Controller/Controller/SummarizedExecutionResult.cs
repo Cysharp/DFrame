@@ -31,7 +31,7 @@ public class SummarizedExecutionResult
     [DataMember]
     public int WorkloadCount { get; set; }
     [DataMember]
-    public IReadOnlyList<KeyValuePair<string, string>> Metadata { get; set; }
+    public Dictionary<string, string> Metadata { get; set; }
     
     [DataMember]
     public Dictionary<WorkloadId, Dictionary<string, string>?>? Results { get; set; }
@@ -91,10 +91,10 @@ public class SummarizedExecutionResult
     // for serialize.
     public SummarizedExecutionResult()
     {
-        Metadata = Array.Empty<KeyValuePair<string, string>>();
+        Metadata = new(0);
     }
 
-    public SummarizedExecutionResult(WorkerId workerId, int workloadCount, IReadOnlyList<KeyValuePair<string, string>> metadata, DFrameControllerOptions options)
+    public SummarizedExecutionResult(WorkerId workerId, int workloadCount, Dictionary<string, string> metadata, DFrameControllerOptions options)
     {
         this.elapsedValues = new FixedSizeList<TimeSpan>(options.CompleteElapsedBufferCount);
         this.WorkerId = workerId;
