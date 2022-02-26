@@ -58,12 +58,17 @@ namespace DFrame
 #endif
             DFrameWorkerApp(DFrameWorkerOptions options, IServiceProviderIsService isService, IServiceProvider serviceProvider)
         {
-            var workloadCollection = DFrameWorkloadCollection.FromAssemblies(options.WorkloadAssemblies, isService);
+            var workloadCollection = DFrameWorkloadCollection.FromAssemblies(options.WorkloadAssemblies, options.IncludesDefaultHttpWorkload, isService);
 #if UNITY_2020_1_OR_NEWER
             var logger = new ILogger<DFrameWorkerEngine>();
 #else
             var logger = serviceProvider.GetRequiredService<ILogger<DFrameWorkerEngine>>();
 #endif
+            foreach (var item in workloadCollection.All)
+            {
+                logger.LogInformation("Loaded {0} workload.", item.Name);
+            }
+
 
             this.engines = new DFrameWorkerEngine[Math.Max(1, options.VirtualProcess)];
             for (int i = 0; i < engines.Length; i++)

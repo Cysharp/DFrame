@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using ZLogger;
 
 ThreadPool.SetMinThreads(10000, 10000);
@@ -24,4 +25,41 @@ app.MapGet("/", () =>
     return "ok";
 });
 
+app.MapGet("/reset", () =>
+{
+    i = 0;
+});
+
+app.MapPost("/post_json", ([FromBody] Person p) =>
+{
+    logger.LogInformation($"Post Json:{p.Age} {p.Name}");
+});
+
+app.MapPost("/post_form", (HttpContext ctx) =>
+{
+    var age = int.Parse(ctx.Request.Form["Age"]);
+    var name = ctx.Request.Form["Name"].ToString();
+
+    logger.LogInformation($"Post Form:{age} {name}");
+});
+
+app.MapPut("/put_json", ([FromBody] Person p) =>
+{
+    logger.LogInformation($"Post Json:{p.Age} {p.Name}");
+});
+
+app.MapPut("/put_form", (HttpContext ctx) =>
+{
+    var age = int.Parse(ctx.Request.Form["Age"]);
+    var name = ctx.Request.Form["Name"].ToString();
+
+    logger.LogInformation($"Post Form:{age} {name}");
+});
+
 app.Run();
+
+public class Person
+{
+    public int Age { get; set; }
+    public string Name { get; set; } = default!;
+}

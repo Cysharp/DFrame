@@ -18,9 +18,10 @@ namespace DFrame
 #endif
         public Assembly[] WorkloadAssemblies { get; set; } = AppDomain.CurrentDomain.GetAssemblies();
         public Dictionary<string, string> Metadata { get; set; } = new Dictionary<string, string>();
+        public bool IncludesDefaultHttpWorkload { get; set; } = false;
         public int VirtualProcess { get; set; } = 1;
-        public int MinBatchRate { get; set; } = 1;
-        public int MaxBatchRate { get; set; } = 1;
+        public int MinBatchRate { get; set; } = 500;
+        public int MaxBatchRate { get; set; } = 1000;
         public int BatchRate
         {
             set

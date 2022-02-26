@@ -13,17 +13,12 @@ namespace DFrame
     {
         readonly Dictionary<string, DFrameWorkloadTypeInfo> dframeTypes;
 
-        public static DFrameWorkloadCollection FromCurrentAssemblies(IServiceProviderIsService isService)
+        public static DFrameWorkloadCollection FromAssemblies(Assembly[] searchAssemblies, bool includesDefault, IServiceProviderIsService isService)
         {
-            return FromAssemblies(AppDomain.CurrentDomain.GetAssemblies(), isService);
+            return new DFrameWorkloadCollection(searchAssemblies, includesDefault, isService);
         }
 
-        public static DFrameWorkloadCollection FromAssemblies(Assembly[] searchAssemblies, IServiceProviderIsService isService)
-        {
-            return new DFrameWorkloadCollection(searchAssemblies, isService);
-        }
-
-        DFrameWorkloadCollection(Assembly[] searchAssemblies, IServiceProviderIsService isService)
+        DFrameWorkloadCollection(Assembly[] searchAssemblies, bool includesDefault, IServiceProviderIsService isService)
         {
             dframeTypes = new Dictionary<string, DFrameWorkloadTypeInfo>(StringComparer.InvariantCultureIgnoreCase);
 
@@ -45,6 +40,12 @@ namespace DFrame
                 {
                     if (typeof(Workload).IsAssignableFrom(workload) && !workload.IsAbstract)
                     {
+                        var isDefault = workload.GetCustomAttribute<DefaultWorkloadAttribute>(true);
+                        if (isDefault != null)
+                        {
+                            if (!includesDefault) continue;
+                        }
+
                         var attr = workload.GetCustomAttribute<WorkloadAttribute>(false);
                         var name = attr?.Name ?? workload.Name;
 

@@ -1,18 +1,18 @@
 ﻿using DFrame;
 using DFrame.Controller;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 var builder = DFrameApp.CreateBuilder("http://localhost:7312");
 builder.ConfigureServices(services =>
 {
-    services.AddSingleton<IExecutionResultHistoryProvider>(new FlatFileLogExecutionResultHistoryProvider("results"));
+    // services.AddSingleton<IExecutionResultHistoryProvider>(new FlatFileLogExecutionResultHistoryProvider("results"));
 });
 builder.ConfigureWorker(options =>
 {
-    options.MinBatchRate = 5000;
-    options.MaxBatchRate = 10000;
+    options.IncludesDefaultHttpWorkload = true;
     options.Metadata = new Dictionary<string, string>
     {
         {"ProcessorCount", Environment.ProcessorCount.ToString() }
@@ -50,6 +50,7 @@ public class SampleWorkload : Workload
         };
     }
 }
+
 
 
 public class FlatFileLogExecutionResultHistoryProvider : IExecutionResultHistoryProvider

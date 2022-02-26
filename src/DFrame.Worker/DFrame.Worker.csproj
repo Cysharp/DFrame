@@ -36,6 +36,9 @@
 	<ItemGroup>
 		<TargetFiles1 Include="$(MSBuildProjectDirectory)\**\*.cs" Exclude="**\bin\**\*.*;**\obj\**\*.*;_InternalVisibleTo.cs;RunDFrame.cs;DFrameWorkerApp.cs" />
 	</ItemGroup>
+	<ItemGroup>
+	  <TargetFiles1 Remove="DefaultHttpWorkload.cs" />
+	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 		<Copy SourceFiles="@(TargetFiles1)" DestinationFiles="$(DestinationRoot)\%(RecursiveDir)%(Filename)%(Extension)" SkipUnchangedFiles="true" />

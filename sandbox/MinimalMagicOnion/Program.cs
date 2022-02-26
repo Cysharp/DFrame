@@ -1,6 +1,7 @@
 using Grpc.Net.Client;
 using MagicOnion;
 using MagicOnion.Server;
+using MagicOnion.Server.Hubs;
 using MessagePack;
 using MinimalMagicOnion.Services;
 using ZLogger;
@@ -46,35 +47,17 @@ public interface IEchoService : IService<IEchoService>
 // streaming hub
 public interface IEchoHubReceiver
 {
-    void OnSend(MessageResponse message);
-}
-public class EchoReceiver : IEchoHubReceiver
-{
-    readonly GrpcChannel channel;
-
-    public EchoReceiver(GrpcChannel channel)
-    {
-        this.channel = channel;
-    }
-
-    public IEchoHub Client { get; set; } = default!;
-
-    public async void OnSend(MessageResponse message)
-    {
-        //Console.WriteLine("Reciever:" + message.Message);
-        await Client.EchoAsync(message.Message);
-    }
 }
 
 public interface IEchoHub : IStreamingHub<IEchoHub, IEchoHubReceiver>
 {
-    Task<MessageResponse> EchoAsync(string message);
-    Task<MessageResponse> EchoBroadcastAsync(string message);
+    Task<Nil> EchoAsync(string message);
 }
 
-[MessagePackObject]
-public struct MessageResponse
+public class EchoHub : StreamingHubBase<IEchoHub, IEchoHubReceiver>, IEchoHub
 {
-    [Key(0)]
-    public string Message { get; set; }
+    public Task<Nil> EchoAsync(string message)
+    {
+        return Task.FromResult(Nil.Default);
+    }
 }

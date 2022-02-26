@@ -8,6 +8,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="MagicOnion.Client" Version="4.4.0" />
 		<PackageReference Include="ZLogger" Version="1.6.1" />
 	</ItemGroup>
 
