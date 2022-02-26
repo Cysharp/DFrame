@@ -32,7 +32,7 @@ public class SummarizedExecutionResult
     public int WorkloadCount { get; set; }
     [DataMember]
     public Dictionary<string, string> Metadata { get; set; }
-    
+
     [DataMember]
     public Dictionary<WorkloadId, Dictionary<string, string>?>? Results { get; set; }
     [DataMember]
@@ -67,7 +67,7 @@ public class SummarizedExecutionResult
     [IgnoreDataMember]
     public TimeSpan Avg => (SucceedCount == 0) ? TimeSpan.Zero : TimeSpan.FromTicks(TotalElapsed.Ticks / SucceedCount);
     [IgnoreDataMember]
-    public double Rps => (TotalElapsed.TotalSeconds == 0 || (ExecuteBegin == null)) ? 0 : (SucceedCount / RunningTime.TotalSeconds);
+    public double Rps => (SucceedCount == 0 || (ExecuteBegin == null)) ? 0 : (SucceedCount / RunningTime.TotalSeconds);
 
     [IgnoreDataMember]
     public TimeSpan RunningTime
@@ -149,7 +149,7 @@ public class SummarizedExecutionResult
         CompleteCount += result.BatchedElapsed.Count;
         SucceedCount += result.BatchedElapsed.Count;
 
-        foreach (var item in result.BatchedElapsed)
+        foreach (var item in result.BatchedElapsed.AsSpan())
         {
             var elapsed = TimeSpan.FromTicks(item);
 

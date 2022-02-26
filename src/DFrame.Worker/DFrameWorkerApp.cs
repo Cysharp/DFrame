@@ -324,7 +324,7 @@ namespace DFrame
                         BatchedExecuteResult? batchResult = default;
                         if (isBatchReporting)
                         {
-                            batchResult = new BatchedExecuteResult(x.context.WorkloadId, new List<long>(options.MaxBatchRate));
+                            batchResult = new BatchedExecuteResult(x.context.WorkloadId, new BatchList(options.MaxBatchRate));
                         }
                         var batchRate = 0;
                         if (isBatchReporting)

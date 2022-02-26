@@ -13,6 +13,7 @@ builder.ConfigureServices(services =>
 builder.ConfigureWorker(options =>
 {
     options.IncludesDefaultHttpWorkload = true;
+    options.VirtualProcess = 4;
     options.Metadata = new Dictionary<string, string>
     {
         {"ProcessorCount", Environment.ProcessorCount.ToString() }
