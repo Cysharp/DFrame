@@ -131,7 +131,7 @@ jobs:
       # Store artifacts.
       - uses: actions/upload-artifact@v2
         with:
-          name: DFrame.Unity.${{ env.GIT_TAG }}.zip
+          name: DFrame.Unity.${{ env.GIT_TAG }}.unitypackage
           path: ./src/DFrame.Unity/*.unitypackage          
 
   create-release:
