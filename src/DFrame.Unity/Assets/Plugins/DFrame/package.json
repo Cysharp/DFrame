@@ -2,7 +2,7 @@
     "name": "com.cysharp.dframe",
     "displayName": "DFrame",
     "author": { "name": "Cysharp, Inc.", "url": "http://cysharp.com/" },
-    "version": "1.0.1",
+    "version": "1.0.2",
     "unity": "2020.1",
     "description": "Distributed load testing framework.",
     "keywords": [ "Scripting" ],
