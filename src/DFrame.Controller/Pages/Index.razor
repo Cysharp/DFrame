@@ -48,7 +48,7 @@
                                 <EditForm Model="@vm" OnSubmit=@HandleExecute>
                                     <label class="input-group">
                                         <span class="text-slate-300 min-w-[115px]">Workload</span>
-                                        <select class="select select-bordered select-sm leading-4" @onchange=HandleChangeWorkload value="@vm.SelectedWorkload">
+                                        <select class="select select-bordered select-sm leading-4 py-0" @onchange=HandleChangeWorkload value="@vm.SelectedWorkload">
                                             @foreach (var item in vm.WorkloadInfos)
                                             {
                                                 <option>@item.Name</option>
