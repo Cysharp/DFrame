@@ -5,10 +5,19 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <Content Remove="appsettings.json" />
+	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="ZLogger" Version="1.6.1" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Folder Include="Properties\" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Include="appsettings.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 </Project>

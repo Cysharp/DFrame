@@ -11,19 +11,19 @@ namespace DFrame;
 
 public static class DFrameApp
 {
-    public static void Run(string hostAddress, bool useHttps = false)
+    public static void Run(int portWeb, int portListenWorker, string? controllerAddress = null, bool useHttps = false)
     {
-        new DFrameAppBuilder(hostAddress, useHttps).Run();
+        new DFrameAppBuilder(portWeb, portListenWorker, useHttps).Run(controllerAddress);
     }
 
-    public static async Task RunAsync(string hostAddress, bool useHttps = false)
+    public static async Task RunAsync(int portWeb, int portListenWorker, string? controllerAddress = null, bool useHttps = false)
     {
-        await new DFrameAppBuilder(hostAddress, useHttps).RunAsync();
+        await new DFrameAppBuilder(portWeb, portListenWorker, useHttps).RunAsync(controllerAddress);
     }
 
-    public static DFrameAppBuilder CreateBuilder(string hostAddress, bool useHttps = false)
+    public static DFrameAppBuilder CreateBuilder(int portWeb, int portListenWorker, bool useHttps = false)
     {
-        return new DFrameAppBuilder(hostAddress, useHttps);
+        return new DFrameAppBuilder(portWeb, portListenWorker, useHttps);
     }
 }
 
@@ -32,24 +32,17 @@ public class DFrameAppBuilder
     Action<WebHostBuilderContext, DFrameControllerOptions> configureController;
     Action<HostBuilderContext, DFrameWorkerOptions> configureWorker;
 
-    public string Http1HostAddress { get; }
-    public string Http2HostAddress { get; }
+    string workerListenAddress;
 
     public WebApplicationBuilder ControllerBuilder { get; }
     public IHostBuilder WorkerBuilder { get; }
 
-    internal DFrameAppBuilder(string hostAddress, bool useHttps)
+    internal DFrameAppBuilder(int portWeb, int portListenWorker, bool useHttps)
     {
-        // address == HTTP/1 port.
-        // gRPC address == port + 1
+        this.workerListenAddress = ((useHttps) ? "https" : "http") + "://localhost:" + portListenWorker;
 
-        var last = hostAddress.LastIndexOf(':');
-        var portString = hostAddress.Substring(last + 1);
-        if (!int.TryParse(portString, out var port))
-        {
-            throw new ArgumentException($"Can not parse port. address:{hostAddress}");
-        }
-        var gRpcAddress = hostAddress.Substring(0, last) + ":" + (port + 1);
+        configureController = (_, __) => { };
+        configureWorker = (_, options) => options.ControllerAddress = workerListenAddress;
 
         var args = Environment.GetCommandLineArgs();
 
@@ -57,7 +50,7 @@ public class DFrameAppBuilder
         controllerBuilder.WebHost
             .UseKestrel(x =>
             {
-                x.Listen(IPAddress.Any, port, option =>
+                x.Listen(IPAddress.Any, portWeb, option =>
                 {
                     option.Protocols = HttpProtocols.Http1;
                     if (useHttps)
@@ -65,7 +58,7 @@ public class DFrameAppBuilder
                         option.UseHttps();
                     }
                 });
-                x.Listen(IPAddress.Any, port + 1, option =>
+                x.Listen(IPAddress.Any, portListenWorker, option =>
                 {
                     option.Protocols = HttpProtocols.Http2;
                     if (useHttps)
@@ -75,13 +68,8 @@ public class DFrameAppBuilder
                 });
             });
 
-        configureController = (_, __) => { };
-        configureWorker = (_, options) => options.ControllerAddress = gRpcAddress;
-
         ControllerBuilder = controllerBuilder;
         WorkerBuilder = Host.CreateDefaultBuilder(args);
-        Http1HostAddress = hostAddress;
-        Http2HostAddress = gRpcAddress;
     }
 
     public void ConfigureServices(Action<IServiceCollection> configureDelegate)
@@ -166,7 +154,7 @@ public class DFrameAppBuilder
     {
         this.configureWorker = (ctx, options) =>
         {
-            options.ControllerAddress = Http2HostAddress;
+            options.ControllerAddress = workerListenAddress;
             configureWorker(ctx, options);
         };
     }
@@ -175,20 +163,35 @@ public class DFrameAppBuilder
     {
         this.configureWorker = (_, options) =>
         {
-            options.ControllerAddress = Http2HostAddress;
+            options.ControllerAddress = workerListenAddress;
             configureWorker(options);
         };
     }
 
-    public void Run()
+    public void Run(string? controllerAddress = null)
     {
-        RunAsync().GetAwaiter().GetResult();
+        RunAsync(controllerAddress).GetAwaiter().GetResult();
     }
 
-    public async Task RunAsync()
+    public async Task RunAsync(string? controllerAddress = null)
     {
-        var controller = ControllerBuilder.RunDFrameControllerAsync(configureController);
-        var worker = WorkerBuilder.RunDFrameAsync(configureWorker);
+        var controller = RunControllerAsync();
+        var worker = RunWorkerAsync(controllerAddress);
         await Task.WhenAll(controller, worker);
+    }
+
+    public async Task RunControllerAsync()
+    {
+        await ControllerBuilder.RunDFrameControllerAsync(configureController);
+    }
+
+    public async Task RunWorkerAsync(string? controllerAddress = null)
+    {
+        if (controllerAddress != null)
+        {
+            this.workerListenAddress = controllerAddress;
+        }
+
+        await WorkerBuilder.RunDFrameWorkerAsync(configureWorker);
     }
 }

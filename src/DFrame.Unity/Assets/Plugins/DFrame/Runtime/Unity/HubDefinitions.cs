@@ -4,8 +4,12 @@
 
 using MagicOnion;
 using MessagePack;
+using MessagePack.Formatters;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace DFrame
@@ -27,12 +31,6 @@ namespace DFrame
         void Stop();
         void Teardown();
     }
-
-    public readonly partial struct ExecutionId { }
-
-    public readonly partial struct WorkerId { }
-
-    public readonly partial struct WorkloadId { }
 
     [MessagePackObject]
     public class ExecuteResult
@@ -65,12 +63,92 @@ namespace DFrame
         public WorkloadId WorkloadId { get; }
 
         [Key(1)]
-        public List<long> BatchedElapsed { get; }
+        public BatchList BatchedElapsed { get; }
 
-        public BatchedExecuteResult(WorkloadId workloadId, List<long> batchedElapsed)
+        public BatchedExecuteResult(WorkloadId workloadId, BatchList batchedElapsed)
         {
             WorkloadId = workloadId;
             BatchedElapsed = batchedElapsed;
+        }
+    }
+
+    [MessagePackFormatter(typeof(Formatter))]
+    public sealed class BatchList
+    {
+        long[]? forWrite;
+        ReadOnlyMemory<byte>? forRead;
+        int count;
+
+        public BatchList(int capacity)
+        {
+            this.forWrite = new long[capacity];
+            this.count = 0;
+        }
+
+        BatchList(ReadOnlyMemory<byte> data, int count)
+        {
+            this.forRead = data;
+            this.count = count;
+        }
+
+        public ReadOnlySpan<long> AsSpan()
+        {
+            if (forRead != null)
+            {
+                return MemoryMarshal.Cast<byte, long>(forRead.Value.Span);
+            }
+            if (forWrite != null)
+            {
+                return forWrite.AsSpan(0, count);
+            }
+            return Array.Empty<long>();
+        }
+
+        public int Count => count;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Add(long value)
+        {
+            forWrite![count++] = value;
+        }
+
+        public void Clear()
+        {
+            this.count = 0;
+        }
+
+        class Formatter : IMessagePackFormatter<BatchList>
+        {
+            public void Serialize(ref MessagePackWriter writer, BatchList value, MessagePackSerializerOptions options)
+            {
+                var size = value.count * sizeof(long);
+                writer.WriteBinHeader(size);
+
+                var span = writer.GetSpan(size);
+                MemoryMarshal.Cast<long, byte>(value.AsSpan()).CopyTo(span);
+                writer.Advance(size);
+            }
+
+            public BatchList Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+            {
+                var bytes = reader.ReadBytes();
+                if (bytes.HasValue)
+                {
+                    ReadOnlyMemory<byte> memory;
+                    if (bytes.Value.IsSingleSegment)
+                    {
+                        memory = bytes.Value.First;
+                    }
+                    else
+                    {
+                        memory = bytes.Value.ToArray().AsMemory();
+                    }
+                    var size = memory.Length / sizeof(long);
+                    return new BatchList(memory, size);
+                }
+
+                return new BatchList(0);
+            }
         }
     }
 

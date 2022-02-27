@@ -39,7 +39,7 @@ public class TrialWorkload : Workload
         return Task.CompletedTask;
     }
 
-    public override Dictionary<string, string>? Complete()
+    public override Dictionary<string, string>? Complete(WorkloadContext context)
     {
         return new()
         {
@@ -216,3 +216,26 @@ public class PartlyCloudy : Workload
         return Task.CompletedTask;
     }
 }
+
+
+public class LoggerSum : Workload
+{
+    readonly ILogger<LoggerSum> logger;
+    readonly int x;
+    readonly int y;
+
+    public LoggerSum(ILogger<LoggerSum> logger, int x, int y)
+    {
+        this.logger = logger;
+        this.x = x;
+        this.y = y;
+        logger.LogInformation($"Parameter passed {(x, y)}");
+    }
+
+    public override Task ExecuteAsync(WorkloadContext context)
+    {
+        return Task.CompletedTask;
+    }
+}
+
+

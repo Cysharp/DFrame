@@ -1,25 +1,9 @@
-﻿
-using DFrame;
+﻿using DFrame;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 await Host.CreateDefaultBuilder(args)
-    //.ConfigureLogging(x =>
-    //{
-    //    x.ClearProviders();
-    //    x.AddZLoggerConsole();
-    //})
-    .RunDFrameAsync(new DFrameWorkerOptions("http://localhost:7313")
-    {
-        VirtualProcess = 32,
-        // BatchRate = 50,
-        Metadata = new Dictionary<string, string>
-        {
-            {"MachineName", Environment.MachineName },
-            {"ProcessorCount", Environment.ProcessorCount.ToString() },
-            {"OSVersion", Environment.OSVersion.ToString() },
-        }
-    });
+    .RunDFrameWorkerAsync("http://localhost:7313"); // http/2 address to connect controller
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 

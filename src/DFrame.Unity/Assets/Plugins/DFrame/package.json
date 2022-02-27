@@ -1,0 +1,12 @@
+{
+    "name": "com.cysharp.dframe",
+    "displayName": "DFrame",
+    "author": { "name": "Cysharp, Inc.", "url": "http://cysharp.com/" },
+    "version": "1.0.0",
+    "unity": "2020.1",
+    "description": "Distributed load testing framework.",
+    "keywords": [ "Scripting" ],
+    "license": "MIT",
+    "category": "Scripting",
+    "dependencies": {}
+}

@@ -58,12 +58,17 @@ namespace DFrame
 #endif
             DFrameWorkerApp(DFrameWorkerOptions options, IServiceProviderIsService isService, IServiceProvider serviceProvider)
         {
-            var workloadCollection = DFrameWorkloadCollection.FromAssemblies(options.WorkloadAssemblies, isService);
+            var workloadCollection = DFrameWorkloadCollection.FromAssemblies(options.WorkloadAssemblies, options.IncludesDefaultHttpWorkload, isService);
 #if UNITY_2020_1_OR_NEWER
             var logger = new ILogger<DFrameWorkerEngine>();
 #else
             var logger = serviceProvider.GetRequiredService<ILogger<DFrameWorkerEngine>>();
 #endif
+            foreach (var item in workloadCollection.All)
+            {
+                logger.LogInformation($"Loaded {item.Name} workload.");
+            }
+
 
             this.engines = new DFrameWorkerEngine[Math.Max(1, options.VirtualProcess)];
             for (int i = 0; i < engines.Length; i++)
@@ -226,8 +231,6 @@ namespace DFrame
             {
                 HttpHandler = new SocketsHttpHandler
                 {
-                    PooledConnectionIdleTimeout = options.SocketsHttpHandlerOptions.PooledConnectionIdleTimeout,
-                    PooledConnectionLifetime = options.SocketsHttpHandlerOptions.PooledConnectionLifetime,
                     KeepAlivePingDelay = options.SocketsHttpHandlerOptions.KeepAlivePingDelay,
                     KeepAlivePingTimeout = options.SocketsHttpHandlerOptions.KeepAlivePingTimeout,
                     EnableMultipleHttp2Connections = true,
@@ -272,7 +275,7 @@ namespace DFrame
                 for (int i = 0; i < createCount; i++)
                 {
                     var workload = description.Activator.Value.Invoke(serviceProvider, description.CrateArgument(parameters));
-                    var t = (new WorkloadContext(workloadLifeTime!.Token), (Workload)workload);
+                    var t = (new WorkloadContext(createCount, i, workloadLifeTime!.Token), (Workload)workload);
                     workloads.Add(t);
                 }
 
@@ -319,7 +322,7 @@ namespace DFrame
                         BatchedExecuteResult? batchResult = default;
                         if (isBatchReporting)
                         {
-                            batchResult = new BatchedExecuteResult(x.context.WorkloadId, new List<long>(options.MaxBatchRate));
+                            batchResult = new BatchedExecuteResult(x.context.WorkloadId, new BatchList(options.MaxBatchRate));
                         }
                         var batchRate = 0;
                         if (isBatchReporting)
@@ -331,7 +334,6 @@ namespace DFrame
                         for (long i = 0; i < exec; i++)
                         {
                             x.context.CancellationToken.ThrowIfCancellationRequested();
-
 
                             string? errorMsg = null;
                             var sw = ValueStopwatch.StartNew();
@@ -380,7 +382,7 @@ namespace DFrame
                     var completeResults = new Dictionary<WorkloadId, Dictionary<string, string>?>();
                     foreach (var item in workloads)
                     {
-                        completeResults[item.context.WorkloadId] = item.workload.Complete();
+                        completeResults[item.context.WorkloadId] = item.workload.Complete(item.context);
                     }
 
                     completeExecute.TrySetResult(null!); // call complete before ExecuteCompleteAsync

@@ -1,9 +1,6 @@
-import random
-from locust import HttpUser, task, between
+from locust import task, FastHttpUser
 
-class MyUser(HttpUser):
-    wait_time = between(0, 1)
-
-    @task(20)
+class MyUser(FastHttpUser):
+    @task
     def index(self):
-        self.client.get("/")
+        response = self.client.get("/")

@@ -373,3 +373,13 @@ src/DFrame.Unity/MagicOnion.Unity.Editor.csproj
 src/DFrame.Unity/MessagePack.Annotations.csproj
 
 src/DFrame.Unity/MessagePack.csproj
+
+src/DFrame.Unity/DFrame.1.0.0.unitypackage
+
+src/DFrame.Unity/DFrame.csproj
+
+src/DFrame.Unity/RuntimeUnitTestToolkit.csproj
+
+src/DFrame.Worker/DFrame.Worker.csproj
+
+src/DFrame.Unity/Tests.csproj

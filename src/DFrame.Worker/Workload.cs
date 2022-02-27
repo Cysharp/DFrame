@@ -23,7 +23,7 @@ namespace DFrame
             return Task.CompletedTask;
         }
 
-        public virtual Dictionary<string, string>? Complete()
+        public virtual Dictionary<string, string>? Complete(WorkloadContext context)
         {
             return null;
         }

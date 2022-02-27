@@ -66,7 +66,7 @@ namespace DFrame
 #endif
             foreach (var item in workloadCollection.All)
             {
-                logger.LogInformation("Loaded {0} workload.", item.Name);
+                logger.LogInformation($"Loaded {item.Name} workload.");
             }
 
 
@@ -231,8 +231,6 @@ namespace DFrame
             {
                 HttpHandler = new SocketsHttpHandler
                 {
-                    PooledConnectionIdleTimeout = options.SocketsHttpHandlerOptions.PooledConnectionIdleTimeout,
-                    PooledConnectionLifetime = options.SocketsHttpHandlerOptions.PooledConnectionLifetime,
                     KeepAlivePingDelay = options.SocketsHttpHandlerOptions.KeepAlivePingDelay,
                     KeepAlivePingTimeout = options.SocketsHttpHandlerOptions.KeepAlivePingTimeout,
                     EnableMultipleHttp2Connections = true,
@@ -277,7 +275,7 @@ namespace DFrame
                 for (int i = 0; i < createCount; i++)
                 {
                     var workload = description.Activator.Value.Invoke(serviceProvider, description.CrateArgument(parameters));
-                    var t = (new WorkloadContext(workloadLifeTime!.Token), (Workload)workload);
+                    var t = (new WorkloadContext(createCount, i, workloadLifeTime!.Token), (Workload)workload);
                     workloads.Add(t);
                 }
 
@@ -337,7 +335,6 @@ namespace DFrame
                         {
                             x.context.CancellationToken.ThrowIfCancellationRequested();
 
-
                             string? errorMsg = null;
                             var sw = ValueStopwatch.StartNew();
                             try
@@ -385,7 +382,7 @@ namespace DFrame
                     var completeResults = new Dictionary<WorkloadId, Dictionary<string, string>?>();
                     foreach (var item in workloads)
                     {
-                        completeResults[item.context.WorkloadId] = item.workload.Complete();
+                        completeResults[item.context.WorkloadId] = item.workload.Complete(item.context);
                     }
 
                     completeExecute.TrySetResult(null!); // call complete before ExecuteCompleteAsync

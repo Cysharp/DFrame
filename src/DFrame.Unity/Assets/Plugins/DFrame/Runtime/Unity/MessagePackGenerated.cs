@@ -49,15 +49,14 @@ namespace DFrame.Resolvers
 
         static GeneratedResolverGetFormatterHelper()
         {
-            lookup = new global::System.Collections.Generic.Dictionary<Type, int>(7)
+            lookup = new global::System.Collections.Generic.Dictionary<Type, int>(6)
             {
                 { typeof(global::DFrame.WorkloadParameterInfo[]), 0 },
-                { typeof(global::System.Collections.Generic.List<long>), 1 },
-                { typeof(global::DFrame.AllowParameterType), 2 },
-                { typeof(global::DFrame.BatchedExecuteResult), 3 },
-                { typeof(global::DFrame.ExecuteResult), 4 },
-                { typeof(global::DFrame.WorkloadInfo), 5 },
-                { typeof(global::DFrame.WorkloadParameterInfo), 6 },
+                { typeof(global::DFrame.AllowParameterType), 1 },
+                { typeof(global::DFrame.BatchedExecuteResult), 2 },
+                { typeof(global::DFrame.ExecuteResult), 3 },
+                { typeof(global::DFrame.WorkloadInfo), 4 },
+                { typeof(global::DFrame.WorkloadParameterInfo), 5 },
             };
         }
 
@@ -72,12 +71,11 @@ namespace DFrame.Resolvers
             switch (key)
             {
                 case 0: return new global::MessagePack.Formatters.ArrayFormatter<global::DFrame.WorkloadParameterInfo>();
-                case 1: return new global::MessagePack.Formatters.ListFormatter<long>();
-                case 2: return new DFrame.Formatters.DFrame.AllowParameterTypeFormatter();
-                case 3: return new DFrame.Formatters.DFrame.BatchedExecuteResultFormatter();
-                case 4: return new DFrame.Formatters.DFrame.ExecuteResultFormatter();
-                case 5: return new DFrame.Formatters.DFrame.WorkloadInfoFormatter();
-                case 6: return new DFrame.Formatters.DFrame.WorkloadParameterInfoFormatter();
+                case 1: return new DFrame.Formatters.DFrame.AllowParameterTypeFormatter();
+                case 2: return new DFrame.Formatters.DFrame.BatchedExecuteResultFormatter();
+                case 3: return new DFrame.Formatters.DFrame.ExecuteResultFormatter();
+                case 4: return new DFrame.Formatters.DFrame.WorkloadInfoFormatter();
+                case 5: return new DFrame.Formatters.DFrame.WorkloadParameterInfoFormatter();
                 default: return null;
             }
         }
@@ -173,7 +171,7 @@ namespace DFrame.Formatters.DFrame
             global::MessagePack.IFormatterResolver formatterResolver = options.Resolver;
             writer.WriteArrayHeader(2);
             formatterResolver.GetFormatterWithVerify<global::DFrame.WorkloadId>().Serialize(ref writer, value.WorkloadId, options);
-            formatterResolver.GetFormatterWithVerify<global::System.Collections.Generic.List<long>>().Serialize(ref writer, value.BatchedElapsed, options);
+            formatterResolver.GetFormatterWithVerify<global::DFrame.BatchList>().Serialize(ref writer, value.BatchedElapsed, options);
         }
 
         public global::DFrame.BatchedExecuteResult Deserialize(ref global::MessagePack.MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
@@ -187,7 +185,7 @@ namespace DFrame.Formatters.DFrame
             global::MessagePack.IFormatterResolver formatterResolver = options.Resolver;
             var length = reader.ReadArrayHeader();
             var __WorkloadId__ = default(global::DFrame.WorkloadId);
-            var __BatchedElapsed__ = default(global::System.Collections.Generic.List<long>);
+            var __BatchedElapsed__ = default(global::DFrame.BatchList);
 
             for (int i = 0; i < length; i++)
             {
@@ -197,7 +195,7 @@ namespace DFrame.Formatters.DFrame
                         __WorkloadId__ = formatterResolver.GetFormatterWithVerify<global::DFrame.WorkloadId>().Deserialize(ref reader, options);
                         break;
                     case 1:
-                        __BatchedElapsed__ = formatterResolver.GetFormatterWithVerify<global::System.Collections.Generic.List<long>>().Deserialize(ref reader, options);
+                        __BatchedElapsed__ = formatterResolver.GetFormatterWithVerify<global::DFrame.BatchList>().Deserialize(ref reader, options);
                         break;
                     default:
                         reader.Skip();

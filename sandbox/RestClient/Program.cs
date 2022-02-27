@@ -1,7 +1,21 @@
-﻿
-using DFrame.RestSdk;
+﻿using DFrame.RestSdk;
 
 var client = new DFrameClient("http://localhost:7312/");
+
+// start request
+await client.ExecuteRequestAsync(new()
+{
+    Workload = "SampleWorkload",
+    Concurrency = 10,
+    TotalRequest = 100000
+});
+
+// loadtest is running, wait complete.
+await client.WaitUntilCanExecute();
+
+// get summary and results[]
+var result = await client.GetLatestResultAsync();
+
 
 var c = await client.GetResultsListAsync();
 

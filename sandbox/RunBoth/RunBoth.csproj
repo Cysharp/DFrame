@@ -10,10 +10,20 @@
 	<ItemGroup>
 		<PackageReference Include="MagicOnion.Client" Version="4.4.0" />
 		<PackageReference Include="ZLogger" Version="1.6.1" />
+		<PackageReference Include="Google.Protobuf" Version="3.18.0" />
+		<PackageReference Include="Grpc.Tools" Version="2.40.0">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\src\DFrame\DFrame.csproj" />
 	</ItemGroup>
+
+	<ItemGroup>
+		<Protobuf Include="Protos\greet.proto" GrpcServices="Client" />
+	</ItemGroup>
+
 
 </Project>

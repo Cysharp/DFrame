@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Threading;
 
 namespace DFrame
 {
@@ -40,11 +39,11 @@ namespace DFrame
         }
     }
 
+#if !UNITY_2020_1_OR_NEWER
     public class SocketsHttpHandlerOptions
     {
-        public TimeSpan PooledConnectionIdleTimeout { get; set; } = Timeout.InfiniteTimeSpan;
-        public TimeSpan PooledConnectionLifetime { get; set; } = Timeout.InfiniteTimeSpan;
         public TimeSpan KeepAlivePingDelay { get; set; } = TimeSpan.FromSeconds(60);
         public TimeSpan KeepAlivePingTimeout { get; set; } = TimeSpan.FromSeconds(30);
     }
+#endif
 }

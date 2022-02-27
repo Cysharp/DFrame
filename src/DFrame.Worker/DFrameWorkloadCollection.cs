@@ -40,11 +40,13 @@ namespace DFrame
                 {
                     if (typeof(Workload).IsAssignableFrom(workload) && !workload.IsAbstract)
                     {
+#if !UNITY_2020_1_OR_NEWER
                         var isDefault = workload.GetCustomAttribute<DefaultWorkloadAttribute>(true);
                         if (isDefault != null)
                         {
                             if (!includesDefault) continue;
                         }
+#endif
 
                         var attr = workload.GetCustomAttribute<WorkloadAttribute>(false);
                         var name = attr?.Name ?? workload.Name;
