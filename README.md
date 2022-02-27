@@ -5,7 +5,7 @@
 
 This library allows you to write distributed load test scenarios in plain C#. In addition to HTTP/1, you can test HTTP/2, gRPC, MagicOnion, Photon, or original network transport by writing in C#.
 
-![dframe](https://user-images.githubusercontent.com/46207/155891100-16df18c1-982b-49e1-b2de-0a97a994d24e.gif)
+![dframe](https://user-images.githubusercontent.com/46207/155902346-8dc6459f-d545-4557-854b-0920f0b36c07.gif)
 
 DFrame is similar as [Locust](https://locust.io/), combination of two parts, `DFrame.Controller`(built by Blazor Server) as Web UI and `DFrame.Worker` as C# test scenario script. DFrame is providing as a library however you can bootup easily if you are faimiliar with C#.
 

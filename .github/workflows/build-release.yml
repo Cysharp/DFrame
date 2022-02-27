@@ -16,7 +16,62 @@ env:
   DRY_RUN: ${{ github.event.inputs.dry_run }}
 
 jobs:
+  update-packagejson:
+    runs-on: ubuntu-latest
+    env:
+      TARGET_FILE: ./src/DFrame.Unity/Assets/Plugins/DFrame/package.json
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Output package.json (Before)
+        run: cat ${{ env.TARGET_FILE}}
+
+      - name: Update package.json to version ${{ env.GIT_TAG }}
+        run: sed -i -e "s/\(\"version\":\) \"\(.*\)\",/\1 \"${{ env.GIT_TAG }}\",/" ${{ env.TARGET_FILE }}
+
+      - name: Check update
+        id: check_update
+        run: |
+          cat ${{ env.TARGET_FILE}}
+          git diff --exit-code || echo "::set-output name=changed::1"
+
+      - name: Commit files
+        id: commit
+        if: steps.check_update.outputs.changed == '1'
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git commit -m "feat: Update package.json to ${{ env.GIT_TAG }}" -a
+          echo "::set-output name=sha::$(git rev-parse HEAD)"
+
+      - name: Check sha
+        run: echo "SHA ${SHA}"
+        env:
+          SHA: ${{ steps.commit.outputs.sha }}
+
+      - name: Create Tag
+        if: steps.check_update.outputs.changed == '1'
+        run: git tag ${{ env.GIT_TAG }}
+
+      - name: Push changes
+        if: env.DRY_RUN == 'false' && steps.check_update.outputs.changed == '1'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+          tags: true
+
+      - name: Push changes (dry_run)
+        if: env.DRY_RUN == 'true' && steps.check_update.outputs.changed == '1'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ env.DRY_RUN_BRANCH_PREFIX }}-${{ env.GIT_TAG }}
+          tags: false
+
   build-dotnet:
+    needs: [update-packagejson]
     runs-on: ubuntu-latest
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
@@ -33,30 +88,61 @@ jobs:
       - run: dotnet pack ./src/DFrame/DFrame.csproj -c Release --no-build -p:Version=${{ env.GIT_TAG }} -o ./publish
       - run: dotnet pack ./src/DFrame.Controller/DFrame.Controller.csproj -c Release --no-build -p:Version=${{ env.GIT_TAG }} -o ./publish
       - run: dotnet pack ./src/DFrame.Worker/DFrame.Worker.csproj -c Release --no-build -p:Version=${{ env.GIT_TAG }} -o ./publish
+      - run: dotnet pack ./src/DFrame.RestSdk/DFrame.RestSdk.csproj -c Release --no-build -p:Version=${{ env.GIT_TAG }} -o ./publish
       - uses: actions/upload-artifact@v2
         with:
           name: nuget
           path: ./publish
 
+  build-unity:
+    needs: [update-packagejson]
+    strategy:
+      matrix:
+        unity: ["2020.3.29f1"]
+        include:
+          - unity: 2020.3.29f1
+            license: UNITY_LICENSE_2020
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      # Execute scripts: Export Package
+      #  /opt/Unity/Editor/Unity -quit -batchmode -nographics -silent-crashes -logFile -projectPath . -executeMethod PackageExporter.Export
+      - name: Export unitypackage
+        uses: game-ci/unity-builder@v2.0-alpha-6
+        env:
+          UNITY_LICENSE: ${{ secrets[matrix.license] }}
+        with:
+          projectPath: src/DFrame.Unity
+          unityVersion: ${{ matrix.unity }}
+          targetPlatform: StandaloneLinux64
+          buildMethod: PackageExporter.Export
+          versioning: None
+
+      - name: check all .meta is commited
+        run: |
+          if git ls-files --others --exclude-standard -t | grep --regexp='[.]meta$'; then
+            echo "Detected .meta file generated. Do you forgot commit a .meta file?"
+            exit 1
+          else
+            echo "Great, all .meta files are commited."
+          fi
+        working-directory: src/DFrame.Unity
+
+      # Store artifacts.
+      - uses: actions/upload-artifact@v2
+        with:
+          name: DFrame.unitypackage-${{ matrix.unity }}.zip
+          path: ./src/DFrame.Unity/*.unitypackage          
+
   create-release:
     if: github.event.inputs.dry_run == 'false'
-    needs: [build-dotnet]
+    needs: [update-packagejson, build-dotnet, build-unity]
     runs-on: ubuntu-latest
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
       NUGET_XMLDOC_MODE: skip
     steps:
-      # tag
-      - uses: actions/checkout@v2
-      - name: tag
-        run: git tag ${{ env.GIT_TAG }}
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
-          tags: true
       # Create Releases
       - uses: actions/create-release@v1
         id: create_release
@@ -71,3 +157,23 @@ jobs:
       - uses: actions/download-artifact@v2
       # Upload to NuGet
       - run: dotnet nuget push "./nuget/*.nupkg" -s https://www.nuget.org/api/v2/package -k ${{ secrets.NUGET_KEY }}
+      # Upload to Releases(unitypackage)
+      - uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./DFrame.Unity.${{ env.GIT_TAG }}.unitypackage/DFrame.${{ env.GIT_TAG }}.unitypackage
+          asset_name: DFrame.${{ env.GIT_TAG }}.unitypackage
+          asset_content_type: application/octet-stream
+
+  cleanup:
+    if: github.event.inputs.dry_run == 'true'
+    needs: [build-dotnet, build-unity]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete branch
+        uses: dawidd6/action-delete-branch@v3
+        with:
+          github_token: ${{ github.token }}
+          branches: ${{ env.DRY_RUN_BRANCH_PREFIX }}-${{ env.GIT_TAG }}
