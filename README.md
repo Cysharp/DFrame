@@ -35,6 +35,24 @@ DFrame.Worker also supports Unity. This means that by deploying it on a large nu
 ## Table of Contents
 
 - [Getting started](#getting-started)
+- [Controller and Worker](#controller-and-worker)
+  - [DFrame.Controller](#dframecontroller)
+  - [DFrame.Worker](#dframeworker)
+- [Workload](#workload)
+  - [WorkloadContext](#workloadcontext)
+- [Mode](#mode)
+  - [Request](#request)
+  - [Repeat](#repeat)
+  - [Duration](#duration)
+  - [Infinite](#infinite)
+- [Options](#options)
+  - [DFrameControllerOptions](#dframecontrolleroptions)
+  - [DFrameWorkerOptions](#dframeworkeroptions)
+    - [Metadata](#metadata)
+- [DFrameApp/DFrameAppBuilder](#dframeappdframeappbuilder)
+- [Persistent execute results](#persistent-execute-results)
+- [REST API for Automation](#rest-api-for-automation)
+- [Unity](#unity)
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
