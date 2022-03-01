@@ -78,7 +78,7 @@ namespace DFrame
         }
 
         [RootCommand]
-        public async Task Run()
+        public async Task RunAsync()
         {
             try
             {
