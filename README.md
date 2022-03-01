@@ -3,7 +3,7 @@
 
 **D**istributed load-testing **Frame**work for .NET and Unity.
 
-This library allows you to write distributed load test scenarios in plain C#. In addition to HTTP/1, you can test HTTP/2, gRPC, MagicOnion, Photon, or original network transport by writing in C#.
+This library allows you to write distributed load test scenarios in plain C#, no needs weird gui, dsl, xml, json, yaml. In addition to HTTP/1, you can test HTTP/2, gRPC, MagicOnion, Photon, or original network transport by writing in C#.
 
 ![dframe](https://user-images.githubusercontent.com/46207/155902346-8dc6459f-d545-4557-854b-0920f0b36c07.gif)
 
@@ -24,11 +24,11 @@ public class SampleWorkload : Workload
 }
 ```
 
-It can be used as a single execution tool like Ab, but the distribution mechanism is very simple. When you start the Worker application, it will go to the connect address of the Controller by [MagicOnion](https://github.com/Cysharp/MagicOnion/)(grpc-dotnet). That's it, the connection is complete. Now all you have to do is wait for the command from the web UI.
-
-DFrame optimizes not only for distributed performance, but also for single performance.
+You can now open your browser and run the tests you have set up. It can be used as a single execution tool like Ab, but the distribution mechanism is very simple. When you start the Worker application, it will go to the connect address of the Controller by [MagicOnion](https://github.com/Cysharp/MagicOnion/)(grpc-dotnet). That's it, the connection is complete. Now all you have to do is wait for the command from the web UI.
 
 DFrame.Worker also supports Unity. This means that by deploying it on a large number of Headless Unity or device farms, we can load test even network frameworks that only work with Unity.
+
+Don't forget about performance. It is very important to hit a lot of RPS on single machine. Many of the major load testing tools are not very powerful(except for [wrk](https://github.com/wg/wrk)). DFrame is highly optimized and also brings out the full power of compiled C# code.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
