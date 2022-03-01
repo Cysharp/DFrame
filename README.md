@@ -705,7 +705,7 @@ public class DFrameWorker : MonoBehaviour
     {
         // setup your controller address
         app = new DFrameWorkerApp("localhost:7313");
-        await app.Run();
+        await app.RunAsync();
     }
 
     private void OnDestroy()
