@@ -8,7 +8,17 @@
             </div>
         </div>
         <div class="stat place-items-center place-content-center bg-neutral">
-            <div class="stat-title text-xs">START TIME</div>
+            <div class="stat-title text-xs">
+                @if (ExecutionSummary == null)
+                {
+                    <span>START TIME</span>
+                }
+                else
+                {
+                    <span>START AT</span>
+                    <span>@ExecutionSummary.StartTime.ToLocalTime().ToString("yyyy-MM-dd")</span>
+                }
+            </div>
             <div class="stat-value text-2xl">@ExecutionSummary?.StartTime.ToLocalTime().ToString("HH:mm:ss")</div>
         </div>
         <div class="stat place-items-center place-content-center bg-neutral">
