@@ -261,11 +261,12 @@ namespace DFrame
 
         async void IWorkerReceiver.CreateWorkloadAndSetup(ExecutionId executionId, int createCount, string workloadName, KeyValuePair<string, string>[] parameters)
         {
+            ThreadPoolUtility.SetMinThread(createCount * options.VirtualProcess * 2);
+
             var currentExecutionToken = executionToken;
             try
             {
                 logger.LogInformation($"Creating {createCount} workload(s) of '{workloadName}', executionId: {executionId}");
-                ThreadPoolUtility.SetMinThread(createCount);
                 if (!workloadCollection.TryGetWorkload(workloadName, out var description))
                 {
                     throw new InvalidOperationException($"Workload:{workloadName} does not found in assembly.");

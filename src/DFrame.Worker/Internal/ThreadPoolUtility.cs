@@ -7,13 +7,19 @@ namespace DFrame.Internal
     {
         internal static void SetMinThread(int threadCount)
         {
-            ThreadPool.GetMinThreads(out var worker, out var completion);
-            if (threadCount == worker && threadCount == completion)
+            ThreadPool.GetMinThreads(out var minWorker, out var minCompletion);
+            if (threadCount <= minWorker && threadCount <= minCompletion)
             {
                 return;
             }
 
-            ThreadPool.SetMinThreads(Math.Max(worker, threadCount), Math.Max(worker, completion));
+            ThreadPool.GetMaxThreads(out var maxWorker, out var maxCompletion);
+            if (maxWorker < threadCount || maxCompletion < threadCount)
+            {
+                ThreadPool.SetMaxThreads(Math.Max(maxWorker, threadCount), Math.Max(maxCompletion, threadCount));
+            }
+
+            ThreadPool.SetMinThreads(Math.Max(minWorker, threadCount), Math.Max(minWorker, minCompletion));
         }
     }
 }
