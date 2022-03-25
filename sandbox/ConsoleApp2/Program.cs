@@ -42,3 +42,21 @@ public class SampleAppForDIAndParameter : Workload
         logger.LogInformation("Execute:" + message);
     }
 }
+
+public class EnumWorkload : Workload
+{
+    public EnumWorkload(FOo foo, FOo? fooooo)
+    {
+
+    }
+
+    public override Task ExecuteAsync(WorkloadContext context)
+    {
+        return Task.CompletedTask;
+    }
+}
+
+public enum FOo
+{
+    A, B, C
+}

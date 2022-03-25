@@ -179,10 +179,6 @@ namespace DFrame
                 {
                     var name = p.Name;
                     var enumNames = Array.Empty<string>();
-                    if (p.ParameterType.IsEnum)
-                    {
-                        enumNames = Enum.GetNames(p.ParameterType);
-                    }
 
                     var elementType = p.ParameterType;
                     var parameterType = ConvertToAllowParameterType(ref elementType, out var isNullable, out var isArray);
@@ -192,6 +188,11 @@ namespace DFrame
                     }
 
                     var enumTypeName = (parameterType == AllowParameterType.Enum) ? elementType.Name : null;
+                    if (parameterType == AllowParameterType.Enum)
+                    {
+                        enumNames = Enum.GetNames(elementType);
+                    }
+
                     var defaultValue = p.HasDefaultValue ? p.DefaultValue : null;
                     if (parameterType == AllowParameterType.Enum && p.HasDefaultValue)
                     {
