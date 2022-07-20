@@ -14,7 +14,6 @@ on:
 
 env:
   GIT_TAG: ${{ github.event.inputs.tag }}
-  DRY_RUN: ${{ github.event.inputs.dry-run }}
 
 jobs:
   update-packagejson:
@@ -57,7 +56,7 @@ jobs:
     secrets: inherit
 
   create-release:
-    if: github.event.inputs.dry_run == 'false'
+    if: github.event.inputs.dry-run == 'false'
     needs: [update-packagejson, build-dotnet, build-unity]
     runs-on: ubuntu-latest
     env:
@@ -90,7 +89,7 @@ jobs:
           asset_content_type: application/octet-stream
 
   cleanup:
-    if: github.event.inputs.dry_run == 'true'
+    if: github.event.inputs.dry-run == 'true'
     needs: [update-packagejson, build-dotnet, build-unity]
     uses: Cysharp/Actions/.github/workflows/clean-packagejson-branch.yaml@main
     with:
