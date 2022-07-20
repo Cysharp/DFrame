@@ -8,6 +8,7 @@
 
 		<!-- NuGet Packaging -->
 		<SignAssembly>true</SignAssembly>
+		<IsPackable>true</IsPackable>
 	</PropertyGroup>
 
 	<ItemGroup>
