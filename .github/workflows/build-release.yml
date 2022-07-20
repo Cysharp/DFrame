@@ -18,7 +18,7 @@ env:
 
 jobs:
   update-packagejson:
-    uses: Cysharp/Actions/.github/workflows/update-packagejson.yaml@update
+    uses: Cysharp/Actions/.github/workflows/update-packagejson.yaml@main
     with:
       file-path: ./src/DFrame.Unity/Assets/Plugins/DFrame/package.json
       tag: ${{ github.event.inputs.tag }}
