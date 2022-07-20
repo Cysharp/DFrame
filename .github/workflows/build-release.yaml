@@ -38,6 +38,7 @@ jobs:
     with:
       ref: ${{ needs.update-packagejson.outputs.sha }}
       version: ${{ github.event.inputs.tag }}
+    secrets: inherit
 
   create-release:
     if: github.event.inputs.dry_run == 'false'
