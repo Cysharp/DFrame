@@ -1,0 +1,63 @@
+name: (R) build-dotnet
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: "github ref to build"
+        required: true
+        type: string
+        default: ""
+      config:
+        description: "dotnet build config (Debug|Release)"
+        required: true
+        type: string # cannot use choice
+        default: "Debug"
+      version:
+        description: "build artifact version."
+        required: true
+        type: string
+        default: ""
+
+jobs:
+  build-dotnet:
+    needs: [update-packagejson]
+    runs-on: ubuntu-latest
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+      NUGET_XMLDOC_MODE: skip
+    steps:
+      # VERSION_ARGS = -p:Version=1.0.0
+      - name: Configure Environment Variables
+        run: |
+          echo "CHECKOUT_REF=${{ inputs.ref }}" | tee -a "$GITHUB_ENV"
+          echo "BUILD_CONFIG=${{ inputs.config }}" | tee -a "$GITHUB_ENV"
+          echo "VERSION_ARGS=${{ inputs.version != '' && format('-p:Version={0}', inputs.version) || '' }}" | tee -a "$GITHUB_ENV"
+
+      - name: Showing checkout ref
+        run: echo "${{ env.CHECKOUT_REF }}"
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ env.CHECKOUT_REF }}
+
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 6.0.x
+      - run: dotnet build -c ${{ env.BUILD_CONFIG }} ${{ env.VERSION_ARGS }}
+      # - run: dotnet test -c Release --no-build
+
+      # pack nuget
+      - run: dotnet pack ./src/DFrame/DFrame.csproj -c ${{ env.BUILD_CONFIG }} --no-build ${{ env.VERSION_ARGS }} -o ./publish
+        if: ${{ env.VERSION_ARGS != '' }}
+      - run: dotnet pack ./src/DFrame.Controller/DFrame.Controller.csproj -c ${{ env.BUILD_CONFIG }} --no-build ${{ env.VERSION_ARGS }} -o ./publish
+        if: ${{ env.VERSION_ARGS != '' }}
+      - run: dotnet pack ./src/DFrame.Worker/DFrame.Worker.csproj -c ${{ env.BUILD_CONFIG }} --no-build ${{ env.VERSION_ARGS }} -o ./publish
+        if: ${{ env.VERSION_ARGS != '' }}
+      - run: dotnet pack ./src/DFrame.RestSdk/DFrame.RestSdk.csproj -c ${{ env.BUILD_CONFIG }} --no-build ${{ env.VERSION_ARGS }} -o ./publish
+        if: ${{ env.VERSION_ARGS != '' }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: nuget
+          path: ./publish
+        if: ${{ env.VERSION_ARGS != '' }}
