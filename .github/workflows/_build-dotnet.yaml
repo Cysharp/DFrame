@@ -5,17 +5,17 @@ on:
     inputs:
       ref:
         description: "github ref to build"
-        required: true
+        required: false
         type: string
         default: ""
       config:
         description: "dotnet build config (Debug|Release)"
-        required: true
+        required: false
         type: string # cannot use choice
         default: "Debug"
       version:
         description: "build artifact version."
-        required: true
+        required: false
         type: string
         default: ""
 
