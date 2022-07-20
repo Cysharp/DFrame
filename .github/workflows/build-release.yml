@@ -6,7 +6,7 @@ on:
       tag:
         description: "tag: git tag you want create. (sample 1.0.0)"
         required: true
-      dry_run:
+      dry-run:
         description: "dry_run: true will never create release/nuget."
         required: true
         default: false
@@ -14,7 +14,7 @@ on:
 
 env:
   GIT_TAG: ${{ github.event.inputs.tag }}
-  DRY_RUN: ${{ github.event.inputs.dry_run }}
+  DRY_RUN: ${{ github.event.inputs.dry-run }}
 
 jobs:
   update-packagejson:
@@ -22,7 +22,7 @@ jobs:
     with:
       file-path: ./src/DFrame.Unity/Assets/Plugins/DFrame/package.json
       tag: ${{ github.event.inputs.tag }}
-      dry-run: ${{ github.event.inputs.dry_run }}
+      dry-run: ${{ fromJson(github.event.inputs.dry-run) }}
 
   build-dotnet:
     needs: [update-packagejson]
