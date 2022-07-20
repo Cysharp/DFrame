@@ -17,4 +17,4 @@ jobs:
 
   build-unity:
     if: "((github.event_name == 'push' && github.repository_owner == 'Cysharp') || startsWith(github.event.pull_request.head.label, 'Cysharp:'))"
-    uses: ./.github/workflows/_build-dotnet.yaml
+    uses: ./.github/workflows/_build-unity.yaml

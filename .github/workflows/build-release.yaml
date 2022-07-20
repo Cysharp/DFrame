@@ -34,7 +34,7 @@ jobs:
 
   build-unity:
     needs: [update-packagejson]
-    uses: ./.github/workflows/_build-dotnet.yaml
+    uses: ./.github/workflows/_build-unity.yaml
     with:
       ref: ${{ needs.update-packagejson.outputs.sha }}
       version: ${{ github.event.inputs.tag }}
