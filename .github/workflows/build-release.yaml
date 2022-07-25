@@ -26,18 +26,12 @@ jobs:
   build-dotnet:
     needs: [update-packagejson]
     runs-on: ubuntu-latest
-    env:
-      DOTNET_CLI_TELEMETRY_OPTOUT: 1
-      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
-      NUGET_XMLDOC_MODE: skip
     steps:
       - run: echo ${{ needs.update-packagejson.outputs.sha }}
       - uses: actions/checkout@v3
         with:
           ref: ${{ needs.update-packagejson.outputs.sha }}
-      - uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: 6.0.x
+      - uses: Cysharp/Actions/.github/actions/setup-dotnet
       # pack nuget
       - run: dotnet build -c Release -p:Version=${{ env.GIT_TAG }}
       # - run: dotnet test -c Release --no-build
@@ -49,21 +43,48 @@ jobs:
 
   build-unity:
     needs: [update-packagejson]
-    uses: ./.github/workflows/_build-unity.yaml
-    with:
-      ref: ${{ needs.update-packagejson.outputs.sha }}
-      version: ${{ github.event.inputs.tag }}
-    secrets: inherit
+    strategy:
+      matrix:
+        unity: ["2020.3.29f1"]
+        include:
+          - unity: 2020.3.29f1
+            license: UNITY_LICENSE_2020
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ${{ needs.update-packagejson.outputs.sha }}
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ needs.update-packagejson.outputs.sha }}
+
+      # Execute scripts: Export Package
+      #  /opt/Unity/Editor/Unity -quit -batchmode -nographics -silent-crashes -logFile -projectPath . -executeMethod PackageExporter.Export
+      - name: Export unitypackage
+        uses: game-ci/unity-builder@v2.0
+        env:
+          UNITY_LICENSE: ${{ secrets[matrix.license] }}
+        with:
+          projectPath: src/DFrame.Unity
+          unityVersion: ${{ matrix.unity }}
+          targetPlatform: StandaloneLinux64
+          buildMethod: PackageExporter.Export
+          versioning: None
+
+      - uses: Cysharp/Actions/.github/actions/check-metas # check meta files
+        with:
+          directory: src/DFrame.Unity
+
+      # Store artifacts.
+      - uses: actions/upload-artifact@v2
+        with:
+          name: DFrame.Unity.${{ env.GIT_TAG }}.unitypackage
+          path: ./src/DFrame.Unity/*.unitypackage
 
   create-release:
     if: github.event.inputs.dry-run == 'false'
     needs: [update-packagejson, build-dotnet, build-unity]
     runs-on: ubuntu-latest
-    env:
-      DOTNET_CLI_TELEMETRY_OPTOUT: 1
-      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
-      NUGET_XMLDOC_MODE: skip
     steps:
+      - uses: Cysharp/Actions/.github/actions/setup-dotnet
       # Create Releases
       - uses: actions/create-release@v1
         id: create_release
@@ -74,7 +95,6 @@ jobs:
           release_name: Ver.${{ env.GIT_TAG }}
           draft: true
           prerelease: false
-      # Download (All) Artifacts to current directory
       - uses: actions/download-artifact@v2
       # Upload to NuGet
       - run: dotnet nuget push "./nuget/*.nupkg" -s https://www.nuget.org/api/v2/package -k ${{ secrets.NUGET_KEY }}
