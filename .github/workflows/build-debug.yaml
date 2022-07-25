@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: Cysharp/Actions/.github/actions/setup-dotnet
+      - uses: Cysharp/Actions/.github/actions/setup-dotnet@main
       - run: dotnet build -c Debug
       #- run: dotnet test -c Debug --no-build
 
@@ -44,7 +44,7 @@ jobs:
           buildMethod: PackageExporter.Export
           versioning: None
 
-      - uses: Cysharp/Actions/.github/actions/check-metas # check meta files
+      - uses: Cysharp/Actions/.github/actions/check-metas@main # check meta files
         with:
           directory: src/DFrame.Unity
 
