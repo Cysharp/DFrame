@@ -14,7 +14,6 @@ on:
 
 env:
   GIT_TAG: ${{ github.event.inputs.tag }}
-  DRY_RUN: ${{ github.event.inputs.dry-run }}
 
 jobs:
   update-packagejson:
@@ -27,25 +26,16 @@ jobs:
   build-dotnet:
     needs: [update-packagejson]
     runs-on: ubuntu-latest
-    env:
-      DOTNET_CLI_TELEMETRY_OPTOUT: 1
-      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
-      NUGET_XMLDOC_MODE: skip
     steps:
       - run: echo ${{ needs.update-packagejson.outputs.sha }}
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: ${{ needs.update-packagejson.outputs.sha }}
-      - uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: 6.0.x
+      - uses: Cysharp/Actions/.github/actions/setup-dotnet@main
       # pack nuget
       - run: dotnet build -c Release -p:Version=${{ env.GIT_TAG }}
       # - run: dotnet test -c Release --no-build
-      - run: dotnet pack ./src/DFrame/DFrame.csproj -c Release --no-build -p:Version=${{ env.GIT_TAG }} -o ./publish
-      - run: dotnet pack ./src/DFrame.Controller/DFrame.Controller.csproj -c Release --no-build -p:Version=${{ env.GIT_TAG }} -o ./publish
-      - run: dotnet pack ./src/DFrame.Worker/DFrame.Worker.csproj -c Release --no-build -p:Version=${{ env.GIT_TAG }} -o ./publish
-      - run: dotnet pack ./src/DFrame.RestSdk/DFrame.RestSdk.csproj -c Release --no-build -p:Version=${{ env.GIT_TAG }} -o ./publish
+      - run: dotnet pack -c Release --no-build -p:Version=${{ env.GIT_TAG }} -o ./publish
       - uses: actions/upload-artifact@v2
         with:
           name: nuget
@@ -62,13 +52,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo ${{ needs.update-packagejson.outputs.sha }}
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: ${{ needs.update-packagejson.outputs.sha }}
+
       # Execute scripts: Export Package
       #  /opt/Unity/Editor/Unity -quit -batchmode -nographics -silent-crashes -logFile -projectPath . -executeMethod PackageExporter.Export
       - name: Export unitypackage
-        uses: game-ci/unity-builder@v2.0-alpha-6
+        uses: game-ci/unity-builder@v2
         env:
           UNITY_LICENSE: ${{ secrets[matrix.license] }}
         with:
@@ -78,15 +69,9 @@ jobs:
           buildMethod: PackageExporter.Export
           versioning: None
 
-      - name: check all .meta is commited
-        run: |
-          if git ls-files --others --exclude-standard -t | grep --regexp='[.]meta$'; then
-            echo "Detected .meta file generated. Do you forgot commit a .meta file?"
-            exit 1
-          else
-            echo "Great, all .meta files are commited."
-          fi
-        working-directory: src/DFrame.Unity
+      - uses: Cysharp/Actions/.github/actions/check-metas@main # check meta files
+        with:
+          directory: src/DFrame.Unity
 
       # Store artifacts.
       - uses: actions/upload-artifact@v2
@@ -95,14 +80,11 @@ jobs:
           path: ./src/DFrame.Unity/*.unitypackage
 
   create-release:
-    if: github.event.inputs.dry_run == 'false'
+    if: github.event.inputs.dry-run == 'false'
     needs: [update-packagejson, build-dotnet, build-unity]
     runs-on: ubuntu-latest
-    env:
-      DOTNET_CLI_TELEMETRY_OPTOUT: 1
-      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
-      NUGET_XMLDOC_MODE: skip
     steps:
+      - uses: Cysharp/Actions/.github/actions/setup-dotnet@main
       # Create Releases
       - uses: actions/create-release@v1
         id: create_release
@@ -113,7 +95,6 @@ jobs:
           release_name: Ver.${{ env.GIT_TAG }}
           draft: true
           prerelease: false
-      # Download (All) Artifacts to current directory
       - uses: actions/download-artifact@v2
       # Upload to NuGet
       - run: dotnet nuget push "./nuget/*.nupkg" -s https://www.nuget.org/api/v2/package -k ${{ secrets.NUGET_KEY }}
@@ -128,12 +109,8 @@ jobs:
           asset_content_type: application/octet-stream
 
   cleanup:
-    if: github.event.inputs.dry_run == 'true'
-    needs: [build-dotnet, build-unity]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Delete branch
-        uses: dawidd6/action-delete-branch@v3
-        with:
-          github_token: ${{ github.token }}
-          branches: ${{ env.DRY_RUN_BRANCH_PREFIX }}-${{ env.GIT_TAG }}
+    if: needs.update-packagejson.outputs.is-branch-created == 'true'
+    needs: [update-packagejson, build-dotnet, build-unity]
+    uses: Cysharp/Actions/.github/workflows/clean-packagejson-branch.yaml@main
+    with:
+      branch: ${{ needs.update-packagejson.outputs.branch-name }}

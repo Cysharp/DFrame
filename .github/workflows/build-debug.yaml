@@ -14,19 +14,12 @@ on:
 jobs:
   build-dotnet:
     runs-on: ubuntu-latest
-    env:
-      DOTNET_CLI_TELEMETRY_OPTOUT: 1
-      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
-      NUGET_XMLDOC_MODE: skip
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: 6.0.x
-      # build src
+      - uses: actions/checkout@v3
+      - uses: Cysharp/Actions/.github/actions/setup-dotnet@main
       - run: dotnet build -c Debug
-      # tests
-      #- run: dotnet test -c Debug --no-build ./tests/DFrame.Tests/DFrame.Tests.csproj
+      #- run: dotnet test -c Debug --no-build
+
   build-unity:
     if: "((github.event_name == 'push' && github.repository_owner == 'Cysharp') || startsWith(github.event.pull_request.head.label, 'Cysharp:'))"
     strategy:
@@ -37,11 +30,11 @@ jobs:
             license: UNITY_LICENSE_2020
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       # Execute scripts: Export Package
       #  /opt/Unity/Editor/Unity -quit -batchmode -nographics -silent-crashes -logFile -projectPath . -executeMethod PackageExporter.Export
       - name: Export unitypackage
-        uses: game-ci/unity-builder@v2.0-alpha-6
+        uses: game-ci/unity-builder@v2
         env:
           UNITY_LICENSE: ${{ secrets[matrix.license] }}
         with:
@@ -51,18 +44,12 @@ jobs:
           buildMethod: PackageExporter.Export
           versioning: None
 
-      - name: check all .meta is commited
-        run: |
-          if git ls-files --others --exclude-standard -t | grep --regexp='[.]meta$'; then
-            echo "Detected .meta file generated. Do you forgot commit a .meta file?"
-            exit 1
-          else
-            echo "Great, all .meta files are commited."
-          fi
-        working-directory: src/DFrame.Unity
+      - uses: Cysharp/Actions/.github/actions/check-metas@main # check meta files
+        with:
+          directory: src/DFrame.Unity
 
       # Store artifacts.
       - uses: actions/upload-artifact@v2
         with:
-          name: DFrame.unitypackage-${{ matrix.unity }}.zip
+          name: DFrame.Unity.${{ matrix.unity }}.unitypackage
           path: ./src/DFrame.Unity/*.unitypackage
