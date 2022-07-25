@@ -59,7 +59,7 @@ jobs:
       # Execute scripts: Export Package
       #  /opt/Unity/Editor/Unity -quit -batchmode -nographics -silent-crashes -logFile -projectPath . -executeMethod PackageExporter.Export
       - name: Export unitypackage
-        uses: game-ci/unity-builder@v2.0
+        uses: game-ci/unity-builder@v2
         env:
           UNITY_LICENSE: ${{ secrets[matrix.license] }}
         with:
@@ -109,7 +109,7 @@ jobs:
           asset_content_type: application/octet-stream
 
   cleanup:
-    if: github.event.inputs.dry-run == 'true'
+    if: needs.update-packagejson.outputs.is-branch-created == 'true'
     needs: [update-packagejson, build-dotnet, build-unity]
     uses: Cysharp/Actions/.github/workflows/clean-packagejson-branch.yaml@main
     with:
