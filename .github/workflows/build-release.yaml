@@ -26,6 +26,7 @@ jobs:
   build-dotnet:
     needs: [update-packagejson]
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - run: echo ${{ needs.update-packagejson.outputs.sha }}
       - uses: actions/checkout@v3
@@ -50,6 +51,7 @@ jobs:
           - unity: 2020.3.29f1
             license: UNITY_LICENSE_2020
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - run: echo ${{ needs.update-packagejson.outputs.sha }}
       - uses: actions/checkout@v3
@@ -83,6 +85,7 @@ jobs:
     if: github.event.inputs.dry-run == 'false'
     needs: [update-packagejson, build-dotnet, build-unity]
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: Cysharp/Actions/.github/actions/setup-dotnet@main
       # Create Releases
