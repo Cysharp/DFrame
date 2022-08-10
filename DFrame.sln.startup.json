@@ -10,10 +10,10 @@
   "ListAllProjects": true,
 
   "MultiProjectConfigurations": {
-    "DFrame.Controller + ConsoleApp2 + MinimalEcho": {
+    "ConsoleController + ConsoleApp2 + MinimalEcho": {
       "Projects": {
         "ConsoleApp2": {},
-        "DFrame.Controller": {},
+        "ConsoleController": {},
         "MinimalEcho": {}
       }
     }
