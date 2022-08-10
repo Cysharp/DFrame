@@ -276,7 +276,7 @@ namespace DFrame
                 for (int i = 0; i < createCount; i++)
                 {
                     var workload = description.Activator.Value.Invoke(serviceProvider, description.CrateArgument(parameters));
-                    var t = (new WorkloadContext(createCount, i, workloadLifeTime!.Token), (Workload)workload);
+                    var t = (new WorkloadContext(executionId, createCount, i, workloadLifeTime!.Token), (Workload)workload);
                     workloads.Add(t);
                 }
 
