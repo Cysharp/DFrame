@@ -380,6 +380,7 @@ It can check on `...` drawer on each worker result.
 public class WorkloadContext
 {
     public WorkloadId WorkloadId { get; }
+    public WorkloadId WorkloadId { get; }
     public int WorkloadCount { get; }
     public int WorkloadIndex { get; }
     public CancellationToken CancellationToken { get; }
