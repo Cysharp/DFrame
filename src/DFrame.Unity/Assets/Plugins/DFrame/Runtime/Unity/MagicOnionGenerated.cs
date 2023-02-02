@@ -142,7 +142,7 @@ namespace DFrame.Resolvers
             lookup = new global::System.Collections.Generic.Dictionary<global::System.Type, int>(7)
             {
                 {typeof(global::DFrame.WorkloadInfo[]), 0 },
-                {typeof(global::MagicOnion.DynamicArgumentTuple<global::DFrame.ExecutionId, global::System.Int32, global::System.String, global::System.Collections.Generic.KeyValuePair<global::System.String, global::System.String>[]>), 1 },
+                {typeof(global::MagicOnion.DynamicArgumentTuple<global::DFrame.ExecutionId, global::System.Int32, global::System.Int32, global::System.Int64, global::System.String, global::System.Collections.Generic.KeyValuePair<global::System.String, global::System.String>[]>), 1 },
                 {typeof(global::MagicOnion.DynamicArgumentTuple<global::DFrame.WorkloadInfo[], global::System.Collections.Generic.Dictionary<global::System.String, global::System.String>>), 2 },
                 {typeof(global::System.Collections.Generic.Dictionary<global::DFrame.WorkloadId, global::System.Collections.Generic.Dictionary<global::System.String, global::System.String>>), 3 },
                 {typeof(global::System.Collections.Generic.Dictionary<global::System.String, global::System.String>), 4 },
@@ -161,7 +161,7 @@ namespace DFrame.Resolvers
             switch (key)
             {
                 case 0: return new global::MessagePack.Formatters.ArrayFormatter<global::DFrame.WorkloadInfo>();
-                case 1: return new global::MagicOnion.DynamicArgumentTupleFormatter<global::DFrame.ExecutionId, global::System.Int32, global::System.String, global::System.Collections.Generic.KeyValuePair<global::System.String, global::System.String>[]>(default(global::DFrame.ExecutionId), default(global::System.Int32), default(global::System.String), default(global::System.Collections.Generic.KeyValuePair<global::System.String, global::System.String>[]));
+                case 1: return new global::MagicOnion.DynamicArgumentTupleFormatter<global::DFrame.ExecutionId, global::System.Int32, global::System.Int32, global::System.Int64, global::System.String, global::System.Collections.Generic.KeyValuePair<global::System.String, global::System.String>[]>(default(global::DFrame.ExecutionId), default(global::System.Int32), default(global::System.Int32), default(global::System.Int64), default(global::System.String), default(global::System.Collections.Generic.KeyValuePair<global::System.String, global::System.String>[]));
                 case 2: return new global::MagicOnion.DynamicArgumentTupleFormatter<global::DFrame.WorkloadInfo[], global::System.Collections.Generic.Dictionary<global::System.String, global::System.String>>(default(global::DFrame.WorkloadInfo[]), default(global::System.Collections.Generic.Dictionary<global::System.String, global::System.String>));
                 case 3: return new global::MessagePack.Formatters.DictionaryFormatter<global::DFrame.WorkloadId, global::System.Collections.Generic.Dictionary<global::System.String, global::System.String>>();
                 case 4: return new global::MessagePack.Formatters.DictionaryFormatter<global::System.String, global::System.String>();
@@ -270,10 +270,10 @@ namespace DFrame
         {
             switch (methodId)
             {
-                case 984740550: // Void CreateWorkloadAndSetup(global::DFrame.ExecutionId executionId, global::System.Int32 createCount, global::System.String workloadName, global::System.Collections.Generic.KeyValuePair<global::System.String, global::System.String>[] parameters)
+                case 984740550: // Void CreateWorkloadAndSetup(global::DFrame.ExecutionId executionId, global::System.Int32 createCount, global::System.Int32 concurrency, global::System.Int64 totalRequestCount, global::System.String workloadName, global::System.Collections.Generic.KeyValuePair<global::System.String, global::System.String>[] parameters)
                     {
-                        var value = base.Deserialize<global::MagicOnion.DynamicArgumentTuple<global::DFrame.ExecutionId, global::System.Int32, global::System.String, global::System.Collections.Generic.KeyValuePair<global::System.String, global::System.String>[]>>(data);
-                        receiver.CreateWorkloadAndSetup(value.Item1, value.Item2, value.Item3, value.Item4);
+                        var value = base.Deserialize<global::MagicOnion.DynamicArgumentTuple<global::DFrame.ExecutionId, global::System.Int32, global::System.Int32, global::System.Int64, global::System.String, global::System.Collections.Generic.KeyValuePair<global::System.String, global::System.String>[]>>(data);
+                        receiver.CreateWorkloadAndSetup(value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6);
                     }
                     break;
                 case 650159416: // Void Execute(global::System.Int64[] executeCount)
