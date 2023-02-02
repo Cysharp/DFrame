@@ -259,7 +259,7 @@ namespace DFrame
             logger.LogInformation($"Connect completed.");
         }
 
-        async void IWorkerReceiver.CreateWorkloadAndSetup(ExecutionId executionId, int createCount, string workloadName, KeyValuePair<string, string>[] parameters)
+        async void IWorkerReceiver.CreateWorkloadAndSetup(ExecutionId executionId, int createCount, int concurrency, long totalRequestCount, string workloadName, KeyValuePair<string, string>[] parameters)
         {
             ThreadPoolUtility.SetMinThread(createCount * options.VirtualProcess * 2);
 
@@ -276,7 +276,7 @@ namespace DFrame
                 for (int i = 0; i < createCount; i++)
                 {
                     var workload = description.Activator.Value.Invoke(serviceProvider, description.CrateArgument(parameters));
-                    var t = (new WorkloadContext(executionId, createCount, i, workloadLifeTime!.Token), (Workload)workload);
+                    var t = (new WorkloadContext(executionId, createCount, i, concurrency, totalRequestCount, workloadLifeTime!.Token), (Workload)workload);
                     workloads.Add(t);
                 }
 
