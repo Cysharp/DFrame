@@ -13,6 +13,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using MagicOnion.Serialization;
 
 namespace DFrame
 {
@@ -242,13 +243,13 @@ namespace DFrame
 
             var callInvoker = channel.CreateCallInvoker();
             var callOption = new CallOptions(new Metadata { { "worker-id", workerId.ToString() } });
-            var connectTask = StreamingHubClient.ConnectAsync<IControllerHub, IWorkerReceiver>(callInvoker, this, option: callOption, serializerOptions:
+            var connectTask = StreamingHubClient.ConnectAsync<IControllerHub, IWorkerReceiver>(callInvoker, this, option: callOption, serializerProvider: MessagePackMagicOnionSerializerProvider.Default.WithOptions(
 #if UNITY_2020_1_OR_NEWER
                 DFrameResolver.Options
 #else
                 MessagePackSerializerOptions.Standard
 #endif
-            );
+            ));
             client = await connectTask.WaitAsync(connectTimeout);
 
             this.connectionLifeTime = CancellationTokenSource.CreateLinkedTokenSource(client!.WaitForDisconnect().ToCancellationToken(), applicationLifeTime);

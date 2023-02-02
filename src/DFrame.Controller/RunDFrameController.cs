@@ -1,6 +1,8 @@
 ﻿using DFrame.Controller;
 using DFrame.Internal;
+using MagicOnion.Serialization;
 using MagicOnion.Server;
+using MagicOnion.Server.Diagnostics;
 using MessagePack;
 using MessagePipe;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
@@ -38,7 +40,7 @@ public static class DFrameControllerWebApplicationBuilderExtensions
             services.AddMagicOnion(x =>
             {
                 // Should use same options between DFrame.Controller(this) and DFrame.Worker
-                x.SerializerOptions = MessagePackSerializerOptions.Standard;
+                x.MessageSerializer = MessagePackMagicOnionSerializerProvider.Default;
             });
             services.AddSingleton<IMagicOnionLogger, MagicOnionLogToLogger>();
 

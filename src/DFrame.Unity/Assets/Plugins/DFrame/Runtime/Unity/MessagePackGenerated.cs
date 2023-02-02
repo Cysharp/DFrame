@@ -6,15 +6,13 @@
 #pragma warning disable 612
 #pragma warning disable 414
 #pragma warning disable 168
+#pragma warning disable CS1591 // document public APIs
 
-#pragma warning disable SA1200 // Using directives should be placed correctly
 #pragma warning disable SA1312 // Variable names should begin with lower-case letter
 #pragma warning disable SA1649 // File name should match first type name
 
 namespace DFrame.Resolvers
 {
-    using System;
-
     public class GeneratedResolver : global::MessagePack.IFormatterResolver
     {
         public static readonly global::MessagePack.IFormatterResolver Instance = new GeneratedResolver();
@@ -45,11 +43,11 @@ namespace DFrame.Resolvers
 
     internal static class GeneratedResolverGetFormatterHelper
     {
-        private static readonly global::System.Collections.Generic.Dictionary<Type, int> lookup;
+        private static readonly global::System.Collections.Generic.Dictionary<global::System.Type, int> lookup;
 
         static GeneratedResolverGetFormatterHelper()
         {
-            lookup = new global::System.Collections.Generic.Dictionary<Type, int>(6)
+            lookup = new global::System.Collections.Generic.Dictionary<global::System.Type, int>(6)
             {
                 { typeof(global::DFrame.WorkloadParameterInfo[]), 0 },
                 { typeof(global::DFrame.AllowParameterType), 1 },
@@ -60,7 +58,7 @@ namespace DFrame.Resolvers
             };
         }
 
-        internal static object GetFormatter(Type t)
+        internal static object GetFormatter(global::System.Type t)
         {
             int key;
             if (!lookup.TryGetValue(t, out key))
@@ -88,7 +86,6 @@ namespace DFrame.Resolvers
 #pragma warning restore 612
 
 #pragma warning restore SA1312 // Variable names should begin with lower-case letter
-#pragma warning restore SA1200 // Using directives should be placed correctly
 #pragma warning restore SA1649 // File name should match first type name
 
 
@@ -100,25 +97,22 @@ namespace DFrame.Resolvers
 #pragma warning disable 612
 #pragma warning disable 414
 #pragma warning disable 168
+#pragma warning disable CS1591 // document public APIs
 
-#pragma warning disable SA1200 // Using directives should be placed correctly
 #pragma warning disable SA1403 // File may only contain a single namespace
 #pragma warning disable SA1649 // File name should match first type name
 
 namespace DFrame.Formatters.DFrame
 {
-    using System;
-    using System.Buffers;
-    using MessagePack;
 
     public sealed class AllowParameterTypeFormatter : global::MessagePack.Formatters.IMessagePackFormatter<global::DFrame.AllowParameterType>
     {
-        public void Serialize(ref MessagePackWriter writer, global::DFrame.AllowParameterType value, global::MessagePack.MessagePackSerializerOptions options)
+        public void Serialize(ref global::MessagePack.MessagePackWriter writer, global::DFrame.AllowParameterType value, global::MessagePack.MessagePackSerializerOptions options)
         {
-            writer.Write((Int32)value);
+            writer.Write((global::System.Int32)value);
         }
 
-        public global::DFrame.AllowParameterType Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
+        public global::DFrame.AllowParameterType Deserialize(ref global::MessagePack.MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
         {
             return (global::DFrame.AllowParameterType)reader.ReadInt32();
         }
@@ -130,7 +124,6 @@ namespace DFrame.Formatters.DFrame
 #pragma warning restore 618
 #pragma warning restore 612
 
-#pragma warning restore SA1200 // Using directives should be placed correctly
 #pragma warning restore SA1403 // File may only contain a single namespace
 #pragma warning restore SA1649 // File name should match first type name
 
@@ -144,9 +137,9 @@ namespace DFrame.Formatters.DFrame
 #pragma warning disable 612
 #pragma warning disable 414
 #pragma warning disable 168
+#pragma warning disable CS1591 // document public APIs
 
 #pragma warning disable SA1129 // Do not use default value type constructor
-#pragma warning disable SA1200 // Using directives should be placed correctly
 #pragma warning disable SA1309 // Field names should not begin with underscore
 #pragma warning disable SA1312 // Variable names should begin with lower-case letter
 #pragma warning disable SA1403 // File may only contain a single namespace
@@ -154,9 +147,6 @@ namespace DFrame.Formatters.DFrame
 
 namespace DFrame.Formatters.DFrame
 {
-    using global::System.Buffers;
-    using global::MessagePack;
-
     public sealed class BatchedExecuteResultFormatter : global::MessagePack.Formatters.IMessagePackFormatter<global::DFrame.BatchedExecuteResult>
     {
 
@@ -170,8 +160,8 @@ namespace DFrame.Formatters.DFrame
 
             global::MessagePack.IFormatterResolver formatterResolver = options.Resolver;
             writer.WriteArrayHeader(2);
-            formatterResolver.GetFormatterWithVerify<global::DFrame.WorkloadId>().Serialize(ref writer, value.WorkloadId, options);
-            formatterResolver.GetFormatterWithVerify<global::DFrame.BatchList>().Serialize(ref writer, value.BatchedElapsed, options);
+            global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<global::DFrame.WorkloadId>(formatterResolver).Serialize(ref writer, value.WorkloadId, options);
+            global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<global::DFrame.BatchList>(formatterResolver).Serialize(ref writer, value.BatchedElapsed, options);
         }
 
         public global::DFrame.BatchedExecuteResult Deserialize(ref global::MessagePack.MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
@@ -192,10 +182,10 @@ namespace DFrame.Formatters.DFrame
                 switch (i)
                 {
                     case 0:
-                        __WorkloadId__ = formatterResolver.GetFormatterWithVerify<global::DFrame.WorkloadId>().Deserialize(ref reader, options);
+                        __WorkloadId__ = global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<global::DFrame.WorkloadId>(formatterResolver).Deserialize(ref reader, options);
                         break;
                     case 1:
-                        __BatchedElapsed__ = formatterResolver.GetFormatterWithVerify<global::DFrame.BatchList>().Deserialize(ref reader, options);
+                        __BatchedElapsed__ = global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<global::DFrame.BatchList>(formatterResolver).Deserialize(ref reader, options);
                         break;
                     default:
                         reader.Skip();
@@ -222,11 +212,11 @@ namespace DFrame.Formatters.DFrame
 
             global::MessagePack.IFormatterResolver formatterResolver = options.Resolver;
             writer.WriteArrayHeader(5);
-            formatterResolver.GetFormatterWithVerify<global::DFrame.WorkloadId>().Serialize(ref writer, value.WorkloadId, options);
-            formatterResolver.GetFormatterWithVerify<global::System.TimeSpan>().Serialize(ref writer, value.Elapsed, options);
+            global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<global::DFrame.WorkloadId>(formatterResolver).Serialize(ref writer, value.WorkloadId, options);
+            global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<global::System.TimeSpan>(formatterResolver).Serialize(ref writer, value.Elapsed, options);
             writer.Write(value.ExecutionNo);
             writer.Write(value.HasError);
-            formatterResolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.ErrorMessage, options);
+            global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<string>(formatterResolver).Serialize(ref writer, value.ErrorMessage, options);
         }
 
         public global::DFrame.ExecuteResult Deserialize(ref global::MessagePack.MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
@@ -250,10 +240,10 @@ namespace DFrame.Formatters.DFrame
                 switch (i)
                 {
                     case 0:
-                        __WorkloadId__ = formatterResolver.GetFormatterWithVerify<global::DFrame.WorkloadId>().Deserialize(ref reader, options);
+                        __WorkloadId__ = global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<global::DFrame.WorkloadId>(formatterResolver).Deserialize(ref reader, options);
                         break;
                     case 1:
-                        __Elapsed__ = formatterResolver.GetFormatterWithVerify<global::System.TimeSpan>().Deserialize(ref reader, options);
+                        __Elapsed__ = global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<global::System.TimeSpan>(formatterResolver).Deserialize(ref reader, options);
                         break;
                     case 2:
                         __ExecutionNo__ = reader.ReadInt64();
@@ -262,7 +252,7 @@ namespace DFrame.Formatters.DFrame
                         __HasError__ = reader.ReadBoolean();
                         break;
                     case 4:
-                        __ErrorMessage__ = formatterResolver.GetFormatterWithVerify<string>().Deserialize(ref reader, options);
+                        __ErrorMessage__ = global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<string>(formatterResolver).Deserialize(ref reader, options);
                         break;
                     default:
                         reader.Skip();
@@ -289,8 +279,8 @@ namespace DFrame.Formatters.DFrame
 
             global::MessagePack.IFormatterResolver formatterResolver = options.Resolver;
             writer.WriteArrayHeader(2);
-            formatterResolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.Name, options);
-            formatterResolver.GetFormatterWithVerify<global::DFrame.WorkloadParameterInfo[]>().Serialize(ref writer, value.Arguments, options);
+            global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<string>(formatterResolver).Serialize(ref writer, value.Name, options);
+            global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<global::DFrame.WorkloadParameterInfo[]>(formatterResolver).Serialize(ref writer, value.Arguments, options);
         }
 
         public global::DFrame.WorkloadInfo Deserialize(ref global::MessagePack.MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
@@ -311,10 +301,10 @@ namespace DFrame.Formatters.DFrame
                 switch (i)
                 {
                     case 0:
-                        __Name__ = formatterResolver.GetFormatterWithVerify<string>().Deserialize(ref reader, options);
+                        __Name__ = global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<string>(formatterResolver).Deserialize(ref reader, options);
                         break;
                     case 1:
-                        __Arguments__ = formatterResolver.GetFormatterWithVerify<global::DFrame.WorkloadParameterInfo[]>().Deserialize(ref reader, options);
+                        __Arguments__ = global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<global::DFrame.WorkloadParameterInfo[]>(formatterResolver).Deserialize(ref reader, options);
                         break;
                     default:
                         reader.Skip();
@@ -341,13 +331,13 @@ namespace DFrame.Formatters.DFrame
 
             global::MessagePack.IFormatterResolver formatterResolver = options.Resolver;
             writer.WriteArrayHeader(7);
-            formatterResolver.GetFormatterWithVerify<global::DFrame.AllowParameterType>().Serialize(ref writer, value.ParameterType, options);
+            global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<global::DFrame.AllowParameterType>(formatterResolver).Serialize(ref writer, value.ParameterType, options);
             writer.Write(value.IsNullable);
             writer.Write(value.IsArray);
-            formatterResolver.GetFormatterWithVerify<object>().Serialize(ref writer, value.DefaultValue, options);
-            formatterResolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.ParameterName, options);
-            formatterResolver.GetFormatterWithVerify<string[]>().Serialize(ref writer, value.EnumNames, options);
-            formatterResolver.GetFormatterWithVerify<string>().Serialize(ref writer, value.EnumTypeName, options);
+            global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<object>(formatterResolver).Serialize(ref writer, value.DefaultValue, options);
+            global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<string>(formatterResolver).Serialize(ref writer, value.ParameterName, options);
+            global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<string[]>(formatterResolver).Serialize(ref writer, value.EnumNames, options);
+            global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<string>(formatterResolver).Serialize(ref writer, value.EnumTypeName, options);
         }
 
         public global::DFrame.WorkloadParameterInfo Deserialize(ref global::MessagePack.MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
@@ -373,7 +363,7 @@ namespace DFrame.Formatters.DFrame
                 switch (i)
                 {
                     case 0:
-                        __ParameterType__ = formatterResolver.GetFormatterWithVerify<global::DFrame.AllowParameterType>().Deserialize(ref reader, options);
+                        __ParameterType__ = global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<global::DFrame.AllowParameterType>(formatterResolver).Deserialize(ref reader, options);
                         break;
                     case 1:
                         __IsNullable__ = reader.ReadBoolean();
@@ -382,16 +372,16 @@ namespace DFrame.Formatters.DFrame
                         __IsArray__ = reader.ReadBoolean();
                         break;
                     case 3:
-                        __DefaultValue__ = formatterResolver.GetFormatterWithVerify<object>().Deserialize(ref reader, options);
+                        __DefaultValue__ = global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<object>(formatterResolver).Deserialize(ref reader, options);
                         break;
                     case 4:
-                        __ParameterName__ = formatterResolver.GetFormatterWithVerify<string>().Deserialize(ref reader, options);
+                        __ParameterName__ = global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<string>(formatterResolver).Deserialize(ref reader, options);
                         break;
                     case 5:
-                        __EnumNames__ = formatterResolver.GetFormatterWithVerify<string[]>().Deserialize(ref reader, options);
+                        __EnumNames__ = global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<string[]>(formatterResolver).Deserialize(ref reader, options);
                         break;
                     case 6:
-                        __EnumTypeName__ = formatterResolver.GetFormatterWithVerify<string>().Deserialize(ref reader, options);
+                        __EnumTypeName__ = global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<string>(formatterResolver).Deserialize(ref reader, options);
                         break;
                     default:
                         reader.Skip();
@@ -404,6 +394,7 @@ namespace DFrame.Formatters.DFrame
             return ____result;
         }
     }
+
 }
 
 #pragma warning restore 168
@@ -412,7 +403,6 @@ namespace DFrame.Formatters.DFrame
 #pragma warning restore 612
 
 #pragma warning restore SA1129 // Do not use default value type constructor
-#pragma warning restore SA1200 // Using directives should be placed correctly
 #pragma warning restore SA1309 // Field names should not begin with underscore
 #pragma warning restore SA1312 // Variable names should begin with lower-case letter
 #pragma warning restore SA1403 // File may only contain a single namespace

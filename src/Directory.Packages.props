@@ -1,0 +1,15 @@
+<Project>
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageVersion Include="ConsoleAppFramework" Version="4.0.6" />
+        <PackageVersion Include="MagicOnion" Version="5.1.0" />
+        <PackageVersion Include="MagicOnion.Client" Version="5.1.0" />
+        <PackageVersion Include="MessagePack" Version="2.3.85" />
+        <PackageVersion Include="MessagePipe" Version="1.7.1" />
+        <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
+        <PackageVersion Include="ObservableCollections" Version="1.1.2" />
+        <PackageVersion Include="UnitGenerator" Version="1.4.7" />
+    </ItemGroup>
+</Project>
