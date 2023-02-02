@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MagicOnion.Client" Version="5.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Assets\Plugins\DFrame\Runtime\Unity\HubDefinitions.cs" />
+    <Compile Include="Assets\Plugins\DFrame\Runtime\Unity\UnitOGenerator.Generated.cs" />
+  </ItemGroup>
+
+</Project>
