@@ -45,7 +45,7 @@ namespace DFrame
 
     public interface IWorkerReceiver
     {
-        void CreateWorkloadAndSetup(ExecutionId executionId, int createCount, string workloadName, KeyValuePair<string, string>[] parameters);
+        void CreateWorkloadAndSetup(ExecutionId executionId, int createCount, int concurrency, long totalRequestCount, string workloadName, KeyValuePair<string, string>[] parameters);
         void Execute(long[] executeCount); // exec count per workload
         void Stop();
         void Teardown();
