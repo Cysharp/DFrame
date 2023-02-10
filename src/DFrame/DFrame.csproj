@@ -17,7 +17,7 @@
     </PropertyGroup>
     
     <ItemGroup>
-        <PackageReference Include="MagicOnion" Version="4.1.2" />
+        <PackageReference Include="MagicOnion" Version="5.1.2" />
         <PackageReference Include="ConsoleAppFramework" Version="4.0.4" />
         <PackageReference Include="ZLogger" Version="1.6.1" />
     </ItemGroup>

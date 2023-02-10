@@ -84,7 +84,7 @@ namespace EchoMagicOnion
         public UnaryResult<Nil> Echo(string message)
         {
             _logger.LogInformation($"Unary Recieved: {message}");
-            return UnaryResult(Nil.Default);
+            return UnaryResult.FromResult(Nil.Default);
         }
     }
 

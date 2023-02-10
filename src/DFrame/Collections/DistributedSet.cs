@@ -75,7 +75,7 @@ namespace DFrame.Collections
             var set = GetHashSet();
             lock (set)
             {
-                return UnaryResult(set.Add(item));
+                return UnaryResult.FromResult(set.Add(item));
             }
         }
 
@@ -89,7 +89,7 @@ namespace DFrame.Collections
                     set.Add(item);
                 }
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<Nil> ClearAsync()
@@ -99,7 +99,7 @@ namespace DFrame.Collections
             {
                 set.Clear();
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<bool> ContainsAsync(object item)
@@ -107,7 +107,7 @@ namespace DFrame.Collections
             var set = GetHashSet();
             lock (set)
             {
-                return UnaryResult(set.Contains(item));
+                return UnaryResult.FromResult(set.Contains(item));
             }
         }
 
@@ -118,7 +118,7 @@ namespace DFrame.Collections
             {
                 set.ExceptWith(other);
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<int> GetCountAsync()
@@ -126,7 +126,7 @@ namespace DFrame.Collections
             var set = GetHashSet();
             lock (set)
             {
-                return UnaryResult(set.Count);
+                return UnaryResult.FromResult(set.Count);
             }
         }
 
@@ -137,7 +137,7 @@ namespace DFrame.Collections
             {
                 set.IntersectWith(other);
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<bool> IsProperSubsetOfAsync(IEnumerable<object> other)
@@ -145,7 +145,7 @@ namespace DFrame.Collections
             var set = GetHashSet();
             lock (set)
             {
-                return UnaryResult(set.IsProperSubsetOf(other));
+                return UnaryResult.FromResult(set.IsProperSubsetOf(other));
             }
         }
 
@@ -154,7 +154,7 @@ namespace DFrame.Collections
             var set = GetHashSet();
             lock (set)
             {
-                return UnaryResult(set.IsProperSupersetOf(other));
+                return UnaryResult.FromResult(set.IsProperSupersetOf(other));
             }
         }
 
@@ -163,7 +163,7 @@ namespace DFrame.Collections
             var set = GetHashSet();
             lock (set)
             {
-                return UnaryResult(set.IsSubsetOf(other));
+                return UnaryResult.FromResult(set.IsSubsetOf(other));
             }
         }
 
@@ -172,7 +172,7 @@ namespace DFrame.Collections
             var set = GetHashSet();
             lock (set)
             {
-                return UnaryResult(set.IsSupersetOf(other));
+                return UnaryResult.FromResult(set.IsSupersetOf(other));
             }
         }
 
@@ -181,7 +181,7 @@ namespace DFrame.Collections
             var set = GetHashSet();
             lock (set)
             {
-                return UnaryResult(set.Overlaps(other));
+                return UnaryResult.FromResult(set.Overlaps(other));
             }
         }
 
@@ -190,7 +190,7 @@ namespace DFrame.Collections
             var set = GetHashSet();
             lock (set)
             {
-                return UnaryResult(set.Remove(item));
+                return UnaryResult.FromResult(set.Remove(item));
             }
         }
 
@@ -199,7 +199,7 @@ namespace DFrame.Collections
             var set = GetHashSet();
             lock (set)
             {
-                return UnaryResult(set.SetEquals(other));
+                return UnaryResult.FromResult(set.SetEquals(other));
             }
         }
 
@@ -210,7 +210,7 @@ namespace DFrame.Collections
             {
                 set.SymmetricExceptWith(other);
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<object[]> ToArrayAsync()
@@ -218,7 +218,7 @@ namespace DFrame.Collections
             var set = GetHashSet();
             lock (set)
             {
-                return UnaryResult(set.ToArray());
+                return UnaryResult.FromResult(set.ToArray());
             }
         }
 
@@ -227,7 +227,7 @@ namespace DFrame.Collections
             var set = GetHashSet();
             lock (set)
             {
-                return UnaryResult(new ConditionalValue<object>(set.TryGetValue(equalValue, out var v), v));
+                return UnaryResult.FromResult(new ConditionalValue<object>(set.TryGetValue(equalValue, out var v), v));
             }
         }
 
@@ -238,7 +238,7 @@ namespace DFrame.Collections
             {
                 set.UnionWith(other);
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
     }
 

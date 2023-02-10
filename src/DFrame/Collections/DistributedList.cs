@@ -89,7 +89,7 @@ namespace DFrame.Collections
             {
                 list.Add(item);
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<Nil> AddRangeAsync(IEnumerable<object> collection)
@@ -99,7 +99,7 @@ namespace DFrame.Collections
             {
                 list.AddRange(collection);
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<Nil> ClearAsync()
@@ -109,7 +109,7 @@ namespace DFrame.Collections
             {
                 list.Clear();
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<bool> ContainsAsync(object item)
@@ -117,7 +117,7 @@ namespace DFrame.Collections
             var list = GetList();
             lock (list)
             {
-                return UnaryResult(list.Contains(item));
+                return UnaryResult.FromResult(list.Contains(item));
             }
         }
 
@@ -126,7 +126,7 @@ namespace DFrame.Collections
             var list = GetList();
             lock (list)
             {
-                return UnaryResult(list.Count);
+                return UnaryResult.FromResult(list.Count);
             }
         }
 
@@ -135,7 +135,7 @@ namespace DFrame.Collections
             var list = GetList();
             lock (list)
             {
-                return UnaryResult(list.GetRange(index, count));
+                return UnaryResult.FromResult(list.GetRange(index, count));
             }
         }
 
@@ -144,7 +144,7 @@ namespace DFrame.Collections
             var list = GetList();
             lock (list)
             {
-                return UnaryResult(list[index]);
+                return UnaryResult.FromResult(list[index]);
             }
         }
 
@@ -153,7 +153,7 @@ namespace DFrame.Collections
             var list = GetList();
             lock (list)
             {
-                return UnaryResult(list.IndexOf(item, index));
+                return UnaryResult.FromResult(list.IndexOf(item, index));
             }
         }
 
@@ -162,7 +162,7 @@ namespace DFrame.Collections
             var list = GetList();
             lock (list)
             {
-                return UnaryResult(list.IndexOf(item, index, count));
+                return UnaryResult.FromResult(list.IndexOf(item, index, count));
             }
         }
 
@@ -171,7 +171,7 @@ namespace DFrame.Collections
             var list = GetList();
             lock (list)
             {
-                return UnaryResult(list.IndexOf(item));
+                return UnaryResult.FromResult(list.IndexOf(item));
             }
         }
 
@@ -182,7 +182,7 @@ namespace DFrame.Collections
             {
                 list.Insert(index, item);
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<Nil> InsertRangeAsync(int index, IEnumerable<object> collection)
@@ -192,7 +192,7 @@ namespace DFrame.Collections
             {
                 list.InsertRange(index, collection);
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<int> LastIndexOf2Async(object item, int index)
@@ -200,7 +200,7 @@ namespace DFrame.Collections
             var list = GetList();
             lock (list)
             {
-                return UnaryResult(list.LastIndexOf(item, index));
+                return UnaryResult.FromResult(list.LastIndexOf(item, index));
             }
         }
 
@@ -209,7 +209,7 @@ namespace DFrame.Collections
             var list = GetList();
             lock (list)
             {
-                return UnaryResult(list.LastIndexOf(item, index, count));
+                return UnaryResult.FromResult(list.LastIndexOf(item, index, count));
             }
         }
 
@@ -218,7 +218,7 @@ namespace DFrame.Collections
             var list = GetList();
             lock (list)
             {
-                return UnaryResult(list.LastIndexOf(item));
+                return UnaryResult.FromResult(list.LastIndexOf(item));
             }
         }
 
@@ -227,7 +227,7 @@ namespace DFrame.Collections
             var list = GetList();
             lock (list)
             {
-                return UnaryResult(list.Remove(item));
+                return UnaryResult.FromResult(list.Remove(item));
             }
         }
 
@@ -238,7 +238,7 @@ namespace DFrame.Collections
             {
                 list.RemoveAt(index);
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<Nil> RemoveRangeAsync(int index, int count)
@@ -248,7 +248,7 @@ namespace DFrame.Collections
             {
                 list.RemoveRange(index, count);
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<Nil> Reverse2Async(int index, int count)
@@ -258,7 +258,7 @@ namespace DFrame.Collections
             {
                 list.Reverse(index, count);
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<Nil> ReverseAsync()
@@ -268,7 +268,7 @@ namespace DFrame.Collections
             {
                 list.Reverse();
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<Nil> SetValueAsync(int index, object value)
@@ -278,7 +278,7 @@ namespace DFrame.Collections
             {
                 list[index] = value;
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<Nil> SortAsync()
@@ -288,7 +288,7 @@ namespace DFrame.Collections
             {
                 list.Sort();
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<object[]> ToArrayAsync()
@@ -296,7 +296,7 @@ namespace DFrame.Collections
             var list = GetList();
             lock (list)
             {
-                return UnaryResult(list.ToArray());
+                return UnaryResult.FromResult(list.ToArray());
             }
         }
     }

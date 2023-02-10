@@ -5,6 +5,7 @@ using MagicOnion;
 using MagicOnion.Client;
 using MessagePack;
 using System;
+using MagicOnion.Serialization;
 
 namespace DFrame
 {
@@ -52,7 +53,7 @@ namespace DFrame
         {
             return MagicOnionClient.Create<T>(
                     masterChannel.CreateCallInvoker(),
-                    serializerOptions)
+                    MessagePackMagicOnionSerializerProvider.Default.WithOptions(serializerOptions))
                 .WithHeaders(new Metadata() { { key, value } });
         }
     }

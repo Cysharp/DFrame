@@ -14,6 +14,7 @@ using System.Net;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
+using MagicOnion.Serialization;
 using ZLogger;
 
 namespace DFrame
@@ -192,7 +193,7 @@ namespace DFrame
                 }, opt =>
                 {
                     opt.IsReturnExceptionStackTraceInErrorDetail = true;
-                    opt.SerializerOptions = options.SerializerOptions;
+                    opt.MessageSerializer = MessagePackMagicOnionSerializerProvider.Default.WithOptions(options.SerializerOptions);
                 });
             }
 

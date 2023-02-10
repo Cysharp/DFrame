@@ -16,6 +16,7 @@ using System.Net.Http;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
+using MagicOnion.Serialization;
 using ZLogger;
 
 namespace DFrame
@@ -215,7 +216,7 @@ namespace DFrame
             var receiver = new WorkerReceiver(channel, workerId, provider, options);
             var callOption = new CallOptions(new Metadata { { "worker-id", workerId.ToString() } });
 
-            var client = await StreamingHubClient.ConnectAsync<IMasterHub, IWorkerReceiver>(callInvoker, receiver, option: callOption, serializerOptions: options.SerializerOptions);
+            var client = await StreamingHubClient.ConnectAsync<IMasterHub, IWorkerReceiver>(callInvoker, receiver, option: callOption, serializerProvider: MessagePackMagicOnionSerializerProvider.Default.WithOptions(options.SerializerOptions));
             // Connect explicitly???
             receiver.Client = client;
 

@@ -71,7 +71,7 @@ namespace DFrame.Collections
             {
                 d.Add(key, value);
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<Nil> AddRangeAsync(IEnumerable<KeyValuePair<object, object>> collection)
@@ -84,7 +84,7 @@ namespace DFrame.Collections
                     d.Add(item.Key, item.Value);
                 }
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<Nil> ClearAsync()
@@ -94,7 +94,7 @@ namespace DFrame.Collections
             {
                 d.Clear();
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<bool> ContainsKeyAsync(object key)
@@ -102,7 +102,7 @@ namespace DFrame.Collections
             var d = GetDictionary();
             lock (d)
             {
-                return UnaryResult(d.ContainsKey(key));
+                return UnaryResult.FromResult(d.ContainsKey(key));
             }
         }
 
@@ -111,7 +111,7 @@ namespace DFrame.Collections
             var d = GetDictionary();
             lock (d)
             {
-                return UnaryResult(d.ContainsValue(value));
+                return UnaryResult.FromResult(d.ContainsValue(value));
             }
         }
 
@@ -122,12 +122,12 @@ namespace DFrame.Collections
             {
                 if (d.TryGetValue(key, out value!))
                 {
-                    return UnaryResult(value);
+                    return UnaryResult.FromResult(value);
                 }
                 else
                 {
                     d[key] = value;
-                    return UnaryResult(value);
+                    return UnaryResult.FromResult(value);
                 }
             }
         }
@@ -139,7 +139,7 @@ namespace DFrame.Collections
             {
                 d[key] = value;
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<Nil> SetRangeAsync(IEnumerable<KeyValuePair<object, object>> collection)
@@ -152,7 +152,7 @@ namespace DFrame.Collections
                     d[item.Key] = item.Value;
                 }
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<bool> TryAddAsync(object key, object value)
@@ -160,7 +160,7 @@ namespace DFrame.Collections
             var d = GetDictionary();
             lock (d)
             {
-                return UnaryResult(d.TryAdd(key, value));
+                return UnaryResult.FromResult(d.TryAdd(key, value));
             }
         }
 
@@ -169,7 +169,7 @@ namespace DFrame.Collections
             var d = GetDictionary();
             lock (d)
             {
-                return UnaryResult(new ConditionalValue<object>(d.TryGetValue(key, out var v), v));
+                return UnaryResult.FromResult(new ConditionalValue<object>(d.TryGetValue(key, out var v), v));
             }
         }
 
@@ -178,7 +178,7 @@ namespace DFrame.Collections
             var d = GetDictionary();
             lock (d)
             {
-                return UnaryResult(new ConditionalValue<object>(d.Remove(key, out var v), v));
+                return UnaryResult.FromResult(new ConditionalValue<object>(d.Remove(key, out var v), v));
             }
         }
 
@@ -190,11 +190,11 @@ namespace DFrame.Collections
                 if (d.ContainsKey(key))
                 {
                     d[key] = value;
-                    return UnaryResult(true);
+                    return UnaryResult.FromResult(true);
                 }
                 else
                 {
-                    return UnaryResult(false);
+                    return UnaryResult.FromResult(false);
                 }
             }
         }
@@ -204,7 +204,7 @@ namespace DFrame.Collections
             var d = GetDictionary();
             lock (d)
             {
-                return UnaryResult(d.Count);
+                return UnaryResult.FromResult(d.Count);
             }
         }
 
@@ -213,7 +213,7 @@ namespace DFrame.Collections
             var d = GetDictionary();
             lock (d)
             {
-                return UnaryResult(d.ToArray());
+                return UnaryResult.FromResult(d.ToArray());
             }
         }
     }

@@ -55,7 +55,7 @@ namespace DFrame.Collections
             var stack = GetStack();
             lock (stack)
             {
-                return UnaryResult(stack.Count);
+                return UnaryResult.FromResult(stack.Count);
             }
         }
 
@@ -66,7 +66,7 @@ namespace DFrame.Collections
             {
                 stack.Clear();
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<bool> ContainsAsync(object item)
@@ -74,7 +74,7 @@ namespace DFrame.Collections
             var stack = GetStack();
             lock (stack)
             {
-                return UnaryResult(stack.Contains(item));
+                return UnaryResult.FromResult(stack.Contains(item));
             }
         }
 
@@ -83,7 +83,7 @@ namespace DFrame.Collections
             var stack = GetStack();
             lock (stack)
             {
-                return UnaryResult(new ConditionalValue<object>(stack.TryPop(out var result), result));
+                return UnaryResult.FromResult(new ConditionalValue<object>(stack.TryPop(out var result), result));
             }
         }
 
@@ -94,7 +94,7 @@ namespace DFrame.Collections
             {
                 stack.Push(item);
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<Nil> PushRangeAsync(IEnumerable<object> collection)
@@ -107,7 +107,7 @@ namespace DFrame.Collections
                     stack.Push(v);
                 }
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<ConditionalValue<object>> TryPeekAsync()
@@ -115,7 +115,7 @@ namespace DFrame.Collections
             var stack = GetStack();
             lock (stack)
             {
-                return UnaryResult(new ConditionalValue<object>(stack.TryPeek(out var result), result));
+                return UnaryResult.FromResult(new ConditionalValue<object>(stack.TryPeek(out var result), result));
             }
         }
 
@@ -124,7 +124,7 @@ namespace DFrame.Collections
             var stack = GetStack();
             lock (stack)
             {
-                return UnaryResult(stack.ToArray());
+                return UnaryResult.FromResult(stack.ToArray());
             }
         }
     }

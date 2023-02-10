@@ -56,7 +56,7 @@ namespace DFrame.Collections
             var q = GetQueue();
             lock (q)
             {
-                return UnaryResult(q.Count);
+                return UnaryResult.FromResult(q.Count);
             }
         }
 
@@ -67,7 +67,7 @@ namespace DFrame.Collections
             {
                 q.Clear();
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<bool> ContainsAsync(object item)
@@ -75,7 +75,7 @@ namespace DFrame.Collections
             var q = GetQueue();
             lock (q)
             {
-                return UnaryResult(q.Contains(item));
+                return UnaryResult.FromResult(q.Contains(item));
             }
         }
 
@@ -84,7 +84,7 @@ namespace DFrame.Collections
             var q = GetQueue();
             lock (q)
             {
-                return UnaryResult(new ConditionalValue<object>(q.TryDequeue(out var v), v));
+                return UnaryResult.FromResult(new ConditionalValue<object>(q.TryDequeue(out var v), v));
             }
         }
 
@@ -95,7 +95,7 @@ namespace DFrame.Collections
             {
                 q.Enqueue(item);
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<Nil> EnqueueRangeAsync(IEnumerable<object> item)
@@ -108,7 +108,7 @@ namespace DFrame.Collections
                     q.Enqueue(v);
                 }
             }
-            return ReturnNil();
+            return UnaryResult.FromResult(Nil.Default);
         }
 
         public UnaryResult<ConditionalValue<object>> TryPeekAsync()
@@ -116,7 +116,7 @@ namespace DFrame.Collections
             var q = GetQueue();
             lock (q)
             {
-                return UnaryResult(new ConditionalValue<object>(q.TryPeek(out var v), v));
+                return UnaryResult.FromResult(new ConditionalValue<object>(q.TryPeek(out var v), v));
             }
         }
 
@@ -125,7 +125,7 @@ namespace DFrame.Collections
             var q = GetQueue();
             lock (q)
             {
-                return UnaryResult(q.ToArray());
+                return UnaryResult.FromResult(q.ToArray());
             }
         }
     }

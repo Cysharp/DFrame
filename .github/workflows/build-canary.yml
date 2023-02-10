@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "master"
+      - "0.0.9-MagicOnion-5"
     tags:
       - "!*" # not a tag push
 
