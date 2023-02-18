@@ -1,10 +1,10 @@
-﻿using MessagePipe;
+﻿using DFrame.Controller;
+using DFrame.Internal;
+using DFrame.Pages.Components;
+using MessagePipe;
 using Microsoft.AspNetCore.Components;
 using ObservableCollections;
-using DFrame.Controller;
 using System.Diagnostics.CodeAnalysis;
-using DFrame.Pages.Components;
-using DFrame.Internal;
 
 namespace DFrame.Pages;
 
@@ -79,7 +79,7 @@ public partial class Index : IDisposable
             return;
         }
 
-        var parameters = vm.SelectedWorkloadParameters.Select(x => new KeyValuePair<string, string?>(x.ParameterName, x.Value)).ToArray();
+        var parameters = vm.SelectedWorkloadParameters.Select(x => new KeyValuePair<string, string?>(x.ParameterName, x.ResultValue)).ToArray();
 
         var totalRequest = (vm.CommandMode == CommandMode.InfiniteLoop || vm.CommandMode == CommandMode.Duration) ? long.MaxValue : vm.TotalRequest;
 
@@ -376,11 +376,24 @@ public class IndexViewModel : IDisposable
 
     public class WorkloadParameterInfoViewModel
     {
+        const string LabeledValueDelimiter = " : ";
+
         static readonly string[] BoolSelectableValues = new[] { true.ToString(), false.ToString() };
         static readonly string[] NullableBoolSelectableValues = new[] { true.ToString(), false.ToString(), "null" };
 
         // Modifiable Form
         public string? Value { get; set; }
+
+        public string? ResultValue
+        {
+            get => ParameterType switch
+            {
+                AllowParameterType.LabeledValue => Value?.Split(LabeledValueDelimiter, StringSplitOptions.RemoveEmptyEntries)[1],
+                _ => Value
+            };
+        }
+
+        public AllowParameterType ParameterType { get; }
 
         public string TypeLabel { get; }
         public string ParameterName { get; }
@@ -390,6 +403,7 @@ public class IndexViewModel : IDisposable
 
         public WorkloadParameterInfoViewModel(WorkloadParameterInfo parameterInfo)
         {
+            ParameterType = parameterInfo.ParameterType;
             TypeLabel = parameterInfo.GetTypeLabel();
             ParameterName = parameterInfo.ParameterName;
 
@@ -408,17 +422,21 @@ public class IndexViewModel : IDisposable
                 }
             }
 
-            if (parameterInfo.ParameterType == AllowParameterType.Enum)
+            if (parameterInfo.ParameterType == AllowParameterType.Enum || parameterInfo.ParameterType == AllowParameterType.LabeledValue)
             {
+                var enumNames = parameterInfo.Labels is { } labels
+                    ? parameterInfo.EnumNames.Zip(labels, (e, l) => l + LabeledValueDelimiter + e).ToArray()
+                    : parameterInfo.EnumNames;
+
                 if (parameterInfo.IsNullable)
                 {
                     Value = "null";
-                    SelectableValues = parameterInfo.EnumNames.Prepend("null").ToArray();
+                    SelectableValues = enumNames.Prepend("null").ToArray();
                 }
                 else
                 {
-                    Value = parameterInfo.EnumNames.FirstOrDefault();
-                    SelectableValues = parameterInfo.EnumNames;
+                    Value = enumNames.FirstOrDefault();
+                    SelectableValues = enumNames;
                 }
             }
 

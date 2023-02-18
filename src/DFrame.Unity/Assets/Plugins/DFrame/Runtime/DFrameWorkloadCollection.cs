@@ -199,7 +199,16 @@ namespace DFrame
                         defaultValue = Enum.GetName(elementType, defaultValue!);
                     }
 
-                    return new WorkloadParameterInfo(parameterType.Value, isNullable, isArray, defaultValue, name!, enumNames, enumTypeName);
+                    string[]? labels = null;
+                    if (TryGetLabeledParameters(type, p, out var parameterSelection))
+                    {
+                        var selectionArray = parameterSelection.ToArray();
+                        enumNames = selectionArray.Select(x => x.value.ToString()).ToArray();
+                        labels = selectionArray.Select(x => x.label).ToArray();
+                        parameterType = AllowParameterType.LabeledValue;
+                    }
+
+                    return new WorkloadParameterInfo(parameterType.Value, isNullable, isArray, defaultValue, name!, enumNames, enumTypeName, labels);
                 })
                 .ToArray();
 
@@ -310,9 +319,26 @@ namespace DFrame
                     return DateTime.Parse(value);
                 case AllowParameterType.String:
                     return value;
+                case AllowParameterType.LabeledValue:
+                    return int.Parse(value);
                 default:
                     throw new InvalidOperationException($"Target parameter value can not parse, Type: {parameterInfo.ParameterType.FullName} Value: {value}");
             }
+        }
+
+        static bool TryGetLabeledParameters(Type workloadType, ParameterInfo parameterInfo, [NotNullWhen(true)] out IEnumerable<(string label, int value)>? selection)
+        {
+            selection = null;
+
+            if (parameterInfo.GetCustomAttribute<SelectionFromAttribute>() is not { SelectorMethodName: var methodName }) return false;
+
+            if (workloadType.GetMethod(methodName, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic) is not { } methodInfo)
+            {
+                throw new InvalidOperationException($"Missing method specified from {nameof(SelectionFromAttribute)}. name:{methodName}, type:{workloadType.FullName}");
+            }
+
+            selection = (IEnumerable<(string, int)>)methodInfo.Invoke(null, null)!;
+            return true;
         }
     }
 }

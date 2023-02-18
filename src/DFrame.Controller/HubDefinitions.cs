@@ -4,14 +4,14 @@
 // DFrame.Worker does not use implicit using so keep all using.
 using MagicOnion;
 using MessagePack;
+using MessagePack.Formatters;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using UnitGenerator;
-using System.Runtime.CompilerServices;
-using MessagePack.Formatters;
-using System.Runtime.InteropServices;
-using System.Buffers;
 #if DFRAME_CONTROLLER
 using DFrame;
 using DFrame.Controller;
@@ -209,7 +209,7 @@ namespace DFrame
     [MessagePackObject]
     public class WorkloadParameterInfo
     {
-        public WorkloadParameterInfo(AllowParameterType parameterType, bool isNullable, bool isArray, object? defaultValue, string parameterName, string[] enumNames, string? enumTypeName)
+        public WorkloadParameterInfo(AllowParameterType parameterType, bool isNullable, bool isArray, object? defaultValue, string parameterName, string[] enumNames, string? enumTypeName, string[]? labels)
         {
             ParameterType = parameterType;
             IsNullable = isNullable;
@@ -218,6 +218,7 @@ namespace DFrame
             ParameterName = parameterName;
             EnumNames = enumNames;
             EnumTypeName = enumTypeName;
+            Labels = labels;
         }
 
         [Key(0)]
@@ -234,6 +235,8 @@ namespace DFrame
         public string[] EnumNames { get; }
         [Key(6)]
         public string? EnumTypeName { get; }
+        [Key(7)]
+        public string[]? Labels { get; }
 
         public string GetTypeLabel()
         {
@@ -267,5 +270,6 @@ namespace DFrame
         Decimal,
         DateTime,
         String,
+        LabeledValue,
     }
 }
