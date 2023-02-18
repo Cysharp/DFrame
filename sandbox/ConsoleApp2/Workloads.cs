@@ -4,11 +4,6 @@ using MagicOnion;
 using MagicOnion.Client;
 using MessagePack;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 [Workload("myworkload")]
 public class TrialWorkload : Workload
@@ -238,4 +233,35 @@ public class LoggerSum : Workload
     }
 }
 
+public class Selection : Workload
+{
+    record SampleRecord(int Id, string Title, int Value);
+
+    static readonly SampleRecord[] sampleRecords = new SampleRecord[]
+    {
+        new(1001, "Record1", 10),
+        new(1002, "Record2", 11),
+        new(1003, "Record3", 12),
+        new(1004, "Record4", 13),
+    };
+
+    static IEnumerable<(string, int)> GetParameter1Selection()
+        => sampleRecords.Select(x => (x.Title, x.Id));
+
+    readonly ILogger<Selection> logger;
+    readonly int parameter1;
+
+    public Selection(ILogger<Selection> logger, [SelectionFrom(nameof(GetParameter1Selection))] int parameter1)
+    {
+        this.logger = logger;
+        this.parameter1 = parameter1;
+    }
+
+    public override Task ExecuteAsync(WorkloadContext context)
+    {
+        var record = sampleRecords.FirstOrDefault(x => x.Id == parameter1)!;
+        logger.LogInformation("Id:{0}, Title:{1}, Value:{2}", record.Id, record.Title, record.Value);
+        return Task.CompletedTask;
+    }
+}
 
