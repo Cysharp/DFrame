@@ -1,10 +1,10 @@
-﻿using MessagePipe;
+﻿using DFrame.Controller;
+using DFrame.Internal;
+using DFrame.Pages.Components;
+using MessagePipe;
 using Microsoft.AspNetCore.Components;
 using ObservableCollections;
-using DFrame.Controller;
 using System.Diagnostics.CodeAnalysis;
-using DFrame.Pages.Components;
-using DFrame.Internal;
 
 namespace DFrame.Pages;
 
@@ -309,6 +309,7 @@ public class IndexViewModel : IDisposable
 
         this.IsRunning = engine.IsRunning;
         this.WorkloadInfos = engine.WorkloadInfos;
+        Array.Sort(this.WorkloadInfos, (x, y) => x.Name.CompareTo(y.Name));
         if (this.SelectedWorkload == null)
         {
             this.SelectedWorkload = WorkloadInfos.FirstOrDefault()?.Name;
