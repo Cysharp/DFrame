@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+#pragma warning disable CS1998
 
 namespace DFrame
 {
@@ -16,6 +17,7 @@ namespace DFrame
         Task ReportProgressAsync(ExecuteResult result);
         Task ExecuteCompleteAsync(ExecuteResult[] result);
         Task TeardownCompleteAsync();
+        Task PongAsync();
     }
 
     public sealed class MasterHub : StreamingHubBase<IMasterHub, IWorkerReceiver>, IMasterHub
@@ -38,42 +40,40 @@ namespace DFrame
             workerConnectionContext.Broadcaster = broadcaster;
         }
 
-        protected override ValueTask OnDisconnected()
+        protected override async ValueTask OnDisconnected()
         {
             workerConnectionContext.RemoveConnection(workerId);
-            return default;
         }
 
-        public Task ConnectAsync()
+        public async Task ConnectAsync()
         {
             workerConnectionContext.AddConnection(workerId);
-            return Task.CompletedTask;
         }
 
-        public Task CreateWorkloadCompleteAsync()
+        public async Task CreateWorkloadCompleteAsync()
         {
             workerConnectionContext.OnCreateWorkloadAndSetup.Done(workerId);
-            return Task.CompletedTask;
         }
 
-        public Task ReportProgressAsync(ExecuteResult result)
+        public async Task ReportProgressAsync(ExecuteResult result)
         {
             // TODO: throw new NotImplementedException();
-            return Task.CompletedTask;
         }
 
-        public Task ExecuteCompleteAsync(ExecuteResult[] result)
+        public async Task ExecuteCompleteAsync(ExecuteResult[] result)
         {
             // TODO:remove execute result?
             workerConnectionContext.AddExecuteResult(result);
             workerConnectionContext.OnExecute.Done(workerId);
-            return Task.CompletedTask;
         }
 
-        public Task TeardownCompleteAsync()
+        public async Task TeardownCompleteAsync()
         {
             workerConnectionContext.OnTeardown.Done(workerId);
-            return Task.CompletedTask;
+        }
+
+        public async Task PongAsync()
+        {
         }
     }
 

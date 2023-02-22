@@ -19,6 +19,8 @@ namespace DFrame
         void Stop();
         void Teardown();
         void Shutdown();
+
+        void Ping();
     }
 
     internal class WorkerReceiver : IWorkerReceiver
@@ -119,6 +121,11 @@ namespace DFrame
         public void Shutdown()
         {
             receiveShutdown.TrySetResult(null);
+        }
+
+        public async void Ping()
+        {
+            await Client.PongAsync();
         }
 
         // for Ramp-up

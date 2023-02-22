@@ -89,6 +89,9 @@ namespace DFrame
                     }
                 }
 
+                logger.LogInformation("Start ping timer.");
+                _ = StartPingAsync(broadcaster, failSignal.Task, cancellationToken);
+
                 logger.LogInformation($"Create and execute workload '{workloadName}' on the workers.");
                 await CreateWorkloadAndExecuteAsync(broadcaster, workerConnection, workloadName, cancellationToken, failSignal);
 
@@ -117,6 +120,15 @@ namespace DFrame
             }
 
             logger.LogInformation("Master shutdown.");
+        }
+
+        async Task StartPingAsync(IWorkerReceiver workerReceiver, Task failSignalTask, CancellationToken cancellationToken)
+        {
+            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+            while (await timer.WaitForNextTickAsync() && !failSignalTask.IsCompleted && !cancellationToken.IsCancellationRequested)
+            {
+                workerReceiver.Ping();
+            }
         }
 
         IHost StartMasterHost(string?[] arguments, CancellationToken cancellationToken)

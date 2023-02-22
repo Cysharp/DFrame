@@ -223,10 +223,15 @@ namespace DFrame
             await client.ConnectAsync();
 
             logger.LogInformation($"Worker -> Master connect completed successfully, WorkerId:{workerId.ToString()}.");
+            var waitForDisconnectTask = client.WaitForDisconnect();
             try
             {
                 // wait for shutdown command from master.
-                await Task.WhenAny(receiver.WaitShutdown.WithCancellation(Context.CancellationToken), client.WaitForDisconnect());
+                await Task.WhenAny(receiver.WaitShutdown.WithCancellation(Context.CancellationToken), waitForDisconnectTask);
+            }
+            catch (Exception ex)
+            {
+                logger.LogCritical($"Exception thrown while waiting for shutdown command: {ex.GetType().Name}: {ex.Message}; (WaitShutdown={receiver.WaitShutdown.IsCompleted}; Context.CancellationToken={Context.CancellationToken.IsCancellationRequested}; waitForDisconnect={waitForDisconnectTask.IsCompleted})");
             }
             finally
             {
