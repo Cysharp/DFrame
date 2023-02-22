@@ -24,7 +24,7 @@ namespace DFrame.Kubernetes
         /// <summary>
         /// Worker scaling type.
         /// </summary>
-        public ScalingType ScalingType { get; set; } = ScalingType.Job;
+        public ScalingType ScalingType { get; set; } = Enum.Parse<ScalingType>(Environment.GetEnvironmentVariable("DFRAME_WORKER_SCALING_TYPE") ?? "Job");
         /// <summary>
         /// Worker Kubernetes resource name. default dframe-worker
         /// </summary>
