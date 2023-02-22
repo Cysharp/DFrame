@@ -235,13 +235,13 @@ namespace DFrame
             }
             finally
             {
-                await ShutdownAsync(client, channel, workerId);
+                await ShutdownAsync(client, channel, workerId, waitForDisconnectTask, receiver.WaitShutdown);
             }
         }
 
-        async Task ShutdownAsync(IMasterHub client, GrpcChannel channel, Guid workerId)
+        async Task ShutdownAsync(IMasterHub client, GrpcChannel channel, Guid workerId, Task waitForDisconnectTask, Task receiverWaitShutdownTask)
         {
-            logger.LogInformation($"Worker shutdown, WorkerId:{workerId.ToString()}.");
+            logger.LogInformation($"Worker shutdown, WorkerId:{workerId.ToString()}; WaitShutdown={receiverWaitShutdownTask.IsCompleted}; Context.CancellationToken={Context.CancellationToken.IsCancellationRequested}; waitForDisconnect={waitForDisconnectTask.IsCompleted}");
 
             logger.LogTrace($"Worker StreamingHubClient disposing.");
             await client.DisposeAsync();
