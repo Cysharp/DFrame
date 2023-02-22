@@ -218,7 +218,7 @@ namespace DFrame.Kubernetes
                 using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(_env.WorkerPodCreationTimeout)))
                 using (var watch = pods.Watch<V1Pod, V1PodList>((type, item, cts) =>
                 {
-                    Console.WriteLine($"pod event caught. {type} {item?.Metadata?.Name}");
+                    //Console.WriteLine($"pod event caught. {type} {item?.Metadata?.Name}");
                     if (type == WatchEventType.Added)
                     {
                         added++;
