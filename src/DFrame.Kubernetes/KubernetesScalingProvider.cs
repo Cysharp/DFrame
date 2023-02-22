@@ -323,10 +323,16 @@ namespace DFrame.Kubernetes
                     await watchTask;
                 }
 
+                // wait 5 sec before getting status.
+                await Task.Delay(5 * 1000);
+
                 // confirm result
                 var workerDeploy = await _operations.GetDeploymentAsync(_ns, _env.Name);
                 if (workerDeploy.Status.UnavailableReplicas != null && workerDeploy.Status.UnavailableReplicas > 0)
+                {
+                    Console.WriteLine($"Worker replicas status. ReadyReplicas: {workerDeploy.Status.ReadyReplicas}, UnavailableReplicas: {workerDeploy.Status.UnavailableReplicas}");
                     throw new KubernetesException($"Failed to scale out worker on kubernetes, deploy status was failed.");
+                }
                 var workerPods = await _operations.GetPodsAsync(_ns, "app=dframe-worker");
                 var terminatedWorkers = workerPods.Items.Where(x => x.Status?.ContainerStatuses?.FirstOrDefault()?.LastState?.Terminated != null).ToArray();
                 if (terminatedWorkers.Any())
