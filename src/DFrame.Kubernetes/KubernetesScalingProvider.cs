@@ -324,7 +324,7 @@ namespace DFrame.Kubernetes
                 }
 
                 // wait 5 sec before getting status.
-                await Task.Delay(5 * 1000);
+                await Task.Delay(30 * 1000);
 
                 // confirm result
                 var workerDeploy = await _operations.GetDeploymentAsync(_ns, _env.Name);

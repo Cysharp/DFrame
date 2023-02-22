@@ -141,8 +141,8 @@ namespace DFrame.Kubernetes
                         },
                         Spec = new V1PodSpec
                         {
-                            // note: must be Never to prevent pod restart during load testing.
-                            RestartPolicy = "Never",
+                            // note: Want to use Never, but Deployment only allow Always.
+                            RestartPolicy = "Always",
                             Containers = new[] {
                                 new V1Container
                                 {
