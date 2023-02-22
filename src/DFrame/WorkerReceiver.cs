@@ -125,7 +125,15 @@ namespace DFrame
 
         public async void Ping()
         {
-            await Client.PongAsync();
+            try
+            {
+                await Client.PongAsync();
+            }
+            catch (Exception e)
+            {
+                // Ignore
+                logger.LogWarning(e, "Exception (Ping): " + e.Message);
+            }
         }
 
         // for Ramp-up
