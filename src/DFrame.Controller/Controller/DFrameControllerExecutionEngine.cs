@@ -13,6 +13,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
     readonly ILoggerFactory loggerFactory;
     readonly IExecutionResultHistoryProvider historyProvider;
     readonly DFrameControllerOptions options;
+    readonly IEventHandler? eventHandler;
 
     // Global states
     readonly Dictionary<WorkerId, WorkerInfo> connections = new();
@@ -32,12 +33,13 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
     public ExecutionSummary? LatestExecutionSummary { get; private set; } = default;
     public SummarizedExecutionResult[] LatestSortedSummarizedExecutionResults { get; private set; } = Array.Empty<SummarizedExecutionResult>();
 
-    public DFrameControllerExecutionEngine(ILoggerFactory loggerFactory, IExecutionResultHistoryProvider historyProvider, DFrameControllerOptions options)
+    public DFrameControllerExecutionEngine(ILoggerFactory loggerFactory, IExecutionResultHistoryProvider historyProvider, DFrameControllerOptions options, IEventHandler? eventHandler)
     {
         this.loggerFactory = loggerFactory;
         this.logger = loggerFactory.CreateLogger<DFrameControllerExecutionEngine>();
         this.historyProvider = historyProvider;
         this.options = options;
+        this.eventHandler = eventHandler;
     }
 
     public bool StartWorkerFlow(string workloadName, int concurrency, long totalRequestCount, int workerLimit, KeyValuePair<string, string?>[] parameters)
@@ -133,6 +135,9 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
                 broadcaster = globalGroup.CreateBroadcasterTo<IWorkerReceiver>(connectionIds);
             }
 
+            try { eventHandler?.OnWorkflowStarted(summary); }
+            catch (Exception exception) { logger.LogError(exception, "Exception from " + nameof(IEventHandler.OnWorkflowStarted)); }
+
             broadcaster.CreateWorkloadAndSetup(executionId, createWorkloadCount, concurrency, totalRequestCount, workloadName, parameters!);
             StateChanged?.Invoke();
         }
@@ -221,6 +226,9 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
 
     public void CreateWorkloadAndSetupComplete(WorkerId workerId, IWorkerReceiver broadcaster, IWorkerReceiver broadcastToSelf)
     {
+        try { eventHandler?.OnSetupCompleted(LatestExecutionSummary!); }
+        catch (Exception exception) { logger.LogError(exception, "Exception from " + nameof(IEventHandler.OnSetupCompleted)); }
+
         lock (EngineSync)
         {
             if (RunningState?.CreateWorkloadAndSetupComplete(workerId, broadcaster, broadcastToSelf) ?? true)
@@ -232,6 +240,9 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
 
     public void TeardownComplete(WorkerId workerId)
     {
+        try { eventHandler?.OnTeardownCompleted(LatestExecutionSummary!); }
+        catch (Exception exception) { logger.LogError(exception, "Exception from " + nameof(IEventHandler.OnTeardownCompleted)); }
+
         lock (EngineSync)
         {
             if (RunningState?.TeardownComplete(workerId) ?? true)
@@ -243,6 +254,9 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
 
     public void ExecuteComplete(WorkerId workerId, Dictionary<WorkloadId, Dictionary<string, string>?> results)
     {
+        try { eventHandler?.OnExecuteCompleted(LatestExecutionSummary!); }
+        catch (Exception exception) { logger.LogError(exception, "Exception from " + nameof(IEventHandler.OnExecuteCompleted)); }
+
         lock (EngineSync)
         {
             if (RunningState?.ExecuteComplete(workerId, results) ?? true)
@@ -257,6 +271,9 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
 
     public void WorkflowCompleted()
     {
+        try { eventHandler?.OnWorkflowCompleted(LatestExecutionSummary!); }
+        catch (Exception exception) { logger.LogError(exception, "Exception from " + nameof(IEventHandler.OnWorkflowCompleted)); }
+
         lock (EngineSync)
         {
             var summary = LatestExecutionSummary;
