@@ -47,9 +47,6 @@ jobs:
     strategy:
       matrix:
         unity: ["2020.3.29f1"]
-        include:
-          - unity: 2020.3.29f1
-            license: UNITY_LICENSE_2020
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
