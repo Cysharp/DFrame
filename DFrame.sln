@@ -24,7 +24,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{7936D1
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DFrame.Controller", "src\DFrame.Controller\DFrame.Controller.csproj", "{924897EC-941D-4FA9-894B-571B4E4F56F5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp2", "sandbox\ConsoleApp2\ConsoleApp2.csproj", "{E74D802D-1FD9-458D-9870-EFED1FE1F38C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleWorker", "sandbox\ConsoleWorker\ConsoleWorker.csproj", "{E74D802D-1FD9-458D-9870-EFED1FE1F38C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DFrame", "src\DFrame\DFrame.csproj", "{A4C29523-D8A0-4924-BE62-3C65F8CCA431}"
 EndProject
@@ -42,7 +42,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RestClient", "sandbox\RestC
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DFrame.RestSdk", "src\DFrame.RestSdk\DFrame.RestSdk.csproj", "{CAFBB8E4-0034-4FD9-AB2A-47D097EAF393}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinimumGrpc", "sandbox\MinimumGrpc\MinimumGrpc.csproj", "{C7BBF6FF-BFB2-4791-AA0D-36B9BFF84C9A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MinimumGrpc", "sandbox\MinimumGrpc\MinimumGrpc.csproj", "{C7BBF6FF-BFB2-4791-AA0D-36B9BFF84C9A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

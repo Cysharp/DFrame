@@ -10,9 +10,9 @@
   "ListAllProjects": true,
 
   "MultiProjectConfigurations": {
-    "ConsoleController + ConsoleApp2 + MinimalEcho": {
+    "ConsoleController + ConsoleWorker + MinimalEcho": {
       "Projects": {
-        "ConsoleApp2": {},
+        "ConsoleWorker": {},
         "ConsoleController": {},
         "MinimalEcho": {}
       }

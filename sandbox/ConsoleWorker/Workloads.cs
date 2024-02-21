@@ -4,11 +4,6 @@ using MagicOnion;
 using MagicOnion.Client;
 using MessagePack;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 [Workload("myworkload")]
 public class TrialWorkload : Workload
