@@ -26,7 +26,7 @@ public class TrialWorkload : Workload
 
     public override async Task ExecuteAsync(WorkloadContext context)
     {
-        logger.LogInformation("Execute:" + (++execCount));
+        logger.LogInformation($"Execute:{context.ExecuteCount}");
         await Task.Delay(TimeSpan.FromSeconds(1));
     }
 

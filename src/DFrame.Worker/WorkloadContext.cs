@@ -8,6 +8,7 @@ namespace DFrame
         public WorkloadId WorkloadId { get; }
         public int WorkloadCount { get; }
         public int WorkloadIndex { get; }
+        public long ExecuteCount { get; internal set; } = 0;
         public int Concurrency { get; }
         public long TotalRequestCount { get; }
         public CancellationToken CancellationToken { get; }
