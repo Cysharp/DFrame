@@ -4,6 +4,7 @@ using DFrame.Internal;
 using Grpc.Core;
 using Grpc.Net.Client;
 using MagicOnion.Client;
+using MagicOnion.Serialization;
 using MessagePack;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -13,7 +14,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using MagicOnion.Serialization;
 
 namespace DFrame
 {
