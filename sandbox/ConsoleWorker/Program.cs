@@ -2,8 +2,16 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-await Host.CreateDefaultBuilder(args)
-    .RunDFrameWorkerAsync("http://localhost:7313"); // http/2 address to connect controller
+namespace ConsoleWorker;
+
+public static class Program
+{
+    public static async Task Main(string[] args)
+    {
+        await Host.CreateDefaultBuilder(args)
+            .RunDFrameWorkerAsync("http://localhost:7313"); // http/2 address to connect controller
+    }
+}
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 

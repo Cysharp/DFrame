@@ -16,6 +16,13 @@
         "ConsoleController": {},
         "MinimalEcho": {}
       }
+    },
+    "ConsoleController + ConsoleMultipleWorker + MinimalEcho": {
+      "Projects": {
+        "ConsoleMultipleWorker": {},
+        "ConsoleController": {},
+        "MinimalEcho": {}
+      }
     }
   }
 }

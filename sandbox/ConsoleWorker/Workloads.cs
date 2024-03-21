@@ -5,6 +5,8 @@ using MagicOnion.Client;
 using MessagePack;
 using Microsoft.Extensions.Logging;
 
+namespace ConsoleWorker;
+
 [Workload("myworkload")]
 public class TrialWorkload : Workload
 {
