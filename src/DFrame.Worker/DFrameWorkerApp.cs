@@ -341,6 +341,7 @@ namespace DFrame
                             var sw = ValueStopwatch.StartNew();
                             try
                             {
+                                x.context.ExecuteCount = i;
                                 await x.workload.ExecuteAsync(x.context);
                             }
                             catch (OperationCanceledException e) when (e.CancellationToken == token.Value)
