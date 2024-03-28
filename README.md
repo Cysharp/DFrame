@@ -53,6 +53,7 @@ Don't forget about performance. It is very important to hit a lot of RPS on sing
 - [Persistent execute results](#persistent-execute-results)
 - [REST API for Automation](#rest-api-for-automation)
 - [Unity](#unity)
+- [Controller event handling](#controller-event-handling)
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -742,6 +743,49 @@ internal class PreserveAttribute : System.Attribute
 ```
 
 ![image](https://user-images.githubusercontent.com/46207/155901725-4ce8a36f-46e9-4437-aba7-639425f4b93f.png)
+
+## Controller event handling
+
+`DFrame.Controller` provides event publishing using [MessagePipe](https://github.com/Cysharp/MessagePipe).
+You can intercept processing at each step of the controller by obtaining `ISubscriber<ControllerEventMessage>` subscriber from DI.
+
+```csharp
+class SomeService : IHostedService
+{
+    readonly ISubscriber<ControllerEventMessage> subscriber;
+
+    private IDisposable? eventMessageSubscription = null;
+
+    // ISubscriber<ControllerEventMessage> is from DI.
+    public SomeService(ISubscriber<ControllerEventMessage> subscriber)
+    {
+        this.subscriber = subscriber;
+    }
+
+    public Task StartAsync(CancellationToken cancellationToken)
+    {
+        var bag = DisposableBag.CreateBuilder(initialCapacity: 1);
+        subscriber.Subscribe(
+            eventMessage =>
+            {
+                // Your code.
+            }
+        ).AddTo(bag);
+        eventMessageSubscription = bag.Build();
+
+        return Task.CompletedTask;
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        eventMessageSubscription?.Dispose();
+        return Task.CompletedTask;
+    }
+}
+```
+
+A sample using this is available [here](sandbox/ConsoleController/EventHandler.cs).
+For more information on usage, please refer to the [MessagePipe](https://github.com/Cysharp/MessagePipe) documentation.
 
 License
 ---
