@@ -1,4 +1,5 @@
 ﻿using MagicOnion.Server.Hubs;
+using MessagePipe;
 
 namespace DFrame.Controller;
 
@@ -13,6 +14,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
     readonly ILoggerFactory loggerFactory;
     readonly IExecutionResultHistoryProvider historyProvider;
     readonly DFrameControllerOptions options;
+    readonly IPublisher<EventMessage.ControllerEventMessage> eventMessagePublisher;
 
     // Global states
     readonly Dictionary<WorkerId, WorkerInfo> connections = new();
@@ -32,12 +34,13 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
     public ExecutionSummary? LatestExecutionSummary { get; private set; } = default;
     public SummarizedExecutionResult[] LatestSortedSummarizedExecutionResults { get; private set; } = Array.Empty<SummarizedExecutionResult>();
 
-    public DFrameControllerExecutionEngine(ILoggerFactory loggerFactory, IExecutionResultHistoryProvider historyProvider, DFrameControllerOptions options)
+    public DFrameControllerExecutionEngine(ILoggerFactory loggerFactory, IExecutionResultHistoryProvider historyProvider, DFrameControllerOptions options, IPublisher<EventMessage.ControllerEventMessage> eventMessagePublisher)
     {
         this.loggerFactory = loggerFactory;
         this.logger = loggerFactory.CreateLogger<DFrameControllerExecutionEngine>();
         this.historyProvider = historyProvider;
         this.options = options;
+        this.eventMessagePublisher = eventMessagePublisher;
     }
 
     public bool StartWorkerFlow(string workloadName, int concurrency, long totalRequestCount, int workerLimit, KeyValuePair<string, string?>[] parameters)
@@ -137,6 +140,8 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
             StateChanged?.Invoke();
         }
 
+        eventMessagePublisher.Publish(new(EventMessage.ControllerEventMessageType.WorkflowStarted, LatestExecutionSummary));
+
         return true;
     }
 
@@ -221,6 +226,8 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
 
     public void CreateWorkloadAndSetupComplete(WorkerId workerId, IWorkerReceiver broadcaster, IWorkerReceiver broadcastToSelf)
     {
+        eventMessagePublisher.Publish(new(EventMessage.ControllerEventMessageType.SetupCompleted, LatestExecutionSummary!));
+
         lock (EngineSync)
         {
             if (RunningState?.CreateWorkloadAndSetupComplete(workerId, broadcaster, broadcastToSelf) ?? true)
@@ -232,6 +239,8 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
 
     public void TeardownComplete(WorkerId workerId)
     {
+        eventMessagePublisher.Publish(new(EventMessage.ControllerEventMessageType.TeardownCompleted, LatestExecutionSummary!));
+
         lock (EngineSync)
         {
             if (RunningState?.TeardownComplete(workerId) ?? true)
@@ -243,6 +252,8 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
 
     public void ExecuteComplete(WorkerId workerId, Dictionary<WorkloadId, Dictionary<string, string>?> results)
     {
+        eventMessagePublisher.Publish(new(EventMessage.ControllerEventMessageType.ExecuteCompleted, LatestExecutionSummary!));
+
         lock (EngineSync)
         {
             if (RunningState?.ExecuteComplete(workerId, results) ?? true)
