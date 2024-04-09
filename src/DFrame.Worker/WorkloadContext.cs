@@ -4,6 +4,7 @@ namespace DFrame
 {
     public class WorkloadContext
     {
+        public CommandMode CommandMode { get; }
         public ExecutionId ExecutionId { get; }
         public WorkloadId WorkloadId { get; }
         public int WorkloadCount { get; }
@@ -13,8 +14,9 @@ namespace DFrame
         public long TotalRequestCount { get; }
         public CancellationToken CancellationToken { get; }
 
-        public WorkloadContext(ExecutionId executionId, int count, int index, int concurrency, long totalRequestCount, CancellationToken cancellationToken)
+        public WorkloadContext(CommandMode commandMode, ExecutionId executionId, int count, int index, int concurrency, long totalRequestCount, CancellationToken cancellationToken)
         {
+            this.CommandMode = commandMode;
             this.ExecutionId = executionId;
             this.WorkloadId = WorkloadId.New();
             this.WorkloadCount = count;

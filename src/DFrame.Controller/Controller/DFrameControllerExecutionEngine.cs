@@ -43,7 +43,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
         this.eventMessagePublisher = eventMessagePublisher;
     }
 
-    public bool StartWorkerFlow(string workloadName, int concurrency, long totalRequestCount, int workerLimit, KeyValuePair<string, string?>[] parameters)
+    public bool StartWorkerFlow(CommandMode commandMode, string workloadName, int concurrency, long totalRequestCount, int workerLimit, KeyValuePair<string, string?>[] parameters)
     {
         lock (EngineSync)
         {
@@ -136,7 +136,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
                 broadcaster = globalGroup.CreateBroadcasterTo<IWorkerReceiver>(connectionIds);
             }
 
-            broadcaster.CreateWorkloadAndSetup(executionId, createWorkloadCount, concurrency, totalRequestCount, workloadName, parameters!);
+            broadcaster.CreateWorkloadAndSetup(commandMode, executionId, createWorkloadCount, concurrency, totalRequestCount, workloadName, parameters!);
             StateChanged?.Invoke();
         }
 
