@@ -83,7 +83,7 @@ public partial class Index : IDisposable
 
         var totalRequest = (vm.CommandMode == CommandMode.InfiniteLoop || vm.CommandMode == CommandMode.Duration) ? long.MaxValue : vm.TotalRequest;
 
-        var okToStart = engine.StartWorkerFlow(vm.SelectedWorkload, vm.Concurrency, totalRequest, vm.RequestWorkerLimit, parameters!);
+        var okToStart = engine.StartWorkerFlow(vm.CommandMode, vm.SelectedWorkload, vm.Concurrency, totalRequest, vm.RequestWorkerLimit, parameters!);
         if (!okToStart)
         {
             logger.LogInformation("Invalid parameters, does not run workflow.");
@@ -123,7 +123,7 @@ public partial class Index : IDisposable
             {
                 if (state.TryMoveNextRepeat())
                 {
-                    var okToStart = engine.StartWorkerFlow(state.Workload, state.Concurrency, state.TotalRequest, state.WorkerLimit, state.Parameters!);
+                    var okToStart = engine.StartWorkerFlow(CommandMode.Repeat, state.Workload, state.Concurrency, state.TotalRequest, state.WorkerLimit, state.Parameters!);
                     if (okToStart)
                     {
                         return;
@@ -205,14 +205,6 @@ public class RepeatModeState
         TotalRequest += IncreaseTotalRequest;
         return true;
     }
-}
-
-public enum CommandMode
-{
-    Request,
-    Repeat,
-    Duration,
-    InfiniteLoop
 }
 
 public class IndexViewModel : IDisposable

@@ -380,6 +380,7 @@ It can check on `...` drawer on each worker result.
 ```csharp
 public class WorkloadContext
 {
+    public CommandMode CommandMode { get; }
     public ExecutionId ExecutionId { get; }
     public WorkloadId WorkloadId { get; }
     public int WorkloadCount { get; }

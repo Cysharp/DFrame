@@ -16,14 +16,14 @@ namespace DFrame
             // mode
             app.MapPost("api/request", (DFrameControllerExecutionEngine engine, [FromBody] RequestBody request) =>
             {
-                StartRequest(engine, request.Workload, request.Concurrency, request.TotalRequest, request.Workerlimit, request.Parameters, out var result);
+                StartRequest(engine, CommandMode.Request, request.Workload, request.Concurrency, request.TotalRequest, request.Workerlimit, request.Parameters, out var result);
                 return result;
             });
 
             app.MapPost("api/repeat", (DFrameControllerExecutionEngine engine, [FromBody] RepeatBody request) =>
             {
                 var workerLimit = request.Workerlimit ?? engine.CurrentConnectingCount;
-                var ok = StartRequest(engine, request.Workload, request.Concurrency, request.TotalRequest, workerLimit, request.Parameters, out var result);
+                var ok = StartRequest(engine, CommandMode.Repeat, request.Workload, request.Concurrency, request.TotalRequest, workerLimit, request.Parameters, out var result);
                 if (!ok) return result;
 
                 repeatModeState = new Pages.RepeatModeState(request.Workload, request.Concurrency, request.TotalRequest,
@@ -41,7 +41,7 @@ namespace DFrame
                         {
                             if (!repeatCancellation.IsCancellationRequested && state.TryMoveNextRepeat())
                             {
-                                var okToStart = engine.StartWorkerFlow(state.Workload, state.Concurrency, state.TotalRequest, state.WorkerLimit, state.Parameters!);
+                                var okToStart = engine.StartWorkerFlow(CommandMode.Repeat, state.Workload, state.Concurrency, state.TotalRequest, state.WorkerLimit, state.Parameters!);
                                 if (okToStart)
                                 {
                                     return;
@@ -61,7 +61,7 @@ namespace DFrame
             app.MapPost("api/duration", (DFrameControllerExecutionEngine engine, [FromBody] DurationBody request) =>
             {
                 var totalRequest = long.MaxValue;
-                var ok = StartRequest(engine, request.Workload, request.Concurrency, totalRequest, request.Workerlimit, request.Parameters, out var result);
+                var ok = StartRequest(engine, CommandMode.Duration, request.Workload, request.Concurrency, totalRequest, request.Workerlimit, request.Parameters, out var result);
                 if (!ok) return result;
 
                 durationCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(request.ExecuteTimeSeconds));
@@ -76,7 +76,7 @@ namespace DFrame
             app.MapPost("api/infinite", (DFrameControllerExecutionEngine engine, [FromBody] InfiniteBody request) =>
             {
                 var totalRequest = long.MaxValue;
-                StartRequest(engine, request.Workload, request.Concurrency, totalRequest, request.Workerlimit, request.Parameters, out var result);
+                StartRequest(engine, CommandMode.InfiniteLoop, request.Workload, request.Concurrency, totalRequest, request.Workerlimit, request.Parameters, out var result);
                 return result;
             });
 
@@ -124,7 +124,7 @@ namespace DFrame
                 return new { summary = r.Value.Summary, results = r.Value.Results };
             });
 
-            static bool StartRequest(DFrameControllerExecutionEngine engine, string workload, int concurrency, long totalRequest, int? workerlimit, Dictionary<string, string?>? parameters, out IResult result)
+            static bool StartRequest(DFrameControllerExecutionEngine engine, CommandMode commandMode, string workload, int concurrency, long totalRequest, int? workerlimit, Dictionary<string, string?>? parameters, out IResult result)
             {
                 if (engine.IsRunning)
                 {
@@ -134,7 +134,7 @@ namespace DFrame
 
                 try
                 {
-                    var ok = engine.StartWorkerFlow(workload, concurrency, totalRequest, workerlimit ?? engine.CurrentConnectingCount, parameters?.ToArray() ?? Array.Empty<KeyValuePair<string, string?>>());
+                    var ok = engine.StartWorkerFlow(commandMode, workload, concurrency, totalRequest, workerlimit ?? engine.CurrentConnectingCount, parameters?.ToArray() ?? Array.Empty<KeyValuePair<string, string?>>());
                     if (!ok)
                     {
                         result = Results.BadRequest("can not start.");
