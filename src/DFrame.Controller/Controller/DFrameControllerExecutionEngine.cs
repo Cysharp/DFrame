@@ -268,6 +268,8 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
 
     public void WorkflowCompleted()
     {
+        eventMessagePublisher.Publish(new(EventMessage.ControllerEventMessageType.WorkflowCompleted, LatestExecutionSummary!));
+
         lock (EngineSync)
         {
             var summary = LatestExecutionSummary;
