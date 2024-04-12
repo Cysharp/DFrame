@@ -49,7 +49,7 @@ namespace DFrame
     {
         public static MagicOnionGeneratedClientFactoryProvider Instance { get; } = new MagicOnionGeneratedClientFactoryProvider();
 
-        MagicOnionGeneratedClientFactoryProvider() {}
+        MagicOnionGeneratedClientFactoryProvider() { }
 
         bool global::MagicOnion.Client.IMagicOnionClientFactoryProvider.TryGetFactory<T>(out global::MagicOnion.Client.MagicOnionClientFactoryDelegate<T> factory)
             => (factory = MagicOnionClientFactoryCache<T>.Factory) != null;
@@ -68,7 +68,7 @@ namespace DFrame
                 Factory = (global::MagicOnion.Client.MagicOnionClientFactoryDelegate<T>)factory;
             }
         }
-        
+
         static class StreamingHubClientFactoryCache<TStreamingHub, TReceiver> where TStreamingHub : global::MagicOnion.IStreamingHub<TStreamingHub, TReceiver>
         {
             public readonly static global::MagicOnion.Client.StreamingHubClientFactoryDelegate<TStreamingHub, TReceiver> Factory;
@@ -113,16 +113,16 @@ namespace DFrame.Resolvers
     public class MagicOnionResolver : global::MessagePack.IFormatterResolver
     {
         public static readonly global::MessagePack.IFormatterResolver Instance = new MagicOnionResolver();
-    
-        MagicOnionResolver() {}
-    
+
+        MagicOnionResolver() { }
+
         public global::MessagePack.Formatters.IMessagePackFormatter<T> GetFormatter<T>()
             => FormatterCache<T>.formatter;
-    
+
         static class FormatterCache<T>
         {
             public static readonly global::MessagePack.Formatters.IMessagePackFormatter<T> formatter;
-    
+
             static FormatterCache()
             {
                 var f = MagicOnionResolverGetFormatterHelper.GetFormatter(typeof(T));
@@ -136,7 +136,7 @@ namespace DFrame.Resolvers
     internal static class MagicOnionResolverGetFormatterHelper
     {
         static readonly global::System.Collections.Generic.Dictionary<global::System.Type, int> lookup;
-    
+
         static MagicOnionResolverGetFormatterHelper()
         {
             lookup = new global::System.Collections.Generic.Dictionary<global::System.Type, int>(7)
@@ -157,7 +157,7 @@ namespace DFrame.Resolvers
             {
                 return null;
             }
-        
+
             switch (key)
             {
                 case 0: return new global::MessagePack.Formatters.ArrayFormatter<global::DFrame.WorkloadInfo>();
@@ -210,19 +210,19 @@ namespace DFrame
     using global::MagicOnion;
     using global::MagicOnion.Client;
     using global::MessagePack;
-    
+
     [global::MagicOnion.Ignore]
     public class ControllerHubClient : global::MagicOnion.Client.StreamingHubClientBase<global::DFrame.IControllerHub, global::DFrame.IWorkerReceiver>, global::DFrame.IControllerHub
     {
         protected override global::Grpc.Core.Method<global::System.Byte[], global::System.Byte[]> DuplexStreamingAsyncMethod { get; }
-        
+
         public ControllerHubClient(global::Grpc.Core.CallInvoker callInvoker, global::System.String host, global::Grpc.Core.CallOptions options, global::MagicOnion.Serialization.IMagicOnionSerializerProvider serializerProvider, global::MagicOnion.Client.IMagicOnionClientLogger logger)
             : base(callInvoker, host, options, serializerProvider, logger)
         {
             var marshaller = global::MagicOnion.MagicOnionMarshallers.ThroughMarshaller;
             DuplexStreamingAsyncMethod = new global::Grpc.Core.Method<global::System.Byte[], global::System.Byte[]>(global::Grpc.Core.MethodType.DuplexStreaming, "IControllerHub", "Connect", marshaller, marshaller);
         }
-        
+
         public global::System.Threading.Tasks.Task ConnectAsync(global::DFrame.WorkloadInfo[] workloads, global::System.Collections.Generic.Dictionary<global::System.String, global::System.String> metadata)
             => base.WriteMessageWithResponseAsync<global::MagicOnion.DynamicArgumentTuple<global::DFrame.WorkloadInfo[], global::System.Collections.Generic.Dictionary<global::System.String, global::System.String>>, global::MessagePack.Nil>(2012341859, new global::MagicOnion.DynamicArgumentTuple<global::DFrame.WorkloadInfo[], global::System.Collections.Generic.Dictionary<global::System.String, global::System.String>>(workloads, metadata));
         public global::System.Threading.Tasks.Task CreateWorkloadCompleteAsync(global::DFrame.ExecutionId executionId)
@@ -235,22 +235,22 @@ namespace DFrame
             => base.WriteMessageWithResponseAsync<global::System.Collections.Generic.Dictionary<global::DFrame.WorkloadId, global::System.Collections.Generic.Dictionary<global::System.String, global::System.String>>, global::MessagePack.Nil>(244451313, results);
         public global::System.Threading.Tasks.Task TeardownCompleteAsync()
             => base.WriteMessageWithResponseAsync<global::MessagePack.Nil, global::MessagePack.Nil>(-1034933934, global::MessagePack.Nil.Default);
-        
+
         public global::DFrame.IControllerHub FireAndForget()
             => new FireAndForgetClient(this);
-        
+
         [global::MagicOnion.Ignore]
         class FireAndForgetClient : global::DFrame.IControllerHub
         {
             readonly ControllerHubClient parent;
-        
+
             public FireAndForgetClient(ControllerHubClient parent)
                 => this.parent = parent;
-        
+
             public global::DFrame.IControllerHub FireAndForget() => this;
             public global::System.Threading.Tasks.Task DisposeAsync() => throw new global::System.NotSupportedException();
             public global::System.Threading.Tasks.Task WaitForDisconnect() => throw new global::System.NotSupportedException();
-        
+
             public global::System.Threading.Tasks.Task ConnectAsync(global::DFrame.WorkloadInfo[] workloads, global::System.Collections.Generic.Dictionary<global::System.String, global::System.String> metadata)
                 => parent.WriteMessageFireAndForgetAsync<global::MagicOnion.DynamicArgumentTuple<global::DFrame.WorkloadInfo[], global::System.Collections.Generic.Dictionary<global::System.String, global::System.String>>, global::MessagePack.Nil>(2012341859, new global::MagicOnion.DynamicArgumentTuple<global::DFrame.WorkloadInfo[], global::System.Collections.Generic.Dictionary<global::System.String, global::System.String>>(workloads, metadata));
             public global::System.Threading.Tasks.Task CreateWorkloadCompleteAsync(global::DFrame.ExecutionId executionId)
@@ -263,17 +263,17 @@ namespace DFrame
                 => parent.WriteMessageFireAndForgetAsync<global::System.Collections.Generic.Dictionary<global::DFrame.WorkloadId, global::System.Collections.Generic.Dictionary<global::System.String, global::System.String>>, global::MessagePack.Nil>(244451313, results);
             public global::System.Threading.Tasks.Task TeardownCompleteAsync()
                 => parent.WriteMessageFireAndForgetAsync<global::MessagePack.Nil, global::MessagePack.Nil>(-1034933934, global::MessagePack.Nil.Default);
-            
+
         }
-        
+
         protected override void OnBroadcastEvent(global::System.Int32 methodId, global::System.ArraySegment<global::System.Byte> data)
         {
             switch (methodId)
             {
                 case 984740550: // Void CreateWorkloadAndSetup(global::DFrame.ExecutionId executionId, global::System.Int32 createCount, global::System.Int32 concurrency, global::System.Int64 totalRequestCount, global::System.String workloadName, global::System.Collections.Generic.KeyValuePair<global::System.String, global::System.String>[] parameters)
                     {
-                        var value = base.Deserialize<global::MagicOnion.DynamicArgumentTuple<global::DFrame.ExecutionId, global::System.Int32, global::System.Int32, global::System.Int64, global::System.String, global::System.Collections.Generic.KeyValuePair<global::System.String, global::System.String>[]>>(data);
-                        receiver.CreateWorkloadAndSetup(value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6);
+                        var value = base.Deserialize<global::MagicOnion.DynamicArgumentTuple<CommandMode, global::DFrame.ExecutionId, global::System.Int32, global::System.Int32, global::System.Int64, global::System.String, global::System.Collections.Generic.KeyValuePair<global::System.String, global::System.String>[]>>(data);
+                        receiver.CreateWorkloadAndSetup(value.Item1, value.Item2, value.Item3, value.Item4, value.Item5, value.Item6, value.Item7);
                     }
                     break;
                 case 650159416: // Void Execute(global::System.Int64[] executeCount)
@@ -296,7 +296,7 @@ namespace DFrame
                     break;
             }
         }
-        
+
         protected override void OnResponseEvent(global::System.Int32 methodId, global::System.Object taskCompletionSource, global::System.ArraySegment<global::System.Byte> data)
         {
             switch (methodId)
@@ -321,7 +321,7 @@ namespace DFrame
                     break;
             }
         }
-        
+
     }
 }
 
