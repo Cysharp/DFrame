@@ -26,7 +26,7 @@ namespace DFrame
 
     public interface IWorkerReceiver
     {
-        void CreateWorkloadAndSetup(ExecutionId executionId, int createCount, int concurrency, long totalRequestCount, string workloadName, KeyValuePair<string, string>[] parameters);
+        void CreateWorkloadAndSetup(CommandMode commandMode, ExecutionId executionId, int createCount, int concurrency, long totalRequestCount, string workloadName, KeyValuePair<string, string>[] parameters);
         void Execute(long[] executeCount); // exec count per workload
         void Stop();
         void Teardown();
@@ -230,5 +230,13 @@ namespace DFrame
         Decimal,
         DateTime,
         String,
+    }
+
+    public enum CommandMode
+    {
+        Request,
+        Repeat,
+        Duration,
+        InfiniteLoop
     }
 }
