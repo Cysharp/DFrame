@@ -62,3 +62,4 @@ jobs:
         with:
           name: DFrame.Unity.${{ matrix.unity }}.unitypackage
           path: ./src/DFrame.Unity/*.unitypackage
+          retention-days: 1
