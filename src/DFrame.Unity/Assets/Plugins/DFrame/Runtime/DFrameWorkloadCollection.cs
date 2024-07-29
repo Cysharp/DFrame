@@ -63,9 +63,7 @@ namespace DFrame
 
         public IEnumerable<DFrameWorkloadTypeInfo> All => dframeTypes.Values;
 
-#pragma warning disable CS0436
         public bool TryGetWorkload(string workloadName, [NotNullWhen(true)] out DFrameWorkloadTypeInfo? workload)
-#pragma warning restore CS0436
         {
             return dframeTypes.TryGetValue(workloadName, out workload);
         }
