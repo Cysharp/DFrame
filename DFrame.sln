@@ -12,6 +12,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{15E00CDF-0E36-4FF1-A88B-E211066D8FDE}"
 	ProjectSection(SolutionItems) = preProject
 		Directory.Build.props = Directory.Build.props
+		src\Directory.Packages.props = src\Directory.Packages.props
 		README.md = README.md
 	EndProjectSection
 EndProject
@@ -44,7 +45,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DFrame.RestSdk", "src\DFram
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MinimumGrpc", "sandbox\MinimumGrpc\MinimumGrpc.csproj", "{C7BBF6FF-BFB2-4791-AA0D-36B9BFF84C9A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleMultipleWorker", "sandbox\ConsoleMultipleWorker\ConsoleMultipleWorker.csproj", "{1BFEF842-0BD4-4249-818A-09DD5E151434}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleMultipleWorker", "sandbox\ConsoleMultipleWorker\ConsoleMultipleWorker.csproj", "{1BFEF842-0BD4-4249-818A-09DD5E151434}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
