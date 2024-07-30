@@ -9,12 +9,7 @@ namespace DFrame
         public string ControllerAddress { get; set; } = default!;
         public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromMinutes(1);
         public TimeSpan ReconnectTime { get; set; } = TimeSpan.FromSeconds(5);
-#if !UNITY_2020_1_OR_NEWER
-        public SocketsHttpHandlerOptions SocketsHttpHandlerOptions { get; set; } = new SocketsHttpHandlerOptions();
-#else
-        public Grpc.Core.ChannelCredentials GrpcChannelCredentials { get; set; } = Grpc.Core.ChannelCredentials.Insecure;
-        public IEnumerable<Grpc.Core.ChannelOption> GrpcChannelOptions { get; set; } = Array.Empty<Grpc.Core.ChannelOption>();
-#endif
+        public HttpHandlerOptions HttpHandlerOptions { get; set; } = new HttpHandlerOptions();
         public Assembly[] WorkloadAssemblies { get; set; } = AppDomain.CurrentDomain.GetAssemblies();
         public Dictionary<string, string> Metadata { get; set; } = new Dictionary<string, string>();
         public bool IncludesDefaultHttpWorkload { get; set; } = false;
@@ -39,11 +34,9 @@ namespace DFrame
         }
     }
 
-#if !UNITY_2020_1_OR_NEWER
-    public class SocketsHttpHandlerOptions
+    public class HttpHandlerOptions
     {
         public TimeSpan KeepAlivePingDelay { get; set; } = TimeSpan.FromSeconds(60);
         public TimeSpan KeepAlivePingTimeout { get; set; } = TimeSpan.FromSeconds(30);
     }
-#endif
 }

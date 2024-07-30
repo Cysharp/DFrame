@@ -22,7 +22,7 @@ public class SampleOne : MonoBehaviour
 
     async void Start()
     {
-        app = new DFrameWorkerApp("localhost:7313");
+        app = new DFrameWorkerApp("http://localhost:7313");
         await app.RunAsync();
     }
 

@@ -24,7 +24,7 @@ namespace DFrame
 
             static Cache()
             {
-                var f = DFrame.Resolvers.MagicOnionResolver.Instance.GetFormatter<T>();
+                var f = DFrame.Internal.MagicOnionDFrameGeneratedClientInitializer.Resolver.GetFormatter<T>();
                 if (f != null)
                 {
                     Formatter = f;

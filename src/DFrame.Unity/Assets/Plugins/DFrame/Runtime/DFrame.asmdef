@@ -2,10 +2,12 @@
     "name": "DFrame",
     "rootNamespace": "DFrame",
     "references": [
-        "MagicOnion.Client",
         "MessagePack.Annotations",
         "MessagePack",
-        "MagicOnion.Abstractions"
+        "MagicOnion.Client",
+        "MagicOnion.Abstractions",
+        "MagicOnion.Serialization.MessagePack",
+        "Cysharp.Net.Http.YetAnotherHttpHandler"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
