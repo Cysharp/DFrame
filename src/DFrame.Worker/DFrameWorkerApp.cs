@@ -14,6 +14,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using MagicOnion.Serialization.MessagePack;
 
 namespace DFrame
 {
@@ -104,11 +105,7 @@ namespace DFrame
         readonly WorkerId workerId;
 
         List<(WorkloadContext context, Workload workload)> workloads;
-#if UNITY_2020_1_OR_NEWER
-        Channel? channel;
-#else
         GrpcChannel? channel;
-#endif
         IControllerHub? client;
 
         int executionToken; // checker for current execution
@@ -179,9 +176,7 @@ namespace DFrame
                         if (channel != null)
                         {
                             await channel.ShutdownAsync();
-#if !UNITY_2020_1_OR_NEWER
                             channel.Dispose();
-#endif
                         }
                         if (workloadLifeTime != null)
                         {
@@ -225,21 +220,25 @@ namespace DFrame
             var connectTimeout = options.ConnectTimeout;
             logger.LogInformation($"Start to connect Worker -> Controller. Address: {options.ControllerAddress}");
 
-#if UNITY_2020_1_OR_NEWER
-            channel = new Grpc.Core.Channel(options.ControllerAddress, options.GrpcChannelCredentials, options.GrpcChannelOptions);
-#else
             channel = GrpcChannel.ForAddress(options.ControllerAddress, new GrpcChannelOptions
             {
+#if UNITY_2020_1_OR_NEWER
+                HttpHandler = new Cysharp.Net.Http.YetAnotherHttpHandler()
+                {
+                    Http2KeepAliveInterval = options.HttpHandlerOptions.KeepAlivePingDelay,
+                    Http2KeepAliveTimeout = options.HttpHandlerOptions.KeepAlivePingTimeout,
+                },
+#else
                 HttpHandler = new SocketsHttpHandler
                 {
-                    KeepAlivePingDelay = options.SocketsHttpHandlerOptions.KeepAlivePingDelay,
-                    KeepAlivePingTimeout = options.SocketsHttpHandlerOptions.KeepAlivePingTimeout,
+                    KeepAlivePingDelay = options.HttpHandlerOptions.KeepAlivePingDelay,
+                    KeepAlivePingTimeout = options.HttpHandlerOptions.KeepAlivePingTimeout,
                     EnableMultipleHttp2Connections = true,
                     ConnectTimeout = connectTimeout,
                 },
-                LoggerFactory = this.serviceProvider.GetService<ILoggerFactory>()
-            });
+                LoggerFactory = this.serviceProvider.GetService<ILoggerFactory>(),
 #endif
+            });
 
             var callInvoker = channel.CreateCallInvoker();
             var callOption = new CallOptions(new Metadata { { "worker-id", workerId.ToString() } });
@@ -249,7 +248,7 @@ namespace DFrame
 #else
                 MessagePackSerializerOptions.Standard
 #endif
-            ));
+            ), factoryProvider: MagicOnionDFrameGeneratedClientInitializer.StreamingHubClientFactoryProvider);
             client = await connectTask.WaitAsync(connectTimeout);
 
             this.connectionLifeTime = CancellationTokenSource.CreateLinkedTokenSource(client!.WaitForDisconnect().ToCancellationToken(), applicationLifeTime);
