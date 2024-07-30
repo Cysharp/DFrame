@@ -1,6 +1,7 @@
 ﻿using DFrame.Controller;
 using DFrame.Internal;
 using MagicOnion.Serialization;
+using MagicOnion.Serialization.MessagePack;
 using MagicOnion.Server;
 using MagicOnion.Server.Diagnostics;
 using MessagePack;
@@ -40,7 +41,6 @@ public static class DFrameControllerWebApplicationBuilderExtensions
             // Should use same options between DFrame.Controller(this) and DFrame.Worker
             x.MessageSerializer = MessagePackMagicOnionSerializerProvider.Default;
         });
-        appBuilder.Services.AddSingleton<IMagicOnionLogger, MagicOnionLogToLogger>();
 
         appBuilder.Services.AddRazorPages()
             .ConfigureApplicationPartManager(manager =>
