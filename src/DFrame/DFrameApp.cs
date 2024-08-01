@@ -27,6 +27,10 @@ public static class DFrameApp
     }
 }
 
+#pragma warning disable ASP0011 // Suggest using builder.Logging instead of ConfigureLogging (https://aka.ms/aspnet/analyzers)
+#pragma warning disable ASP0012 // Suggest using builder.Services instead of ConfigureServices (https://aka.ms/aspnet/analyzers)
+#pragma warning disable ASP0013 // Suggest using WebApplicationBuilder.Configuration instead of ConfigureAppConfiguration (https://aka.ms/aspnet/analyzers)
+
 public class DFrameAppBuilder
 {
     Action<WebHostBuilderContext, DFrameControllerOptions> configureController;

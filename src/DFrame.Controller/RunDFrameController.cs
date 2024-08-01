@@ -35,39 +35,38 @@ public static class DFrameControllerWebApplicationBuilderExtensions
 
     static async Task RunDFrameControllerAsync(WebApplicationBuilder appBuilder, DFrameControllerOptions options, Action<WebHostBuilderContext, DFrameControllerOptions> configureOptions)
     {
-        appBuilder.WebHost.ConfigureServices((WebHostBuilderContext ctx, IServiceCollection services) =>
+        appBuilder.Services.AddGrpc();
+        appBuilder.Services.AddMagicOnion(x =>
         {
-            services.AddGrpc();
-            services.AddMagicOnion(x =>
+            // Should use same options between DFrame.Controller(this) and DFrame.Worker
+            x.MessageSerializer = MessagePackMagicOnionSerializerProvider.Default;
+        });
+
+        appBuilder.Services.AddRazorPages()
+            .ConfigureApplicationPartManager(manager =>
             {
-                // Should use same options between DFrame.Controller(this) and DFrame.Worker
-                x.MessageSerializer = MessagePackMagicOnionSerializerProvider.Default;
+                // import libraries razor pages
+                var assembly = typeof(DFrameControllerWebApplicationBuilderExtensions).Assembly;
+                var assemblyPart = new CompiledRazorAssemblyPart(assembly);
+                manager.ApplicationParts.Add(assemblyPart);
             });
 
-            services.AddRazorPages()
-                .ConfigureApplicationPartManager(manager =>
-                {
-                    // import libraries razor pages
-                    var assembly = typeof(DFrameControllerWebApplicationBuilderExtensions).Assembly;
-                    var assemblyPart = new CompiledRazorAssemblyPart(assembly);
-                    manager.ApplicationParts.Add(assemblyPart);
-                });
+        appBuilder.Services.AddServerSideBlazor();
 
-            services.AddServerSideBlazor();
+        // DFrame Options
+        appBuilder.Services.TryAddSingleton<DFrameControllerExecutionEngine>();
+        appBuilder.Services.TryAddSingleton<DFrameControllerLogBuffer>();
+        appBuilder.Services.AddSingleton<ILoggerProvider, DFrameControllerLoggerProvider>();
+        appBuilder.Services.AddScoped<LocalStorageAccessor>();
+#pragma warning disable ASP0012 // Suggest using builder.Services over Host.ConfigureServices or WebHost.ConfigureServices
+        appBuilder.WebHost.ConfigureServices((ctx, services) => configureOptions(ctx, options));
+#pragma warning restore ASP0012 // Suggest using builder.Services over Host.ConfigureServices or WebHost.ConfigureServices
+        appBuilder.Services.AddSingleton(options);
 
-            // DFrame Options
-            services.TryAddSingleton<DFrameControllerExecutionEngine>();
-            services.TryAddSingleton<DFrameControllerLogBuffer>();
-            services.AddSingleton<ILoggerProvider, DFrameControllerLoggerProvider>();
-            services.AddScoped<LocalStorageAccessor>();
-            configureOptions(ctx, options);
-            services.AddSingleton(options);
+        // If user sets custom provider, use it.
+        appBuilder.Services.TryAddSingleton<IExecutionResultHistoryProvider, InMemoryExecutionResultHistoryProvider>();
 
-            // If user sets custom provdier, use it.
-            services.TryAddSingleton<IExecutionResultHistoryProvider, InMemoryExecutionResultHistoryProvider>();
-
-            services.AddMessagePipe();
-        });
+        appBuilder.Services.AddMessagePipe();
 
         var app = appBuilder.Build();
 
