@@ -14,6 +14,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using MagicOnion.Client.DynamicClient;
 using MagicOnion.Serialization.MessagePack;
 
 namespace DFrame
@@ -225,6 +226,7 @@ namespace DFrame
 #if UNITY_2020_1_OR_NEWER
                 HttpHandler = new Cysharp.Net.Http.YetAnotherHttpHandler()
                 {
+                    Http2Only = true,
                     Http2KeepAliveInterval = options.HttpHandlerOptions.KeepAlivePingDelay,
                     Http2KeepAliveTimeout = options.HttpHandlerOptions.KeepAlivePingTimeout,
                 },
@@ -242,13 +244,18 @@ namespace DFrame
 
             var callInvoker = channel.CreateCallInvoker();
             var callOption = new CallOptions(new Metadata { { "worker-id", workerId.ToString() } });
-            var connectTask = StreamingHubClient.ConnectAsync<IControllerHub, IWorkerReceiver>(callInvoker, this, option: callOption, serializerProvider: MessagePackMagicOnionSerializerProvider.Default.WithOptions(
 #if UNITY_2020_1_OR_NEWER
-                DFrameResolver.Options
+            var factoryProvider = MagicOnionDFrameGeneratedClientInitializer.StreamingHubClientFactoryProvider;
+            var serializerOptions = DFrameResolver.Options;
 #else
-                MessagePackSerializerOptions.Standard
+            var factoryProvider = DynamicStreamingHubClientFactoryProvider.Instance;
+            var serializerOptions = MessagePackSerializerOptions.Standard;
 #endif
-            ), factoryProvider: MagicOnionDFrameGeneratedClientInitializer.StreamingHubClientFactoryProvider);
+            var connectTask = StreamingHubClient.ConnectAsync<IControllerHub, IWorkerReceiver>(callInvoker, this,
+                option: callOption,
+                serializerProvider: MessagePackMagicOnionSerializerProvider.Default.WithOptions(serializerOptions),
+                factoryProvider: factoryProvider
+            );
             client = await connectTask.WaitAsync(connectTimeout);
 
             this.connectionLifeTime = CancellationTokenSource.CreateLinkedTokenSource(client!.WaitForDisconnect().ToCancellationToken(), applicationLifeTime);
