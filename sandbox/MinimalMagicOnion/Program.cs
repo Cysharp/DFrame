@@ -32,16 +32,16 @@ app.Run();
 
 public class EchoService : ServiceBase<IEchoService>, IEchoService
 {
-    public UnaryResult<Nil> Echo(string message)
+    public UnaryResult Echo(string message)
     {
-        return UnaryResult(Nil.Default);
+        return default;
     }
 }
 
 // unary
 public interface IEchoService : IService<IEchoService>
 {
-    UnaryResult<Nil> Echo(string message);
+    UnaryResult Echo(string message);
 }
 
 // streaming hub
@@ -51,13 +51,13 @@ public interface IEchoHubReceiver
 
 public interface IEchoHub : IStreamingHub<IEchoHub, IEchoHubReceiver>
 {
-    Task<Nil> EchoAsync(string message);
+    Task EchoAsync(string message);
 }
 
 public class EchoHub : StreamingHubBase<IEchoHub, IEchoHubReceiver>, IEchoHub
 {
-    public Task<Nil> EchoAsync(string message)
+    public Task EchoAsync(string message)
     {
-        return Task.FromResult(Nil.Default);
+        return Task.CompletedTask;
     }
 }
