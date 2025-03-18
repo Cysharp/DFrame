@@ -20,7 +20,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
     readonly Dictionary<WorkerId, WorkerInfo> connections = new();
     int connectionsCount; // cache field of connections.Count
     WorkloadInfo[] workloadInfos = Array.Empty<WorkloadInfo>();
-    IGroup? globalGroup;
+    IGroup<IWorkerReceiver>? globalGroup;
 
     // when running, keep this state
     WorkersRunningStateMachine? RunningState;
@@ -129,11 +129,11 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
             IWorkerReceiver broadcaster;
             if (connections.Count == workerCount)
             {
-                broadcaster = globalGroup.CreateBroadcaster<IWorkerReceiver>();
+                broadcaster = globalGroup.All;
             }
             else
             {
-                broadcaster = globalGroup.CreateBroadcasterTo<IWorkerReceiver>(connectionIds);
+                broadcaster = globalGroup.Only(connectionIds);
             }
 
             broadcaster.CreateWorkloadAndSetup(commandMode, executionId, createWorkloadCount, concurrency, totalRequestCount, workloadName, parameters!);
@@ -145,7 +145,7 @@ public class DFrameControllerExecutionEngine : INotifyStateChanged
         return true;
     }
 
-    internal void AddConnection(WorkerInfo workerInfo, WorkloadInfo[] workloads, IGroup globalGroup)
+    internal void AddConnection(WorkerInfo workerInfo, WorkloadInfo[] workloads, IGroup<IWorkerReceiver> globalGroup)
     {
         lock (EngineSync)
         {

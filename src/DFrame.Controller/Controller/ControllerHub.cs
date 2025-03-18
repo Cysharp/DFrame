@@ -1,4 +1,5 @@
-﻿using MagicOnion.Server.Hubs;
+﻿using Cysharp.Runtime.Multicast;
+using MagicOnion.Server.Hubs;
 
 namespace DFrame.Controller;
 
@@ -11,9 +12,9 @@ public sealed class ControllerHub : StreamingHubBase<IControllerHub, IWorkerRece
 {
     readonly DFrameControllerExecutionEngine engine;
     WorkerId workerId;
-    IGroup? executingGroup;
+    IGroup<IWorkerReceiver>? executingGroup;
 
-    public ControllerHub(DFrameControllerExecutionEngine engine)
+    public ControllerHub(DFrameControllerExecutionEngine engine, IMulticastGroupProvider groupProvider)
     {
         this.engine = engine;
     }
@@ -45,10 +46,8 @@ public sealed class ControllerHub : StreamingHubBase<IControllerHub, IWorkerRece
     public Task CreateWorkloadCompleteAsync(ExecutionId executionId)
     {
         executingGroup = Group.AddAsync("running-group-" + executionId.ToString()).GetAwaiter().GetResult();
-        var broadcaster = executingGroup.CreateBroadcaster<IWorkerReceiver>();
-        var selfBroadcaster = this.BroadcastToSelf(executingGroup);
 
-        engine.CreateWorkloadAndSetupComplete(workerId, broadcaster, selfBroadcaster);
+        engine.CreateWorkloadAndSetupComplete(workerId, executingGroup.All, Client);
 
         return Task.CompletedTask;
     }
