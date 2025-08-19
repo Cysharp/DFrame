@@ -1,20 +1,25 @@
 <Project>
-	<PropertyGroup>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<NoWarn>$(NoWarn);CS1591</NoWarn>
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
 
-		<!-- NuGet Packaging -->
-		<PackageVersion>$(Version)</PackageVersion>
-		<Authors>Cysharp</Authors>
-		<Company>Cysharp</Company>
-		<Copyright>© Cysharp, Inc.</Copyright>
-		<PackageProjectUrl>https://github.com/Cysharp/DFrame</PackageProjectUrl>
-		<RepositoryUrl>$(PackageProjectUrl)</RepositoryUrl>
-		<RepositoryType>git</RepositoryType>
-		<PackageTags>loadtesting</PackageTags>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageIcon>Icon.png</PackageIcon>
-		<Description>Distributed loadtesting framework for .NET and Unity.</Description>
-		<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)opensource.snk</AssemblyOriginatorKeyFile>
-	</PropertyGroup>
+    <!-- NuGet Packaging -->
+    <PackageVersion>$(Version)</PackageVersion>
+    <Authors>Cysharp</Authors>
+    <Company>Cysharp</Company>
+    <Copyright>© Cysharp, Inc.</Copyright>
+    <PackageProjectUrl>https://github.com/Cysharp/DFrame</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>$(PackageProjectUrl)</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>loadtesting</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageIcon>Icon.png</PackageIcon>
+    <Description>Distributed loadtesting framework for .NET and Unity.</Description>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)opensource.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 </Project>
