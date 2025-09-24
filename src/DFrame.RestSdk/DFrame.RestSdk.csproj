@@ -11,10 +11,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Include="..\..\Icon.png" Pack="true" PackagePath="/" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<PackageReference Include="MessagePack" />
 		<PackageReference Include="UnitGenerator">
 			<PrivateAssets>all</PrivateAssets>
