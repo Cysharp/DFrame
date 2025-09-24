@@ -14,10 +14,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Include="..\..\Icon.png" Pack="true" PackagePath="/" />
-	</ItemGroup>
-	
-	<ItemGroup>
 		<PackageReference Include="MagicOnion" />
 		<PackageReference Include="MessagePipe" />
 		<PackageReference Include="ObservableCollections" />

@@ -13,10 +13,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Include="..\..\Icon.png" Pack="true" PackagePath="/" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<Compile Include="..\DFrame.Controller\HubDefinitions.cs" Link="HubDefinitions.cs" />
 	</ItemGroup>
 
