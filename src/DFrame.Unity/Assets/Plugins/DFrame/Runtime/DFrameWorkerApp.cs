@@ -341,7 +341,10 @@ namespace DFrame
                         var exec = executeCount[workloadIndex];
                         for (long i = 0; i < exec; i++)
                         {
-                            x.context.CancellationToken.ThrowIfCancellationRequested();
+                            if (x.context.CancellationToken.IsCancellationRequested)
+                            {
+                                break;
+                            }
 
                             string? errorMsg = null;
                             var sw = ValueStopwatch.StartNew();
