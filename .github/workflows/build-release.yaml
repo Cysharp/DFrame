@@ -57,7 +57,6 @@ jobs:
       dry-run: ${{ inputs.dry-run }}
       tag: ${{ inputs.tag }}
       nuget-push: true
-      release-upload: true
     secrets: inherit
 
   cleanup:
