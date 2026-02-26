@@ -342,7 +342,10 @@ namespace DFrame
                         var exec = executeCount[workloadIndex];
                         for (long i = 0; i < exec; i++)
                         {
-                            x.context.CancellationToken.ThrowIfCancellationRequested();
+                            if (x.context.CancellationToken.IsCancellationRequested)
+                            {
+                                break;
+                            }
 
                             string? errorMsg = null;
                             var sw = ValueStopwatch.StartNew();
@@ -353,26 +356,28 @@ namespace DFrame
                             }
                             catch (OperationCanceledException e) when (e.CancellationToken == token.Value)
                             {
-                                return;
+                                break;
                             }
                             catch (Exception ex)
                             {
                                 errorMsg = ex.ToString();
                             }
-
-                            if (!isBatchReporting || errorMsg != null)
+                            finally
                             {
-                                var executeResult = new ExecuteResult(x.context.WorkloadId, sw.Elapsed, i, (errorMsg != null), errorMsg);
-                                await client!.ReportProgressAsync(executeResult);
-                            }
-                            else if (batchResult != null)
-                            {
-                                batchResult.BatchedElapsed.Add(sw.ElapsedTicks);
-                                if (batchResult.BatchedElapsed.Count >= batchRate)
+                                if (!isBatchReporting || errorMsg != null)
                                 {
-                                    await client!.ReportProgressBatchedAsync(batchResult);
-                                    batchRate = _Random.Shared.Next(options.MinBatchRate, options.MaxBatchRate);
-                                    batchResult.BatchedElapsed.Clear();
+                                    var executeResult = new ExecuteResult(x.context.WorkloadId, sw.Elapsed, i, (errorMsg != null), errorMsg);
+                                    await client!.ReportProgressAsync(executeResult);
+                                }
+                                else if (batchResult != null)
+                                {
+                                    batchResult.BatchedElapsed.Add(sw.ElapsedTicks);
+                                    if (batchResult.BatchedElapsed.Count >= batchRate)
+                                    {
+                                        await client!.ReportProgressBatchedAsync(batchResult);
+                                        batchRate = _Random.Shared.Next(options.MinBatchRate, options.MaxBatchRate);
+                                        batchResult.BatchedElapsed.Clear();
+                                    }
                                 }
                             }
                         }
