@@ -1,4 +1,4 @@
-﻿<input id="right-side-panel" type="checkbox" class="drawer-toggle" @bind=isShow>
+<input id="right-side-panel" type="checkbox" class="drawer-toggle" @bind=isShow>
 
 <div class="drawer-side overflow-x-hidden">
     <label for="right-side-panel" class="drawer-overlay z-10"></label>
@@ -105,7 +105,7 @@
         {
             <div class="m-3 p-4 bg-base-200 rounded shadow">
                 <div class="m-3 text-sm text-gray-300 break-all">
-                    @foreach (var (value, view) in logView)
+                    @foreach (var view in logView)
                     {
                         @view
 

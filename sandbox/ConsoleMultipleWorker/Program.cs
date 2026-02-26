@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 await ConsoleApp.RunAsync(args, run);
 
-static async Task run([Option(0)] int workerCount = 10)
+static async Task run([Argument] int workerCount = 10)
 {
     Debug.Assert(workerCount > 0);
 

@@ -154,7 +154,7 @@ namespace DFrame
             this.count = 0;
         }
 
-        class Formatter : IMessagePackFormatter<BatchList>
+        internal class Formatter : IMessagePackFormatter<BatchList>
         {
             public void Serialize(ref MessagePackWriter writer, BatchList value, MessagePackSerializerOptions options)
             {

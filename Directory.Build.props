@@ -2,6 +2,7 @@
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <LangVersion>14</LangVersion>
 
     <!-- NuGet Packaging -->
     <IsPackable>false</IsPackable>

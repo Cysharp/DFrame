@@ -19,7 +19,7 @@
 	<ItemGroup>
 		<PackageReference Include="ConsoleAppFramework" />
 		<PackageReference Include="MagicOnion.Client" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" />
 		<PackageReference Include="UnitGenerator">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

@@ -29,7 +29,6 @@ public partial class Drawer : IDisposable
             errorMessage = x.ErrorMessage;
             logView = x.LogView;
             results = x.Results;
-
             await InvokeAsync(StateHasChanged);
         });
     }

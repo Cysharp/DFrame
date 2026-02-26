@@ -4,7 +4,8 @@ using DFrame.Internal;
 using Grpc.Core;
 using Grpc.Net.Client;
 using MagicOnion.Client;
-using MagicOnion.Serialization;
+using MagicOnion.Client.DynamicClient;
+using MagicOnion.Serialization.MessagePack;
 using MessagePack;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -14,14 +15,12 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using MagicOnion.Client.DynamicClient;
-using MagicOnion.Serialization.MessagePack;
 
 namespace DFrame
 {
     // worker-app work as a daemon, connect to controller at initialize and wait command.
 
-    public class DFrameWorkerApp : ConsoleAppBase
+    public class DFrameWorkerApp 
 #if UNITY_2020_1_OR_NEWER
         , IDisposable
 #endif
@@ -80,12 +79,14 @@ namespace DFrame
             }
         }
 
-        [RootCommand]
-        public async Task RunAsync()
+#if !UNITY_2020_1_OR_NEWER
+        [ConsoleAppFramework.Command("")]
+#endif
+        public async Task RunAsync(CancellationToken cancellationToken)
         {
             try
             {
-                await Task.WhenAll(engines.Select(x => x.RunAsync(this.Context.CancellationToken)));
+                await Task.WhenAll(engines.Select(x => x.RunAsync(cancellationToken)));
             }
             catch (OperationCanceledException)
             {

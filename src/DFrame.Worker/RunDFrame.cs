@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using ConsoleAppFramework;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Threading.Tasks;
@@ -36,13 +37,11 @@ namespace DFrame
                     services.AddSingleton(options);
                 });
 
-            var app = ConsoleApp.CreateFromHostBuilder(hostBuilder, new string[0], x =>
-            {
-                // this affects indesirable result so disable auto replace.
-                x.ReplaceToUseSimpleConsoleLogger = false;
-            });
-            app.AddCommands<DFrameWorkerApp>();
-            await app.RunAsync();
+            var app = hostBuilder.ToConsoleAppBuilder();
+
+            app.Add<DFrameWorkerApp>();
+
+            await app.RunAsync([]);
         }
     }
 }

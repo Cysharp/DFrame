@@ -68,6 +68,22 @@ For .NET, use NuGet. For Unity, please read [Unity](#unity) section.
 
 DFrame calls a test scenario a `Workload`. Your test scenario implements `Workload` and `Task ExecuteAsync(WorkloadContext context)`.
 
+`DFrame.Controler` needs `Microsoft.NET.Sdk.Web` so you can start from `ASP.NET Core Empty Template` and add `<RequiresAspNetWebAssets>true</RequiresAspNetWebAssets>` to PropertyGroup. or create from Console template and change csproj like this.
+
+```csharp
+<!-- Use Sdk.Web -->
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Add this line for .NET 10 -->
+    <RequiresAspNetWebAssets>true</RequiresAspNetWebAssets>
+  </PropertyGroup>
+</Project>
+```
+
 ```csharp
 using DFrame;
 
@@ -206,6 +222,8 @@ else if (args[0] == "worker")
 For minimizes dependency, you can only reference `DFrame.Controller` instead of `DFrame`.
 
 > Install-Package [DFrame.Controller](https://nuget.org/packages/DFrame.Controller)  
+
+Controller project must use `Microsoft.NET.Sdk.Web` and add `<RequiresAspNetWebAssets>true</RequiresAspNetWebAssets>` to `PropertyGroup`.
 
 If you want to use `DFrame.Controller` instead of `DFrameApp`, build it from `WebApplicationBuilder` and `RunDFrameControllerAsync()`.
 
