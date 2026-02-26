@@ -45,60 +45,9 @@ jobs:
           path: ./publish
           retention-days: 1
 
-  build-unity:
-    needs: [update-packagejson]
-    strategy:
-      matrix:
-        unity: ["2022.3.39f1"]
-    permissions:
-      contents: read
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    steps:
-      - name: Load secrets
-        id: op-load-secret
-        uses: 1password/load-secrets-action@8d0d610af187e78a2772c2d18d627f4c52d3fbfb # v3.1.0
-        with:
-          export-env: false
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN_PUBLIC }}
-          UNITY_EMAIL: "op://${{ vars.OP_VAULT_ACTIONS_PUBLIC }}/UNITY_LICENSE/username"
-          UNITY_PASSWORD: "op://${{ vars.OP_VAULT_ACTIONS_PUBLIC }}/UNITY_LICENSE/credential"
-          UNITY_SERIAL: "op://${{ vars.OP_VAULT_ACTIONS_PUBLIC }}/UNITY_LICENSE/serial"
-
-      - run: echo ${{ needs.update-packagejson.outputs.sha }}
-      - uses: Cysharp/Actions/.github/actions/checkout@main
-        with:
-          ref: ${{ needs.update-packagejson.outputs.sha }}
-
-      # Execute scripts: Export Package
-      #  /opt/Unity/Editor/Unity -quit -batchmode -nographics -silent-crashes -logFile -projectPath . -executeMethod PackageExporter.Export
-      - name: Build Unity (.unitypacakge)
-        uses: Cysharp/Actions/.github/actions/unity-builder@main
-        env:
-          UNITY_EMAIL: ${{ steps.op-load-secret.outputs.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ steps.op-load-secret.outputs.UNITY_PASSWORD }}
-          UNITY_SERIAL: ${{ steps.op-load-secret.outputs.UNITY_SERIAL }}
-        with:
-          projectPath: src/DFrame.Unity
-          unityVersion: ${{ matrix.unity }}
-          targetPlatform: StandaloneLinux64
-          buildMethod: PackageExporter.Export
-
-      - uses: Cysharp/Actions/.github/actions/check-metas@main # check meta files
-        with:
-          directory: src/DFrame.Unity
-
-      # Store artifacts.
-      - uses: Cysharp/Actions/.github/actions/upload-artifact@main
-        with:
-          name: DFrame.${{ inputs.tag }}.unitypackage
-          path: ./src/DFrame.Unity/*.unitypackage
-          retention-days: 1
-
   # release
   create-release:
-    needs: [update-packagejson, build-dotnet, build-unity]
+    needs: [update-packagejson, build-dotnet]
     permissions:
       contents: write
       id-token: write # required for NuGet Trusted Publish
@@ -109,12 +58,11 @@ jobs:
       tag: ${{ inputs.tag }}
       nuget-push: true
       release-upload: true
-      release-asset-path: ./DFrame.${{ inputs.tag }}.unitypackage/DFrame.${{ inputs.tag }}.unitypackage
     secrets: inherit
 
   cleanup:
     if: ${{ needs.update-packagejson.outputs.is-branch-created == 'true' }}
-    needs: [update-packagejson, build-dotnet, build-unity]
+    needs: [update-packagejson, build-dotnet]
     permissions:
       contents: write
     uses: Cysharp/Actions/.github/workflows/clean-packagejson-branch.yaml@main

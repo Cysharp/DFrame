@@ -699,7 +699,7 @@ Which api can be used, sorry to see RestSDK's C# code. https://github.com/Cyshar
 
 ## Unity
 
-You can install via UPM git URL package or asset package(DFrame.*.unitypackage) available in DFrame/releases page.
+You can install via UPM git URL.
 
 * DFrame.Unity https://github.com/Cysharp/DFrame.git?path=src/DFrame.Unity/Assets/Plugins/DFrame
 
